@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUEVE Universe — Mișcă-te. Trăiește. Evoluează.</title>
+<meta name="description" content="MUEVE — universul mișcării. Un ecosistem cosmic de calisthenics, yoga, alergare și comunitate.">
+<meta property="og:title" content="MUEVE Universe">
+<meta property="og:description" content="Intră în universul mișcării.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;700;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --deep:#050816;--mid:#0A0F2A;--light:#11183C;
+  --sun:#F5F50A;--sun-g:rgba(245,245,10,.3);
+  --w:#F5F5F5;--b:#000;
+  --forge:#3B82F6;--temple:#A855F7;--path:#06B6D4;--sanctuary:#F59E0B;
+  --ff:'Outfit',sans-serif;--fb:'Space Grotesk',sans-serif;
+}
+html{scroll-behavior:auto}
+body{background:var(--deep);color:var(--w);font-family:var(--fb);overflow-x:hidden;cursor:none}
+::selection{background:var(--sun);color:var(--deep)}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+h1,h2,h3,h4,h5{font-family:var(--ff);font-weight:900;letter-spacing:-.04em}
+
+/* cursor */
+#cBlob{position:fixed;width:220px;height:220px;border-radius:50%;pointer-events:none;z-index:9998;
+  background:radial-gradient(circle,rgba(245,245,10,.22) 0%,rgba(250,120,20,.1) 30%,rgba(180,40,220,.04) 55%,transparent 75%);
+  mix-blend-mode:screen;transform:translate(-50%,-50%);will-change:transform;filter:blur(8px)}
+#cDot{position:fixed;width:10px;height:10px;background:var(--sun);border-radius:50%;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);box-shadow:0 0 14px var(--sun),0 0 40px var(--sun-g);will-change:transform}
+
+/* nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.4rem 4vw;
+  display:flex;align-items:center;justify-content:space-between;mix-blend-mode:difference}
+.nav-logo{font-family:var(--ff);font-weight:900;font-style:italic;font-size:1.6rem;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--w)}
+.nav-r{display:flex;gap:2.2rem;align-items:center}
+.nav-r a{font-size:.75rem;text-transform:uppercase;letter-spacing:.18em;font-weight:700;opacity:.6;transition:opacity .3s}
+.nav-r a:hover{opacity:1}
+.lang-sw{background:none;border:1px solid rgba(255,255,255,.25);color:var(--w);padding:.25rem .7rem;
+  border-radius:20px;font-size:.65rem;font-weight:700;cursor:pointer;letter-spacing:.1em;transition:all .3s}
+.lang-sw:hover{background:var(--w);color:var(--deep)}
+.ham{display:none;background:none;border:none;cursor:pointer;z-index:101;padding:6px}
+.ham span{display:block;width:26px;height:2px;background:var(--w);margin:5px 0;transition:all .3s;border-radius:2px}
+.ham.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.ham.on span:nth-child(2){opacity:0}
+.ham.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mob{position:fixed;inset:0;background:var(--deep);z-index:99;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3rem;opacity:0;pointer-events:none;transition:opacity .4s}
+.mob.on{opacity:1;pointer-events:all}
+.mob a{font-family:var(--ff);font-size:clamp(2rem,6vw,3.5rem);font-weight:900;text-transform:uppercase;
+  letter-spacing:.05em;opacity:.7;transition:all .3s}
+.mob a:hover{opacity:1;color:var(--sun)}
+
+/* canvas bg */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── HERO ── */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;z-index:1;overflow:hidden;padding:0 4vw}
+.hero-sun-wrap{position:relative;margin-bottom:2rem}
+#sunCanvas{display:block}
+.hero h1{font-size:clamp(3.5rem,9vw,8rem);text-align:center;line-height:.9;text-transform:uppercase;
+  position:relative;z-index:2}
+.hero h1 em{font-style:italic;color:var(--sun);display:block;font-size:.55em;letter-spacing:.02em;
+  text-shadow:0 0 60px var(--sun-g),0 0 120px rgba(245,245,10,.15)}
+.hero-sub{font-size:clamp(.9rem,1.6vw,1.15rem);opacity:.45;text-align:center;max-width:480px;
+  line-height:1.7;margin-top:1.5rem;font-weight:300}
+.hero-scroll{position:absolute;bottom:3vh;left:50%;transform:translateX(-50%);
+  writing-mode:vertical-rl;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;opacity:.3}
+.hero-scroll::after{content:'';display:block;width:1px;height:50px;background:var(--w);margin:12px auto 0;
+  animation:scrollLine 2s ease infinite}
+@keyframes scrollLine{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}
+  51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ── WORLDS HORIZONTAL ── */
+.worlds-intro{position:relative;z-index:1;padding:15vh 4vw 5vh;overflow:hidden}
+.worlds-intro h2{font-size:clamp(3rem,7vw,6rem);line-height:.95;text-transform:uppercase}
+.worlds-intro h2 span{color:var(--sun)}
+.worlds-intro p{max-width:400px;opacity:.4;margin-top:1.5rem;line-height:1.7;font-size:.95rem}
+
+.world-row{position:relative;z-index:1;display:flex;align-items:stretch;min-height:70vh;overflow:hidden}
+.world-color{flex:0 0 40vw;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.world-color::before{content:'';position:absolute;inset:0;opacity:.15}
+.world-color .big-icon{font-size:clamp(6rem,12vw,14rem);opacity:.12;font-weight:900;font-family:var(--ff);
+  text-transform:uppercase;position:absolute;white-space:nowrap}
+.world-color .w-symbol{width:clamp(80px,10vw,140px);height:clamp(80px,10vw,140px);border-radius:50%;
+  position:relative;z-index:2;display:flex;align-items:center;justify-content:center}
+.world-color .w-symbol svg{width:40%;height:40%}
+.world-info{flex:1;padding:8vh 6vw;display:flex;flex-direction:column;justify-content:center}
+.world-info .w-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;font-weight:700;opacity:.5;margin-bottom:1rem}
+.world-info h3{font-size:clamp(2rem,4vw,3.5rem);line-height:1;margin-bottom:1.2rem;text-transform:uppercase}
+.world-info p{opacity:.55;line-height:1.8;max-width:420px;font-size:.95rem}
+.world-info .w-tags{display:flex;gap:.8rem;margin-top:2rem;flex-wrap:wrap}
+.world-info .w-tags span{font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;font-weight:700;opacity:.35}
+.world-info .w-tags span::before{content:'/ ';opacity:.4}
+
+.wr-forge .world-color{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(59,130,246,.02))}
+.wr-forge .world-color .w-symbol{background:rgba(59,130,246,.2);box-shadow:0 0 60px rgba(59,130,246,.2)}
+.wr-forge h3,.wr-forge .w-symbol svg{color:var(--forge)}
+
+.wr-temple .world-color{background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.02))}
+.wr-temple .world-color .w-symbol{background:rgba(168,85,247,.2);box-shadow:0 0 60px rgba(168,85,247,.2)}
+.wr-temple h3,.wr-temple .w-symbol svg{color:var(--temple)}
+.wr-temple{flex-direction:row-reverse}
+
+.wr-path .world-color{background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(6,182,212,.02))}
+.wr-path .world-color .w-symbol{background:rgba(6,182,212,.2);box-shadow:0 0 60px rgba(6,182,212,.2)}
+.wr-path h3,.wr-path .w-symbol svg{color:var(--path)}
+
+.wr-sanctuary .world-color{background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.02))}
+.wr-sanctuary .world-color .w-symbol{background:rgba(245,158,11,.2);box-shadow:0 0 60px rgba(245,158,11,.2)}
+.wr-sanctuary h3,.wr-sanctuary .w-symbol svg{color:var(--sanctuary)}
+.wr-sanctuary{flex-direction:row-reverse}
+
+/* ── PROGRAM / CALENDAR ── */
+.prog{position:relative;z-index:1;padding:15vh 0 10vh;overflow:hidden}
+.prog-head{padding:0 4vw;margin-bottom:6vh}
+.prog-head h2{font-size:clamp(3rem,7vw,6rem);line-height:.95;text-transform:uppercase}
+.prog-head h2 span{color:var(--sun)}
+.prog-head p{opacity:.4;margin-top:1rem;max-width:400px;font-size:.95rem;line-height:1.7}
+
+/* program table grid: 8 cols (label + 7 days), 4 rows (header + 3 slots) */
+.prog-table{display:grid;grid-template-columns:auto repeat(7,1fr);position:relative}
+
+/* header cells */
+.pt-corner{padding:1.5vh 1.5vw;border-bottom:1px solid rgba(255,255,255,.06)}
+.pt-head{padding:1.5vh 1vw;text-align:center;font-family:var(--ff);font-weight:900;
+  font-size:clamp(.7rem,1.1vw,.9rem);text-transform:uppercase;letter-spacing:.18em;
+  border-bottom:1px solid rgba(255,255,255,.06);opacity:.5}
+.pt-head-boss{opacity:1;color:var(--sun)}
+
+/* row labels */
+.pt-label{padding:3vh 2vw;display:flex;flex-direction:column;align-items:flex-start;
+  justify-content:center;gap:.4rem;border-bottom:1px solid rgba(255,255,255,.03);
+  border-right:1px solid rgba(255,255,255,.04)}
+.pt-label span:first-child{font-family:var(--ff);font-size:clamp(.55rem,.8vw,.7rem);font-weight:900;
+  text-transform:uppercase;letter-spacing:.2em;opacity:.35}
+.pt-label-icon{font-size:1.2rem;opacity:.15}
+
+/* cells */
+.pt-cell{position:relative;padding:2.5vh 1vw;border-bottom:1px solid rgba(255,255,255,.03);
+  border-right:1px solid rgba(255,255,255,.03);min-height:10vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;
+  transition:background .4s}
+.pt-cell:nth-child(8n){border-right:none}
+
+/* empty cells */
+.pt-empty{opacity:.15}
+.pt-empty::after{content:'—';font-size:.7rem;opacity:.4}
+.pt-rest::after{content:'';opacity:0}
+
+/* filled cells */
+.pt-has{cursor:pointer;overflow:hidden}
+.pt-has::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .4s}
+.pt-has:hover::before{opacity:1}
+.pt-has[data-c="yellow"]::before{background:radial-gradient(circle,rgba(245,245,10,.06),transparent)}
+.pt-has[data-c="purple"]::before{background:radial-gradient(circle,rgba(168,85,247,.06),transparent)}
+.pt-has[data-c="blue"]::before{background:radial-gradient(circle,rgba(59,130,246,.06),transparent)}
+.pt-has[data-c="orange"]::before{background:radial-gradient(circle,rgba(245,158,11,.06),transparent)}
+.pt-has:hover{background:rgba(255,255,255,.02)}
+
+.pt-dot{width:8px;height:8px;border-radius:50%;transition:transform .4s;flex-shrink:0}
+.pt-has:hover .pt-dot{transform:scale(2)}
+.pt-act{font-family:var(--ff);font-size:clamp(.6rem,1vw,.8rem);font-weight:700;
+  text-transform:uppercase;text-align:center;line-height:1.3;position:relative;z-index:1}
+.pt-time{font-size:clamp(.55rem,.75vw,.65rem);opacity:.4;letter-spacing:.05em;position:relative;z-index:1}
+.pt-world{font-size:clamp(.45rem,.6vw,.55rem);text-transform:uppercase;letter-spacing:.12em;
+  opacity:.25;font-weight:700;position:relative;z-index:1}
+
+/* boss cell (Sunday) */
+.pt-boss-cell{background:rgba(245,245,10,.03)}
+.pt-badge{position:absolute;top:.6vh;right:.5vw;font-size:.4rem;font-weight:900;
+  letter-spacing:.12em;background:var(--sun);color:var(--deep);padding:2px 6px;border-radius:2px}
+
+/* today highlight */
+.pt-cell.pt-today{background:rgba(245,245,10,.04);box-shadow:inset 0 0 20px rgba(245,245,10,.03)}
+
+/* expanded day detail */
+.day-expand{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .4s}
+.day-expand.on{opacity:1;pointer-events:all}
+.day-expand-bg{position:absolute;inset:0;background:rgba(5,8,22,.92);backdrop-filter:blur(20px)}
+.day-expand-inner{position:relative;z-index:1;text-align:center;max-width:600px;padding:3rem}
+.day-expand-inner .dx-close{position:absolute;top:-3rem;right:0;background:none;border:none;
+  color:var(--w);font-size:1.5rem;cursor:pointer;opacity:.5;transition:opacity .3s}
+.day-expand-inner .dx-close:hover{opacity:1}
+.day-expand-inner .dx-day{font-size:.7rem;text-transform:uppercase;letter-spacing:.25em;opacity:.4;margin-bottom:1rem}
+.day-expand-inner h3{font-family:var(--ff);font-size:clamp(2rem,5vw,3.5rem);font-weight:900;
+  text-transform:uppercase;line-height:1;margin-bottom:1rem}
+.day-expand-inner .dx-time{font-size:1.1rem;font-weight:700;opacity:.6;margin-bottom:.5rem}
+.day-expand-inner .dx-world{font-size:.7rem;text-transform:uppercase;letter-spacing:.15em;opacity:.3;margin-bottom:2rem}
+.day-expand-inner p{opacity:.55;line-height:1.8;font-size:1rem;margin-bottom:2.5rem}
+.btn-join{display:inline-block;padding:1rem 3rem;background:var(--sun);color:var(--deep);
+  font-family:var(--ff);font-weight:900;font-size:.85rem;text-transform:uppercase;
+  letter-spacing:.1em;border:none;border-radius:0;cursor:pointer;transition:all .3s;
+  clip-path:polygon(0 0,100% 0,95% 100%,5% 100%)}
+.btn-join:hover{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);box-shadow:0 0 40px var(--sun-g)}
+
+/* ── MISSION ── */
+.mission{position:relative;z-index:1;padding:15vh 4vw;display:grid;
+  grid-template-columns:1fr 1fr;gap:8vw;align-items:center;min-height:80vh}
+.mission-left h2{font-size:clamp(3rem,6vw,5.5rem);line-height:.92;text-transform:uppercase;margin-bottom:2rem}
+.mission-left h2 span{color:var(--sun)}
+.mission-left>p{opacity:.45;line-height:1.8;font-size:1rem;max-width:450px}
+.mission-right{display:flex;flex-direction:column;gap:0}
+.m-val{padding:2.5rem 0;border-bottom:1px solid rgba(255,255,255,.05);position:relative;
+  padding-left:2rem;transition:padding-left .4s}
+.m-val:first-child{border-top:1px solid rgba(255,255,255,.05)}
+.m-val::before{content:'';position:absolute;left:0;top:50%;width:0;height:1px;
+  background:var(--sun);transition:width .5s;transform:translateY(-50%)}
+.m-val:hover::before{width:1.2rem}
+.m-val:hover{padding-left:3rem}
+.m-val h4{font-family:var(--ff);font-size:clamp(1rem,1.5vw,1.3rem);margin-bottom:.5rem;font-weight:900;text-transform:uppercase}
+.m-val p{opacity:.4;line-height:1.7;font-size:.88rem;max-width:360px}
+
+/* ── JOIN ── */
+.join{position:relative;z-index:1;min-height:70vh;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;text-align:center;padding:10vh 4vw;overflow:hidden}
+.join h2{font-size:clamp(4rem,10vw,10rem);line-height:.85;text-transform:uppercase;margin-bottom:2rem}
+.join h2 em{font-style:italic;color:var(--sun);display:block;
+  text-shadow:0 0 80px var(--sun-g),0 0 160px rgba(245,245,10,.1)}
+.join>p{opacity:.4;max-width:400px;line-height:1.7;margin-bottom:3rem;font-size:.95rem}
+.join-form{display:flex;gap:0;max-width:440px;width:100%}
+.join-form input{flex:1;padding:1rem 1.5rem;background:rgba(255,255,255,.04);border:none;
+  border-bottom:1px solid rgba(255,255,255,.1);color:var(--w);font-family:var(--fb);font-size:.9rem;outline:none}
+.join-form input:focus{border-color:var(--sun)}
+.join-form input::placeholder{color:rgba(255,255,255,.2)}
+.join-form button{padding:1rem 2.5rem;background:var(--sun);color:var(--deep);border:none;
+  font-family:var(--ff);font-weight:900;font-size:.8rem;text-transform:uppercase;
+  letter-spacing:.1em;cursor:pointer;transition:all .3s}
+.join-form button:hover{background:var(--w)}
+
+/* footer */
+.foot{position:relative;z-index:1;padding:3rem 4vw;display:flex;align-items:center;
+  justify-content:space-between;font-size:.7rem;opacity:.25;border-top:1px solid rgba(255,255,255,.03)}
+.foot-social{display:flex;gap:1rem}
+.foot-social a{opacity:.6;transition:opacity .3s}
+.foot-social a:hover{opacity:1}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .mission{grid-template-columns:1fr;gap:4rem}
+  .world-row{flex-direction:column !important}
+  .world-color{flex:0 0 40vh;width:100%}
+  .prog-table{overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:768px){
+  .nav-r{display:none}.ham{display:block}
+  .hero h1{font-size:clamp(2.8rem,12vw,5rem)}
+  .prog-table{grid-template-columns:auto repeat(7,minmax(90px,1fr))}
+  .world-info{padding:6vh 6vw}
+  .join h2{font-size:clamp(3rem,14vw,6rem)}
+  .join-form{flex-direction:column}
+  #cBlob,#cDot{display:none}body{cursor:auto}
+}
+@media(max-width:480px){
+  .prog-table{grid-template-columns:auto repeat(7,minmax(75px,1fr))}
+  .pt-label span:first-child{writing-mode:vertical-rl;text-orientation:mixed;font-size:.5rem}
+  .pt-label{padding:2vh .8vw}
+  .pt-act{font-size:.55rem}
+  .world-info{padding:5vh 5vw}
+  .worlds-intro,.prog-head{padding-left:5vw;padding-right:5vw}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="cBlob"></div>
+<div id="cDot"></div>
+<canvas id="bg"></canvas>
+
+<!-- SECTION:nav -->
+<div data-section="nav">
+<nav class="nav">
+  <a href="#" class="nav-logo">MUEVE</a>
+  <div class="nav-r">
+    <a href="#worlds" data-en="Worlds" data-ro="Lumi">Lumi</a>
+    <a href="#prog" data-en="Program" data-ro="Program">Program</a>
+    <a href="#mission" data-en="Mission" data-ro="Misiune">Misiune</a>
+    <a href="#join" data-en="Join" data-ro="Intră">Intră</a>
+    <button class="lang-sw" id="langBtn">EN</button>
+  </div>
+  <button class="ham" id="ham" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="mob" id="mob">
+  <a href="#worlds" data-en="Worlds" data-ro="Lumi">Lumi</a>
+  <a href="#prog" data-en="Program" data-ro="Program">Program</a>
+  <a href="#mission" data-en="Mission" data-ro="Misiune">Misiune</a>
+  <a href="#join" data-en="Join" data-ro="Intră">Intră</a>
+</div>
+</div>
+<!-- /SECTION:nav -->
+
+<!-- SECTION:hero -->
+<div data-section="hero">
+<section class="hero" id="hero">
+  <canvas id="sunCanvas" width="360" height="360"></canvas>
+  <h1 data-en="ENTER<em>THE UNIVERSE</em>OF MOVEMENT" data-ro="INTRĂ<em>ÎN UNIVERSUL</em>MIȘCĂRII">INTRĂ<em>ÎN UNIVERSUL</em>MIȘCĂRII</h1>
+  <p class="hero-sub" data-en="Calisthenics. Yoga. Running. Community. One living ecosystem. Your daily ritual." data-ro="Calisthenics. Yoga. Alergare. Comunitate. Un ecosistem viu. Ritualul tău zilnic.">Calisthenics. Yoga. Alergare. Comunitate. Un ecosistem viu. Ritualul tău zilnic.</p>
+  <div class="hero-scroll" data-en="Scroll" data-ro="Derulează">Derulează</div>
+</section>
+</div>
+<!-- /SECTION:hero -->
+
+<!-- SECTION:program -->
+<div data-section="program" id="prog">
+<section class="prog">
+  <div class="prog-head">
+    <h2 data-en="WEEKLY<br><span>RITUAL MAP</span>" data-ro="HARTA<br><span>RITUALULUI</span>">HARTA<br><span>RITUALULUI</span></h2>
+    <p data-en="7 days. 7 missions. One cycle that transforms you. Click a day to see the mission." data-ro="7 zile. 7 misiuni. Un ciclu care te transformă. Click pe o zi pentru detalii.">7 zile. 7 misiuni. Un ciclu care te transformă. Click pe o zi pentru detalii.</p>
+  </div>
+
+  <div class="prog-table" id="progGrid">
+    <!-- Header row: day names -->
+    <div class="pt-corner"></div>
+    <div class="pt-head" data-en="MON" data-ro="LUN">LUN</div>
+    <div class="pt-head" data-en="TUE" data-ro="MAR">MAR</div>
+    <div class="pt-head" data-en="WED" data-ro="MIE">MIE</div>
+    <div class="pt-head" data-en="THU" data-ro="JOI">JOI</div>
+    <div class="pt-head" data-en="FRI" data-ro="VIN">VIN</div>
+    <div class="pt-head" data-en="SAT" data-ro="SÂM">SÂM</div>
+    <div class="pt-head pt-head-boss" data-en="SUN" data-ro="DUM">DUM</div>
+
+    <!-- DIMINEAȚĂ row -->
+    <div class="pt-label"><span data-en="MORNING" data-ro="DIMINEAȚĂ">DIMINEAȚĂ</span><span class="pt-label-icon">&#9788;</span></div>
+    <div class="pt-cell pt-empty"></div>
+    <div class="pt-cell pt-has" data-c="purple" data-slot="am-1" onclick="openDay('am-1')">
+      <div class="pt-dot" style="background:var(--temple);box-shadow:0 0 12px rgba(168,85,247,.4)"></div>
+      <div class="pt-act" data-en="Sunrise Yoga" data-ro="Yoga la Răsărit">Yoga la Răsărit</div>
+      <div class="pt-time">06:30</div>
+      <div class="pt-world" data-en="Temple" data-ro="Templul">Templul</div>
+    </div>
+    <div class="pt-cell pt-empty"></div>
+    <div class="pt-cell pt-has" data-c="purple" data-slot="am-3" onclick="openDay('am-3')">
+      <div class="pt-dot" style="background:var(--temple);box-shadow:0 0 12px rgba(168,85,247,.4)"></div>
+      <div class="pt-act" data-en="Sunrise Yoga" data-ro="Yoga la Răsărit">Yoga la Răsărit</div>
+      <div class="pt-time">06:30</div>
+      <div class="pt-world" data-en="Temple" data-ro="Templul">Templul</div>
+    </div>
+    <div class="pt-cell pt-empty"></div>
+    <div class="pt-cell pt-empty"></div>
+    <div class="pt-cell pt-has pt-boss-cell" data-c="yellow" data-slot="am-6" onclick="openDay('am-6')">
+      <div class="pt-dot" style="background:var(--sun);box-shadow:0 0 16px var(--sun-g)"></div>
+      <div class="pt-act" style="color:var(--sun)" data-en="THE BIG Social Run" data-ro="THE BIG Social Run">THE BIG Social Run</div>
+      <div class="pt-time">09:00</div>
+      <div class="pt-world" data-en="All Worlds" data-ro="Toate Lumile">Toate Lumile</div>
+      <div class="pt-badge">MAIN EVENT</div>
+    </div>
+
+    <!-- PRÂNZ row -->
+    <div class="pt-label"><span data-en="MIDDAY" data-ro="PRÂNZ">PRÂNZ</span><span class="pt-label-icon">&#9728;</span></div>
+    <div class="pt-cell pt-empty pt-rest"></div>
+    <div class="pt-cell pt-empty pt-rest"></div>
+    <div class="pt-cell pt-empty pt-rest"></div>
+    <div class="pt-cell pt-empty pt-rest"></div>
+    <div class="pt-cell pt-empty pt-rest"></div>
+    <div class="pt-cell pt-empty pt-rest"></div>
+    <div class="pt-cell pt-empty pt-rest"></div>
+
+    <!-- SEARA row -->
+    <div class="pt-label"><span data-en="EVENING" data-ro="SEARA">SEARA</span><span class="pt-label-icon">&#9790;</span></div>
+    <div class="pt-cell pt-has" data-c="yellow" data-slot="pm-0" onclick="openDay('pm-0')">
+      <div class="pt-dot" style="background:var(--sanctuary);box-shadow:0 0 12px rgba(245,158,11,.4)"></div>
+      <div class="pt-act" data-en="Team Sports" data-ro="Sporturi de Echipă">Sporturi de Echipă</div>
+      <div class="pt-time">19:00</div>
+      <div class="pt-world" data-en="Sanctuary" data-ro="Sanctuarul">Sanctuarul</div>
+    </div>
+    <div class="pt-cell pt-has" data-c="purple" data-slot="pm-1" onclick="openDay('pm-1')">
+      <div class="pt-dot" style="background:var(--path);box-shadow:0 0 12px rgba(6,182,212,.4)"></div>
+      <div class="pt-act" data-en="Evening Run" data-ro="Alergare Seara">Alergare Seara</div>
+      <div class="pt-time">19:30</div>
+      <div class="pt-world" data-en="Path" data-ro="Drumul">Drumul</div>
+    </div>
+    <div class="pt-cell pt-has" data-c="blue" data-slot="pm-2" onclick="openDay('pm-2')">
+      <div class="pt-dot" style="background:var(--forge);box-shadow:0 0 12px rgba(59,130,246,.4)"></div>
+      <div class="pt-act" data-en="Calisthenics" data-ro="Calisthenics">Calisthenics</div>
+      <div class="pt-time">18:30</div>
+      <div class="pt-world" data-en="Forge" data-ro="Forja">Forja</div>
+    </div>
+    <div class="pt-cell pt-has" data-c="purple" data-slot="pm-3" onclick="openDay('pm-3')">
+      <div class="pt-dot" style="background:var(--path);box-shadow:0 0 12px rgba(6,182,212,.4)"></div>
+      <div class="pt-act" data-en="Evening Run" data-ro="Alergare Seara">Alergare Seara</div>
+      <div class="pt-time">19:30</div>
+      <div class="pt-world" data-en="Path" data-ro="Drumul">Drumul</div>
+    </div>
+    <div class="pt-cell pt-has" data-c="blue" data-slot="pm-4" onclick="openDay('pm-4')">
+      <div class="pt-dot" style="background:var(--forge);box-shadow:0 0 12px rgba(59,130,246,.4)"></div>
+      <div class="pt-act" data-en="Calisthenics" data-ro="Calisthenics">Calisthenics</div>
+      <div class="pt-time">18:30</div>
+      <div class="pt-world" data-en="Forge" data-ro="Forja">Forja</div>
+    </div>
+    <div class="pt-cell pt-has" data-c="orange" data-slot="pm-5" onclick="openDay('pm-5')">
+      <div class="pt-dot" style="background:var(--path);box-shadow:0 0 12px rgba(6,182,212,.4)"></div>
+      <div class="pt-act" data-en="Long Evening Run" data-ro="Alergare Lungă">Alergare Lungă</div>
+      <div class="pt-time">18:00</div>
+      <div class="pt-world" data-en="Path" data-ro="Drumul">Drumul</div>
+    </div>
+    <div class="pt-cell pt-empty"></div>
+  </div>
+</section>
+</div>
+<!-- /SECTION:program -->
+
+<!-- SECTION:worlds -->
+<div data-section="worlds" id="worlds">
+<div class="worlds-intro">
+  <h2 data-en="FOUR WORLDS.<br><span>ONE UNIVERSE.</span>" data-ro="PATRU LUMI.<br><span>UN UNIVERS.</span>">PATRU LUMI.<br><span>UN UNIVERS.</span></h2>
+  <p data-en="Each world is a dimension of movement. Choose your path — or master them all." data-ro="Fiecare lume e o dimensiune a mișcării. Alege-ți drumul — sau stăpânește-le pe toate.">Fiecare lume e o dimensiune a mișcării. Alege-ți drumul — sau stăpânește-le pe toate.</p>
+</div>
+
+<div class="world-row wr-forge">
+  <div class="world-color">
+    <div class="big-icon">FORGE</div>
+    <div class="w-symbol">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 12h12M12 6v12"/><circle cx="12" cy="12" r="10"/></svg>
+    </div>
+  </div>
+  <div class="world-info">
+    <div class="w-label" data-en="Calisthenics" data-ro="Calisthenics">Calisthenics</div>
+    <h3 data-en="THE FORGE" data-ro="FORJA">FORJA</h3>
+    <p data-en="Where raw strength meets artistry. Build your body with nothing but gravity and will. Progressive overload, handstands, muscle-ups — the ultimate test of self-mastery." data-ro="Unde forța brută întâlnește arta. Construiește-ți corpul doar cu gravitația și voința. Supraîncărcare progresivă, stând pe mâini, muscle-ups — testul suprem al stăpânirii de sine.">Unde forța brută întâlnește arta. Construiește-ți corpul doar cu gravitația și voința. Supraîncărcare progresivă, stând pe mâini, muscle-ups — testul suprem al stăpânirii de sine.</p>
+    <div class="w-tags"><span data-en="Strength" data-ro="Forță">Forță</span><span data-en="Control" data-ro="Control">Control</span><span data-en="Mastery" data-ro="Măiestrie">Măiestrie</span></div>
+  </div>
+</div>
+
+<div class="world-row wr-temple">
+  <div class="world-color">
+    <div class="big-icon">TEMPLE</div>
+    <div class="w-symbol">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>
+    </div>
+  </div>
+  <div class="world-info">
+    <div class="w-label" data-en="Yoga" data-ro="Yoga">Yoga</div>
+    <h3 data-en="THE TEMPLE" data-ro="TEMPLUL">TEMPLUL</h3>
+    <p data-en="The space between breaths. Sunrise flows that reconnect body and mind. Flexibility, balance, and the kind of strength that comes from stillness." data-ro="Spațiul dintre respirații. Sesiuni la răsărit care reconectează corpul și mintea. Flexibilitate, echilibru și acel tip de forță care vine din liniște.">Spațiul dintre respirații. Sesiuni la răsărit care reconectează corpul și mintea. Flexibilitate, echilibru și acel tip de forță care vine din liniște.</p>
+    <div class="w-tags"><span data-en="Balance" data-ro="Echilibru">Echilibru</span><span data-en="Breath" data-ro="Respirație">Respirație</span><span data-en="Flow" data-ro="Flow">Flow</span></div>
+  </div>
+</div>
+
+<div class="world-row wr-path">
+  <div class="world-color">
+    <div class="big-icon">PATH</div>
+    <div class="w-symbol">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19l4-4 4 4 4-4 4 4"/><path d="M4 14l4-4 4 4 4-4 4 4"/></svg>
+    </div>
+  </div>
+  <div class="world-info">
+    <div class="w-label" data-en="Running" data-ro="Alergare">Alergare</div>
+    <h3 data-en="THE PATH" data-ro="DRUMUL">DRUMUL</h3>
+    <p data-en="Every step is a conversation with the city. Evening runs that clear the mind, long Saturday routes that test the will, Sunday social runs that build the tribe." data-ro="Fiecare pas e o conversație cu orașul. Alergări de seară care limpezesc mintea, rute lungi de sâmbătă care testează voința, alergări sociale de duminică care construiesc tribul.">Fiecare pas e o conversație cu orașul. Alergări de seară care limpezesc mintea, rute lungi de sâmbătă care testează voința, alergări sociale de duminică care construiesc tribul.</p>
+    <div class="w-tags"><span data-en="Endurance" data-ro="Rezistență">Rezistență</span><span data-en="Freedom" data-ro="Libertate">Libertate</span><span data-en="Tribe" data-ro="Trib">Trib</span></div>
+  </div>
+</div>
+
+<div class="world-row wr-sanctuary">
+  <div class="world-color">
+    <div class="big-icon">SANCTUARY</div>
+    <div class="w-symbol">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21a9 9 0 0 0 0-18 9 9 0 0 0 0 18z"/><path d="M12 7v5l3 3"/></svg>
+    </div>
+  </div>
+  <div class="world-info">
+    <div class="w-label" data-en="Relax & Connect" data-ro="Relaxare & Conexiune">Relaxare & Conexiune</div>
+    <h3 data-en="THE SANCTUARY" data-ro="SANCTUARUL">SANCTUARUL</h3>
+    <p data-en="Where competition becomes connection. Team sports, social events, and the energy that only comes from moving together. This is where strangers become crew." data-ro="Unde competiția devine conexiune. Sporturi de echipă, evenimente sociale și energia care vine doar din mișcarea împreună. Aici necunoscuții devin echipă.">Unde competiția devine conexiune. Sporturi de echipă, evenimente sociale și energia care vine doar din mișcarea împreună. Aici necunoscuții devin echipă.</p>
+    <div class="w-tags"><span data-en="Community" data-ro="Comunitate">Comunitate</span><span data-en="Joy" data-ro="Bucurie">Bucurie</span><span data-en="Connection" data-ro="Conexiune">Conexiune</span></div>
+  </div>
+</div>
+</div>
+<!-- /SECTION:worlds -->
+
+<!-- Day expand overlay -->
+<div class="day-expand" id="dayX">
+  <div class="day-expand-bg" onclick="closeDay()"></div>
+  <div class="day-expand-inner">
+    <button class="dx-close" onclick="closeDay()">&times;</button>
+    <div class="dx-day" id="dxDay"></div>
+    <h3 id="dxTitle"></h3>
+    <div class="dx-time" id="dxTime"></div>
+    <div class="dx-world" id="dxWorld"></div>
+    <p id="dxDesc"></p>
+    <button class="btn-join" data-en="JOIN MISSION" data-ro="INTRĂ ÎN MISIUNE">INTRĂ ÎN MISIUNE</button>
+  </div>
+</div>
+
+<!-- SECTION:mission -->
+<div data-section="mission" id="mission">
+<section class="mission">
+  <div class="mission-left">
+    <h2 data-en="OUR<br><span>MISSION</span>" data-ro="<span>MISIUNEA</span><br>NOASTRĂ"><span>MISIUNEA</span><br>NOASTRĂ</h2>
+    <p data-en="MUEVE isn't a gym. It's not a running club. It's not a yoga studio. It's a movement universe — a living system where physical practice becomes daily ritual." data-ro="MUEVE nu e o sală. Nu e un club de alergare. Nu e un studio de yoga. E un univers al mișcării — un sistem viu unde practica fizică devine ritual zilnic.">MUEVE nu e o sală. Nu e un club de alergare. Nu e un studio de yoga. E un univers al mișcării — un sistem viu unde practica fizică devine ritual zilnic.</p>
+  </div>
+  <div class="mission-right">
+    <div class="m-val">
+      <h4 data-en="Ritual over motivation" data-ro="Ritual, nu motivație">Ritual, nu motivație</h4>
+      <p data-en="Motivation fades. Systems stay. MUEVE gives you the weekly structure so you never have to think 'should I go today?'" data-ro="Motivația dispare. Sistemele rămân. MUEVE îți dă structura săptămânală ca să nu te mai întrebi 'ar trebui să merg azi?'">Motivația dispare. Sistemele rămân. MUEVE îți dă structura săptămânală ca să nu te mai întrebi 'ar trebui să merg azi?'</p>
+    </div>
+    <div class="m-val">
+      <h4 data-en="Variety is the system" data-ro="Varietatea e sistemul">Varietatea e sistemul</h4>
+      <p data-en="Your body needs more than one thing. Calisthenics builds. Yoga balances. Running liberates. Together — they complete you." data-ro="Corpul tău are nevoie de mai mult. Calisthenics construiește. Yoga echilibrează. Alergarea eliberează. Împreună — te completează.">Corpul tău are nevoie de mai mult. Calisthenics construiește. Yoga echilibrează. Alergarea eliberează. Împreună — te completează.</p>
+    </div>
+    <div class="m-val">
+      <h4 data-en="Tribe energy" data-ro="Energia tribului">Energia tribului</h4>
+      <p data-en="Solo training has limits. When you run with 50 people on a Sunday morning, something shifts. That's MUEVE energy." data-ro="Antrenamentul solo are limite. Când alergi cu 50 de oameni într-o duminică dimineață, ceva se schimbă. Asta e energia MUEVE.">Antrenamentul solo are limite. Când alergi cu 50 de oameni într-o duminică dimineață, ceva se schimbă. Asta e energia MUEVE.</p>
+    </div>
+  </div>
+</section>
+</div>
+<!-- /SECTION:mission -->
+
+<!-- SECTION:join -->
+<div data-section="join" id="join">
+<section class="join">
+  <h2 data-en="READY<em>TO ENTER?</em>" data-ro="GATA<em>SĂ INTRI?</em>">GATA<em>SĂ INTRI?</em></h2>
+  <p data-en="Drop your email. We'll beam you into the MUEVE universe. First session is free." data-ro="Lasă-ți emailul. Te teleportăm în universul MUEVE. Prima sesiune e pe noi.">Lasă-ți emailul. Te teleportăm în universul MUEVE. Prima sesiune e pe noi.</p>
+  <form class="join-form" onsubmit="event.preventDefault()">
+    <input type="email" name="email" placeholder="email@exemplu.com" required aria-label="Email">
+    <button type="submit" data-en="LAUNCH" data-ro="LANSEAZĂ">LANSEAZĂ</button>
+  </form>
+</section>
+</div>
+<!-- /SECTION:join -->
+
+<!-- SECTION:footer -->
+<div data-section="footer">
+<footer class="foot">
+  <span>&copy; 2026 MUEVE Universe</span>
+  <div class="foot-social">
+    <a href="#" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg></a>
+    <a href="#" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></a>
+  </div>
+</footer>
+</div>
+<!-- /SECTION:footer -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+// ── LENIS ──
+var lenis=new Lenis({duration:1.4,easing:function(t){return Math.min(1,1.001-Math.pow(2,-10*t))}});
+lenis.on('scroll',ScrollTrigger.update);
+gsap.ticker.add(function(t){lenis.raf(t*1000)});
+gsap.ticker.lagSmoothing(0);
+gsap.registerPlugin(ScrollTrigger,ScrollToPlugin);
+
+// ── STARS ──
+var bg=document.getElementById('bg'),bx=bg.getContext('2d');
+var stars=[],NB=400;
+function szBg(){bg.width=innerWidth;bg.height=innerHeight}
+szBg();addEventListener('resize',szBg);
+for(var i=0;i<NB;i++)stars.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+  r:Math.random()*1.2+.2,a:Math.random()*.7+.2,sp:Math.random()*.003+.001,ph:Math.random()*6.28,
+  drift:Math.random()*.15-.075});
+var sTime=0,shoots=[];
+function drawBg(){
+  bx.clearRect(0,0,bg.width,bg.height);
+  sTime+=.016;
+  // gradient bg
+  var g=bx.createLinearGradient(0,0,0,bg.height);
+  g.addColorStop(0,'#050816');g.addColorStop(.5,'#0A0F2A');g.addColorStop(1,'#11183C');
+  bx.fillStyle=g;bx.fillRect(0,0,bg.width,bg.height);
+  // stars
+  for(var i=0;i<stars.length;i++){
+    var s=stars[i],fl=Math.sin(sTime*s.sp*80+s.ph)*.35+.65;
+    s.y+=s.drift;if(s.y>bg.height+2)s.y=-2;if(s.y<-2)s.y=bg.height+2;
+    bx.beginPath();bx.arc(s.x,s.y,s.r,0,6.28);
+    bx.fillStyle='rgba(245,245,245,'+(s.a*fl)+')';bx.fill();
+  }
+  // shooting stars
+  if(Math.random()<.002&&shoots.length<2)
+    shoots.push({x:Math.random()*bg.width*.8,y:Math.random()*bg.height*.3,
+      l:Math.random()*100+50,sp:Math.random()*10+5,ang:Math.PI/4+Math.random()*.4,life:1});
+  for(var j=shoots.length-1;j>=0;j--){
+    var ss=shoots[j];ss.x+=Math.cos(ss.ang)*ss.sp;ss.y+=Math.sin(ss.ang)*ss.sp;ss.life-=.012;
+    if(ss.life<=0){shoots.splice(j,1);continue}
+    bx.beginPath();bx.moveTo(ss.x,ss.y);
+    bx.lineTo(ss.x-Math.cos(ss.ang)*ss.l*ss.life,ss.y-Math.sin(ss.ang)*ss.l*ss.life);
+    var sg=bx.createLinearGradient(ss.x,ss.y,ss.x-Math.cos(ss.ang)*ss.l,ss.y-Math.sin(ss.ang)*ss.l);
+    sg.addColorStop(0,'rgba(245,245,10,'+ss.life+')');sg.addColorStop(1,'rgba(245,245,10,0)');
+    bx.strokeStyle=sg;bx.lineWidth=1.5;bx.stroke();
+  }
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// ── SUN CANVAS ──
+var sc=document.getElementById('sunCanvas'),sx=sc.getContext('2d');
+var sunT=0;
+function drawSun(){
+  sunT+=.01;
+  sx.clearRect(0,0,360,360);
+  // outer glow
+  var g1=sx.createRadialGradient(180,180,60,180,180,180);
+  g1.addColorStop(0,'rgba(245,245,10,.3)');g1.addColorStop(.4,'rgba(245,245,10,.08)');g1.addColorStop(1,'transparent');
+  sx.fillStyle=g1;sx.fillRect(0,0,360,360);
+  // pulse ring
+  var ps=Math.sin(sunT*2)*.15+.85;
+  sx.beginPath();sx.arc(180,180,80*ps+40,0,6.28);
+  sx.strokeStyle='rgba(245,245,10,'+(0.06*ps)+')';sx.lineWidth=1;sx.stroke();
+  // core
+  var g2=sx.createRadialGradient(165,165,10,180,180,70);
+  g2.addColorStop(0,'#FFF9C4');g2.addColorStop(.4,'#F5F50A');g2.addColorStop(1,'#C6B800');
+  sx.beginPath();sx.arc(180,180,65+Math.sin(sunT*3)*3,0,6.28);
+  sx.fillStyle=g2;sx.fill();
+  // MUEVE text
+  sx.save();sx.font='900 italic 26px Outfit,sans-serif';sx.textAlign='center';sx.textBaseline='middle';
+  sx.fillStyle='#050816';sx.fillText('MUEVE',180,176);
+  sx.font='700 10px "Space Grotesk",sans-serif';sx.letterSpacing='4px';
+  sx.fillStyle='rgba(5,8,22,.6)';sx.fillText('RUN CLUB',180,196);
+  sx.restore();
+  // rays
+  for(var i=0;i<12;i++){
+    var a=sunT*.3+i*(6.28/12);
+    var len=85+Math.sin(sunT*2+i)* 15;
+    sx.beginPath();sx.moveTo(180+Math.cos(a)*72,180+Math.sin(a)*72);
+    sx.lineTo(180+Math.cos(a)*len,180+Math.sin(a)*len);
+    sx.strokeStyle='rgba(245,245,10,'+(0.12+Math.sin(sunT+i)*.06)+')';sx.lineWidth=1.5;sx.stroke();
+  }
+  requestAnimationFrame(drawSun);
+}
+drawSun();
+
+// ── CURSOR ──
+var cB=document.getElementById('cBlob'),cD=document.getElementById('cDot');
+var mx=-300,my=-300,cx=-300,cy=-300,dx=-300,dy=-300,vel=0,pmx=0,pmy=0;
+document.addEventListener('mousemove',function(e){
+  var ddx=e.clientX-pmx,ddy=e.clientY-pmy;
+  vel=Math.min(Math.sqrt(ddx*ddx+ddy*ddy),60);
+  pmx=e.clientX;pmy=e.clientY;mx=e.clientX;my=e.clientY;
+});
+function aniCur(){
+  cx+=(mx-cx)*.07;cy+=(my-cy)*.07;dx+=(mx-dx)*.22;dy+=(my-dy)*.22;
+  cB.style.transform='translate('+(cx-110)+'px,'+(cy-110)+'px)';
+  cD.style.transform='translate('+(dx-5)+'px,'+(dy-5)+'px)';
+  var sz=220+vel*4,int=.22+vel*.01;
+  cB.style.width=sz+'px';cB.style.height=sz+'px';
+  cB.style.background='radial-gradient(circle,rgba(245,245,10,'+int+') 0%,rgba(250,120,20,'+(int*.5)+') 25%,rgba(180,40,220,'+(int*.15)+') 50%,transparent 70%)';
+  requestAnimationFrame(aniCur);
+}
+aniCur();
+document.querySelectorAll('a,button,input,.prog-day').forEach(function(el){
+  el.addEventListener('mouseenter',function(){gsap.to(cD,{scale:3,duration:.3});gsap.to(cB,{scale:1.6,opacity:.5,duration:.3})});
+  el.addEventListener('mouseleave',function(){gsap.to(cD,{scale:1,duration:.3});gsap.to(cB,{scale:1,opacity:1,duration:.3})});
+});
+
+// ── HAMBURGER ──
+var ham=document.getElementById('ham'),mob=document.getElementById('mob');
+ham.addEventListener('click',function(){ham.classList.toggle('on');mob.classList.toggle('on')});
+mob.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){ham.classList.remove('on');mob.classList.remove('on')})});
+
+// ── SCROLL LINKS ──
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){var t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();gsap.to(window,{scrollTo:{y:t,offsetY:60},duration:1.2,ease:'power2.inOut'})}});
+});
+
+// ── HERO ANIM ──
+var ht=gsap.timeline({defaults:{ease:'power3.out'}});
+ht.from('#sunCanvas',{scale:0,opacity:0,duration:1.8,ease:'elastic.out(1,.5)'})
+  .from('.hero h1',{y:60,opacity:0,duration:1,ease:'power4.out'},'-=1')
+  .from('.hero-sub',{y:30,opacity:0,duration:.7},'-=.5')
+  .from('.hero-scroll',{opacity:0,duration:.5},'-=.3');
+
+// hero parallax
+gsap.to('#sunCanvas',{y:-80,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
+gsap.to('.hero h1',{y:-40,opacity:.3,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
+
+// ── WORLDS ANIM ──
+gsap.from('.worlds-intro h2',{x:-60,opacity:0,duration:1,scrollTrigger:{trigger:'.worlds-intro',start:'top 75%'}});
+gsap.from('.worlds-intro p',{x:-40,opacity:0,duration:.8,scrollTrigger:{trigger:'.worlds-intro',start:'top 70%'}});
+
+document.querySelectorAll('.world-row').forEach(function(row){
+  var color=row.querySelector('.world-color');
+  var info=row.querySelector('.world-info');
+  gsap.from(color,{clipPath:'inset(0 100% 0 0)',duration:1.2,ease:'power4.inOut',
+    scrollTrigger:{trigger:row,start:'top 70%'}});
+  gsap.from(info.children,{y:40,opacity:0,stagger:.12,duration:.7,ease:'power2.out',
+    scrollTrigger:{trigger:row,start:'top 65%'}});
+  // reversed rows
+  if(row.classList.contains('wr-temple')||row.classList.contains('wr-sanctuary')){
+    gsap.set(color,{clipPath:'inset(0 0 0 0)'});
+    gsap.from(color,{clipPath:'inset(0 0 0 100%)',duration:1.2,ease:'power4.inOut',
+      scrollTrigger:{trigger:row,start:'top 70%'}});
+  }
+});
+
+// ── PROGRAM ANIM ──
+document.querySelectorAll('.pt-has').forEach(function(cell,i){
+  gsap.from(cell,{y:30,opacity:0,duration:.5,delay:i*.06,ease:'power2.out',
+    scrollTrigger:{trigger:'.prog-table',start:'top 80%'}});
+});
+
+// ── MISSION ANIM ──
+gsap.from('.mission-left',{x:-50,opacity:0,duration:.9,scrollTrigger:{trigger:'.mission',start:'top 70%'}});
+gsap.from('.m-val',{x:50,opacity:0,stagger:.15,duration:.6,scrollTrigger:{trigger:'.mission-right',start:'top 75%'}});
+
+// ── JOIN ANIM ──
+gsap.from('.join h2',{scale:.8,opacity:0,duration:1,ease:'power2.out',scrollTrigger:{trigger:'.join',start:'top 75%'}});
+gsap.from('.join>p,.join-form',{y:30,opacity:0,stagger:.15,duration:.6,scrollTrigger:{trigger:'.join',start:'top 70%'}});
+
+// ── TODAY MARKER ──
+var dow=new Date().getDay();// 0=Sun..6=Sat
+// Mark today's column cells
+var colMap={0:6,1:0,2:1,3:2,4:3,5:4,6:5}; // JS day → our col index (0=Mon)
+var todayCol=colMap[dow];
+document.querySelectorAll('.pt-has').forEach(function(c){
+  var slot=c.dataset.slot||'';
+  var dayIdx=parseInt(slot.split('-')[1]);
+  if(dayIdx===todayCol) c.classList.add('pt-today');
+});
+
+// ── CALENDAR DATA (slot-based) ──
+var cData={ro:{
+  'am-1':{day:'MARȚI — DIMINEAȚĂ',title:'YOGA LA RĂSĂRIT',time:'06:30',world:'Templul',
+    desc:'Dimineața începe în Templu cu un flow de 45 min la răsărit. Flexibilitate, respirație, conexiunea corp-minte. Cel mai bun mod de a-ți începe ziua.'},
+  'am-3':{day:'JOI — DIMINEAȚĂ',title:'YOGA LA RĂSĂRIT',time:'06:30',world:'Templul',
+    desc:'Același ritual ca marți. Ritmul se repetă, obiceiul se cimentează. Nu trebuie să te gândești, doar apari.'},
+  'am-6':{day:'DUMINICĂ — DIMINEAȚĂ',title:'THE BIG SOCIAL RUN',time:'09:00',world:'Toate Lumile',
+    desc:'Evenimentul principal. 50+ alergători. Energie maximă. Muzică, pace interioară, sens de comunitate. Nu e doar o alergare — e o experiență colectivă. THE mission of the week.'},
+  'pm-0':{day:'LUNI — SEARA',title:'SPORTURI DE ECHIPĂ',time:'19:00',world:'Sanctuarul',
+    desc:'Fotbal, baschet, volei — variază săptămânal. Energia de grup, competiție sănătoasă și râsete garantate. Nu contează nivelul, contează să fii acolo.'},
+  'pm-1':{day:'MARȚI — SEARA',title:'ALERGARE DE SEARĂ',time:'19:30',world:'Drumul',
+    desc:'Alergare ușoară de 5-7km prin oraș. Ritmul e conversațional, echipa te ține motivat. Perfectă după o zi de muncă.'},
+  'pm-2':{day:'MIERCURI — SEARA',title:'CALISTHENICS',time:'18:30',world:'Forja',
+    desc:'Sesiune de forță la Forjă. Pull-ups, dips, progressions — structurat, intens, eficient. Construiești putere reală cu greutatea propriului corp.'},
+  'pm-3':{day:'JOI — SEARA',title:'ALERGARE DE SEARĂ',time:'19:30',world:'Drumul',
+    desc:'Ca marți seara. Aceeași rută, aceeași energie. Consistența e cheia — corpul tău știe deja programul.'},
+  'pm-4':{day:'VINERI — SEARA',title:'CALISTHENICS',time:'18:30',world:'Forja',
+    desc:'Încheie săptămâna cu o sesiune puternică. Push limits, test PRs. Ai muncit toată săptămâna — acum arată-ți progresul.'},
+  'pm-5':{day:'SÂMBĂTĂ — SEARA',title:'ALERGARE LUNGĂ',time:'18:00',world:'Drumul',
+    desc:'Ruta lungă — 10-15km prin oraș. Ritmul e moderat, conversația curge, mintea se limpezește. O meditație în mișcare.'}
+},en:{
+  'am-1':{day:'TUESDAY — MORNING',title:'SUNRISE YOGA',time:'06:30',world:'The Temple',
+    desc:'Morning starts at The Temple with a 45-min sunrise flow. Flexibility, breath, mind-body connection. The best way to start your day.'},
+  'am-3':{day:'THURSDAY — MORNING',title:'SUNRISE YOGA',time:'06:30',world:'The Temple',
+    desc:'Same ritual as Tuesday. The rhythm repeats, the habit cements. No thinking, just show up.'},
+  'am-6':{day:'SUNDAY — MORNING',title:'THE BIG SOCIAL RUN',time:'09:00',world:'All Worlds',
+    desc:'The main event. 50+ runners. Maximum energy. Music, inner peace, sense of community. Not just a run — a collective experience. THE mission of the week.'},
+  'pm-0':{day:'MONDAY — EVENING',title:'TEAM SPORTS',time:'19:00',world:'The Sanctuary',
+    desc:'Football, basketball, volleyball — rotates weekly. Group energy, healthy competition and guaranteed laughs. Level doesn\'t matter, showing up does.'},
+  'pm-1':{day:'TUESDAY — EVENING',title:'EVENING RUN',time:'19:30',world:'The Path',
+    desc:'Easy 5-7km run through the city. Conversational pace, the crew keeps you motivated. Perfect after a day at work.'},
+  'pm-2':{day:'WEDNESDAY — EVENING',title:'CALISTHENICS',time:'18:30',world:'The Forge',
+    desc:'Strength session at The Forge. Pull-ups, dips, progressions — structured, intense, efficient. Build real power with bodyweight.'},
+  'pm-3':{day:'THURSDAY — EVENING',title:'EVENING RUN',time:'19:30',world:'The Path',
+    desc:'Same as Tuesday evening. Same route, same energy. Consistency is key — your body already knows the program.'},
+  'pm-4':{day:'FRIDAY — EVENING',title:'CALISTHENICS',time:'18:30',world:'The Forge',
+    desc:'Close the training week with a powerful session. Push limits, test PRs. You worked all week — now show your progress.'},
+  'pm-5':{day:'SATURDAY — EVENING',title:'LONG EVENING RUN',time:'18:00',world:'The Path',
+    desc:'Long route — 10-15km through the city. Moderate pace, flowing conversation, clear mind. Moving meditation.'}
+}};
+
+var cLang='ro';
+window.openDay=function(slot){
+  var d=cData[cLang][slot];
+  if(!d)return;
+  document.getElementById('dxDay').textContent=d.day;
+  document.getElementById('dxTitle').textContent=d.title;
+  document.getElementById('dxTime').textContent=d.time;
+  document.getElementById('dxWorld').textContent=d.world;
+  document.getElementById('dxDesc').textContent=d.desc;
+  var xp=document.getElementById('dayX');xp.classList.add('on');
+  gsap.fromTo(xp,{opacity:0},{opacity:1,duration:.4});
+  gsap.fromTo('.day-expand-inner',{y:40,scale:.95},{y:0,scale:1,duration:.5,ease:'power3.out'});
+};
+window.closeDay=function(){
+  gsap.to('#dayX',{opacity:0,duration:.3,onComplete:function(){document.getElementById('dayX').classList.remove('on')}});
+};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDay()});
+
+// ── i18n ──
+window.toggleLang=function(){
+  cLang=cLang==='ro'?'en':'ro';
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    var t=el.getAttribute('data-'+cLang);if(t)el.innerHTML=t;
+  });
+  document.querySelectorAll('.lang-sw').forEach(function(b){b.textContent=cLang==='ro'?'EN':'RO'});
+  document.documentElement.lang=cLang;
+};
+document.getElementById('langBtn').addEventListener('click',toggleLang);
+
+// ── NAV HIDE/SHOW ──
+var lastSy=0,nav=document.querySelector('.nav');
+lenis.on('scroll',function(e){
+  var sy=e.animatedScroll||0;
+  nav.style.transform=sy>lastSy&&sy>120?'translateY(-100%)':'translateY(0)';
+  nav.style.transition='transform .4s';lastSy=sy;
+});
+
+}); // end DOMContentLoaded
+</script>
+</body>
+</html>
