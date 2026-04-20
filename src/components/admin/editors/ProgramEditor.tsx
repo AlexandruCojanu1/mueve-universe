@@ -82,11 +82,6 @@ export default function ProgramEditor({ value, onChange }: { value: ProgramData;
           onChange={(am) => update({ rowLabels: { ...v.rowLabels, am } })}
         />
         <BilingualInput
-          label="Prânz"
-          value={v.rowLabels.noon}
-          onChange={(noon) => update({ rowLabels: { ...v.rowLabels, noon } })}
-        />
-        <BilingualInput
           label="Seara"
           value={v.rowLabels.pm}
           onChange={(pm) => update({ rowLabels: { ...v.rowLabels, pm } })}
@@ -122,7 +117,6 @@ export default function ProgramEditor({ value, onChange }: { value: ProgramData;
                     onChange={(row) => setSlot(i, { ...s, row })}
                     options={[
                       { value: "am", label: "Dimineața" },
-                      { value: "noon", label: "Prânz" },
                       { value: "pm", label: "Seara" },
                     ]}
                   />

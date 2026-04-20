@@ -11,7 +11,9 @@ import NavEditor from "./editors/NavEditor";
 import HeroEditor from "./editors/HeroEditor";
 import WorldsEditor from "./editors/WorldsEditor";
 import ProgramEditor from "./editors/ProgramEditor";
+import PricingEditor from "./editors/PricingEditor";
 import MissionEditor from "./editors/MissionEditor";
+import StatsEditor from "./editors/StatsEditor";
 import JoinEditor from "./editors/JoinEditor";
 import FooterEditor from "./editors/FooterEditor";
 import { TextEditor, CtaEditor, ImageEditor } from "./editors/GenericEditors";
@@ -75,7 +77,9 @@ const EDITORS: Record<SectionType, React.ComponentType<{ value: any; onChange: (
   hero: HeroEditor,
   worlds: WorldsEditor,
   program: ProgramEditor,
+  pricing: PricingEditor,
   mission: MissionEditor,
+  stats: StatsEditor,
   join: JoinEditor,
   footer: FooterEditor,
   text: TextEditor,

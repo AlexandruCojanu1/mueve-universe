@@ -1,17 +1,21 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import type { Lang } from "./content-types";
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; toggle: () => void };
 const LangCtx = createContext<Ctx | null>(null);
 
-export function LangProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("ro");
+function readInitialLang(): Lang {
+  if (typeof window === "undefined") return "ro";
+  try {
+    const stored = localStorage.getItem("mueve-lang");
+    if (stored === "ro" || stored === "en") return stored;
+  } catch {}
+  return "ro";
+}
 
-  useEffect(() => {
-    const stored = typeof window !== "undefined" ? (localStorage.getItem("mueve-lang") as Lang | null) : null;
-    if (stored === "ro" || stored === "en") setLangState(stored);
-  }, []);
+export function LangProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = useState<Lang>(readInitialLang);
 
   const setLang = (l: Lang) => {
     setLangState(l);

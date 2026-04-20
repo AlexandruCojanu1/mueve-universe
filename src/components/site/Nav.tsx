@@ -20,6 +20,9 @@ export default function Nav({ data }: { data: NavData }) {
               {pick(l.label, lang)}
             </a>
           ))}
+          <a href="/dashboard" className="nav-account">
+            {lang === "ro" ? "Cont" : "Account"}
+          </a>
           <button className="lang-sw" onClick={toggle}>
             {lang === "ro" ? "EN" : "RO"}
           </button>
@@ -40,6 +43,9 @@ export default function Nav({ data }: { data: NavData }) {
             {pick(l.label, lang)}
           </a>
         ))}
+        <a href="/dashboard" onClick={() => setMob(false)}>
+          {lang === "ro" ? "Cont" : "Account"}
+        </a>
       </div>
     </>
   );

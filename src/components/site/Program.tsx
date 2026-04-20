@@ -16,21 +16,20 @@ export default function Program({ data }: { data: ProgramData }) {
   const [open, setOpen] = useState<ProgramSlot | null>(null);
 
   const grid = useMemo(() => {
-    const rows: Record<"am" | "noon" | "pm", (ProgramSlot | null)[]> = {
+    const rows: Record<"am" | "pm", (ProgramSlot | null)[]> = {
       am: Array(7).fill(null),
-      noon: Array(7).fill(null),
       pm: Array(7).fill(null),
     };
     for (const s of data.slots) {
+      if (s.row !== "am" && s.row !== "pm") continue;
       if (s.day >= 0 && s.day < 7) rows[s.row][s.day] = s;
     }
     return rows;
   }, [data.slots]);
 
-  const rowKeys: ("am" | "noon" | "pm")[] = ["am", "noon", "pm"];
-  const icons: Record<"am" | "noon" | "pm", string> = {
+  const rowKeys: ("am" | "pm")[] = ["am", "pm"];
+  const icons: Record<"am" | "pm", string> = {
     am: "☀",
-    noon: "☀",
     pm: "☾",
   };
 
@@ -94,7 +93,7 @@ function RowBlock({
 }: {
   label: string;
   icon: string;
-  rowKey: "am" | "noon" | "pm";
+  rowKey: "am" | "pm";
   slots: (ProgramSlot | null)[];
   lang: ReturnType<typeof useLang>["lang"];
   onOpen: (s: ProgramSlot) => void;
@@ -107,8 +106,8 @@ function RowBlock({
       </div>
       {slots.map((s, i) => {
         if (!s) {
-          const cls = rowKey === "noon" ? "pt-cell pt-empty pt-rest" : "pt-cell pt-empty";
-          return <div key={i} className={cls} />;
+          void rowKey;
+          return <div key={i} className="pt-cell pt-empty" />;
         }
         const dot = DOT_COLOR[s.color];
         return (

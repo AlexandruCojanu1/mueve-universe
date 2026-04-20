@@ -5,7 +5,9 @@ import type {
   HeroData,
   WorldsData,
   ProgramData,
+  PricingData,
   MissionData,
+  StatsData,
   JoinData,
   FooterData,
   TextData,
@@ -16,7 +18,9 @@ import Nav from "./Nav";
 import Hero from "./Hero";
 import Worlds from "./Worlds";
 import Program from "./Program";
+import Pricing from "./Pricing";
 import Mission from "./Mission";
+import Stats from "./Stats";
 import Join from "./Join";
 import Footer from "./Footer";
 import { TextBlock, CtaBlock, ImageBlock } from "./Generic";
@@ -33,8 +37,12 @@ export default function SectionRenderer({ section }: { section: Section }) {
       return <Worlds data={d as unknown as WorldsData} />;
     case "program":
       return <Program data={d as unknown as ProgramData} />;
+    case "pricing":
+      return <Pricing data={d as unknown as PricingData} />;
     case "mission":
       return <Mission data={d as unknown as MissionData} />;
+    case "stats":
+      return <Stats data={d as unknown as StatsData} />;
     case "join":
       return <Join data={d as unknown as JoinData} />;
     case "footer":

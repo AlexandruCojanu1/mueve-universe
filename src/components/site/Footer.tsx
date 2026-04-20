@@ -53,6 +53,10 @@ export default function Footer({ data }: { data: FooterData }) {
   return (
     <footer className="foot">
       <span>{pick(data.copyright, lang)}</span>
+      <div className="foot-legal">
+        <a href="/terms">{lang === "ro" ? "Termeni" : "Terms"}</a>
+        <a href="/privacy">{lang === "ro" ? "Confidențialitate" : "Privacy"}</a>
+      </div>
       <div className="foot-social">
         {data.socials.map((s) => (
           <a key={s.id} href={s.href} aria-label={s.label}>

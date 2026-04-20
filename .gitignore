@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 .env.local
 .env
+
+# local dev tooling (puppeteer screenshot scripts, may contain test creds)
+/_tools/
+
+# wallet signing certs — never commit
+/certs/

@@ -1,19 +1,21 @@
 import type { Section } from "@/db/schema";
 import { LangProvider } from "@/lib/lang-context";
 import SectionRenderer from "./SectionRenderer";
-import StarfieldBg from "./StarfieldBg";
+import SkyScene from "./SkyScene";
 import Cursor from "./Cursor";
 import LenisScroll from "./LenisScroll";
+import CookieBanner from "./CookieBanner";
 
 export default function SiteShell({ sections }: { sections: Section[] }) {
   return (
     <LangProvider>
       <LenisScroll />
-      <StarfieldBg />
+      <SkyScene />
       <Cursor />
       {sections.map((s) => (
         <SectionRenderer key={s.id} section={s} />
       ))}
+      <CookieBanner />
     </LangProvider>
   );
 }

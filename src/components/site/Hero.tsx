@@ -2,14 +2,14 @@
 import { useLang } from "@/lib/lang-context";
 import { pick } from "@/lib/bilingual";
 import type { HeroData } from "@/lib/content-types";
-import SunCanvas from "./SunCanvas";
+import Celestial from "./Celestial";
 
 export default function Hero({ data }: { data: HeroData }) {
   const { lang } = useLang();
   return (
     <section className="hero" id="hero">
       <div className="hero-sun-wrap">
-        <SunCanvas />
+        <Celestial />
       </div>
       <h1>
         {pick(data.headingTop, lang)}

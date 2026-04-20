@@ -16,7 +16,7 @@ export default function AdminNav({ email }: { email: string }) {
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/admin" className="font-black italic uppercase tracking-wider text-[var(--sun)]">
-            MUEVE Admin
+            MUEVE UNIVERSE Admin
           </Link>
           <div className="flex gap-1">
             {links.map((l) => (

@@ -38,7 +38,7 @@ export type WorldsData = {
 export type ProgramSlot = {
   id: string;
   day: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Mon..6=Sun
-  row: "am" | "noon" | "pm";
+  row: "am" | "pm";
   activity: Bilingual;
   time: string;
   world: Bilingual;
@@ -51,9 +51,54 @@ export type ProgramData = {
   heading: { lead: Bilingual; accent: Bilingual };
   intro: Bilingual;
   dayLabels: Bilingual[]; // length 7
-  rowLabels: { am: Bilingual; noon: Bilingual; pm: Bilingual };
+  rowLabels: { am: Bilingual; pm: Bilingual };
   joinLabel: Bilingual;
   slots: ProgramSlot[];
+};
+
+export type PricingPlan = {
+  id: string;
+  name: Bilingual;
+  price: string;
+  originalPrice?: string;
+  currency: Bilingual;
+  period?: Bilingual;
+  tagline?: Bilingual;
+  featuresTitle?: Bilingual;
+  features: Bilingual[];
+  highlighted?: boolean;
+  badge?: Bilingual;
+  ctaLabel?: Bilingual;
+  ctaHref?: string;
+  stripePriceId?: string;
+  checkoutMode?: "subscription" | "payment";
+};
+
+export type PricingTier = {
+  id: string;
+  title: Bilingual;
+  subtitle?: Bilingual;
+  plans: PricingPlan[];
+  featured?: boolean;
+};
+
+export type PricingData = {
+  heading: { lead: Bilingual; accent: Bilingual };
+  intro: Bilingual;
+  tiers: PricingTier[];
+  note?: Bilingual;
+};
+
+export type StatItem = {
+  id: string;
+  value: Bilingual;
+  label: Bilingual;
+};
+
+export type StatsData = {
+  eyebrow?: Bilingual;
+  heading?: Bilingual;
+  items: StatItem[];
 };
 
 export type MissionValue = { id: string; title: Bilingual; body: Bilingual };
@@ -99,7 +144,9 @@ export type SectionType =
   | "hero"
   | "worlds"
   | "program"
+  | "pricing"
   | "mission"
+  | "stats"
   | "join"
   | "footer"
   | "text"
@@ -111,7 +158,9 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   hero: "Hero",
   worlds: "Worlds (4-card group)",
   program: "Weekly Program Grid",
+  pricing: "Pricing / Plans",
   mission: "Mission",
+  stats: "Stats / Metrics",
   join: "Join / Signup",
   footer: "Footer",
   text: "Text Block",
@@ -123,7 +172,9 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "hero",
   "worlds",
   "program",
+  "pricing",
   "mission",
+  "stats",
   "join",
   "text",
   "cta",

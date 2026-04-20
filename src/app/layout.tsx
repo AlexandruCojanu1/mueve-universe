@@ -17,11 +17,11 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "MUEVE Universe — Mișcă-te. Trăiește. Evoluează.",
+  title: "MUEVE UNIVERSE — Mișcă-te. Trăiește. Evoluează.",
   description:
-    "MUEVE — universul mișcării. Un ecosistem cosmic de calisthenics, yoga, alergare și comunitate.",
+    "MUEVE UNIVERSE — universul mișcării. Un ecosistem cosmic de calisthenics, yoga, alergare și comunitate.",
   openGraph: {
-    title: "MUEVE Universe",
+    title: "MUEVE UNIVERSE",
     description: "Intră în universul mișcării.",
   },
 };
