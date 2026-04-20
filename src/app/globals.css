@@ -224,11 +224,11 @@ h5 {
   flex-direction: column;
   z-index: 1;
   overflow: hidden;
-  padding: 0 4vw;
+  padding: 6vh 4vw 12vh;
 }
 .hero-sun-wrap {
   position: relative;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 #sunCanvas {
   display: block;
@@ -253,14 +253,14 @@ h5 {
   font-size: clamp(0.9rem, 1.6vw, 1.15rem);
   opacity: 0.45;
   text-align: center;
-  max-width: 480px;
+  max-width: 520px;
   line-height: 1.7;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   font-weight: 300;
 }
 .hero-scroll {
   position: absolute;
-  bottom: 3vh;
+  bottom: 2.5vh;
   left: 50%;
   transform: translateX(-50%);
   writing-mode: vertical-rl;
@@ -273,10 +273,13 @@ h5 {
   content: "";
   display: block;
   width: 1px;
-  height: 50px;
+  height: 36px;
   background: var(--w);
-  margin: 12px auto 0;
+  margin: 10px auto 0;
   animation: scrollLine 2s ease infinite;
+}
+@media (max-height: 720px) {
+  .hero-scroll { display: none; }
 }
 @keyframes scrollLine {
   0% {
@@ -839,14 +842,16 @@ h5 {
 }
 .join h2 {
   font-size: clamp(4rem, 10vw, 10rem);
-  line-height: 0.85;
+  line-height: 0.95;
   text-transform: uppercase;
   margin-bottom: 2rem;
+  padding: 0.15em 0;
 }
 .join h2 em {
   font-style: italic;
   color: var(--sun);
   display: block;
+  margin-top: 0.12em;
   text-shadow: 0 0 80px var(--sun-g), 0 0 160px rgba(245, 245, 10, 0.1);
 }
 .join > p {
