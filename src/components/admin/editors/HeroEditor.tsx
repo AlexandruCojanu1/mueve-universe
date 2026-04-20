@@ -20,9 +20,6 @@ export default function HeroEditor({ value, onChange }: { value: HeroData; onCha
       <Card title="Subtitlu">
         <BilingualInput label="Text" value={v.sub} onChange={(sub) => update({ sub })} multiline rows={3} />
       </Card>
-      <Card title="Scroll indicator">
-        <BilingualInput label="Text" value={v.scrollLabel} onChange={(scrollLabel) => update({ scrollLabel })} />
-      </Card>
     </div>
   );
 }

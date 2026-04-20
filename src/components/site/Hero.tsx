@@ -17,7 +17,6 @@ export default function Hero({ data }: { data: HeroData }) {
         {pick(data.headingBottom, lang)}
       </h1>
       <p className="hero-sub">{pick(data.sub, lang)}</p>
-      <div className="hero-scroll">{pick(data.scrollLabel, lang)}</div>
     </section>
   );
 }
