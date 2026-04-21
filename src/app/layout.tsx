@@ -17,12 +17,20 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mueveclub.ro"),
   title: "MUEVE UNIVERSE — Mișcă-te. Trăiește. Evoluează.",
   description:
     "MUEVE UNIVERSE — universul mișcării. Un ecosistem cosmic de calisthenics, yoga, alergare și comunitate.",
   openGraph: {
     title: "MUEVE UNIVERSE",
     description: "Intră în universul mișcării.",
+    url: "https://mueveclub.ro",
+    siteName: "MUEVE UNIVERSE",
+    locale: "ro_RO",
+    type: "website",
+  },
+  alternates: {
+    canonical: "https://mueveclub.ro",
   },
 };
 

@@ -5,5 +5,6 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       { userAgent: "*", allow: "/", disallow: ["/admin", "/coach", "/dashboard", "/api"] },
     ],
+    host: "https://mueveclub.ro",
   };
 }
