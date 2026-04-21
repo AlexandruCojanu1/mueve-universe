@@ -5,7 +5,12 @@ type Result = {
   valid: boolean;
   member?: { name: string | null; email: string; image: string | null };
   pass?: { planName: string | null; periodEnd: string | null } | null;
-  discount?: { percent: number; description: string; company: string };
+  discount?: {
+    percent: number;
+    description: string;
+    company: string;
+    logoUrl?: string | null;
+  };
   reason?: string | null;
 };
 
@@ -70,6 +75,15 @@ export default function PartnerVerifyClient({
         {data.member?.name && <div className="q-card-sub">{data.member.email}</div>}
 
         <div className="q-discount">
+          {data.discount?.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={data.discount.logoUrl}
+              alt={data.discount.company}
+              className="q-discount-logo"
+            />
+          )}
+          <div className="q-discount-company">{data.discount?.company}</div>
           <div className="q-discount-label">Aplică reducerea</div>
           <div className="q-discount-val">-{data.discount?.percent}%</div>
           {data.discount?.description && (

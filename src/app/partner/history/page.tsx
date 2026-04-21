@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { partners, partnerVisits } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
+import ExportCsvButton from "@/components/partner/ExportCsvButton";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +23,27 @@ export default async function PartnerHistoryPage() {
     .from(partnerVisits)
     .where(eq(partnerVisits.partnerId, p.id))
     .orderBy(desc(partnerVisits.createdAt))
-    .limit(200);
+    .limit(1000);
+
+  const csvData = visits.map((v) => ({
+    createdAt: v.createdAt.toISOString(),
+    memberName: v.memberName,
+    memberEmail: v.memberEmail,
+    valid: v.valid,
+    reason: v.reason,
+  }));
 
   return (
     <>
       <header className="dash-page-head">
         <div className="dash-page-eyebrow">Partener</div>
         <h1 className="dash-page-title">Istoric scanări</h1>
-        <p className="dash-page-sub">Ultimele 200 de validări.</p>
+        <p className="dash-page-sub">Ultimele 1000 de validări.</p>
       </header>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
+        <ExportCsvButton visits={csvData} />
+      </div>
 
       <div className="dash-card">
         {visits.length === 0 ? (
@@ -48,7 +61,7 @@ export default async function PartnerHistoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {visits.map((v) => (
+                {visits.slice(0, 200).map((v) => (
                   <tr key={v.id}>
                     <td>{v.createdAt.toLocaleString("ro-RO")}</td>
                     <td>{v.memberName || "—"}</td>

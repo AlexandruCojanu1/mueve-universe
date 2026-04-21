@@ -199,6 +199,29 @@ export const partnerVisits = pgTable("partner_visits", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Reservations ──
+export const reservationStatus = pgEnum("reservation_status", [
+  "active",
+  "cancelled",
+  "attended",
+]);
+
+export const reservations = pgTable(
+  "reservations",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    slotId: uuid("slot_id").notNull(),
+    slotDate: text("slot_date").notNull(),
+    status: reservationStatus("status").notNull().default("active"),
+    creditId: uuid("credit_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    cancelledAt: timestamp("cancelled_at"),
+  },
+  (r) => [primaryKey({ columns: [r.userId, r.slotId, r.slotDate] })],
+);
+
 // ── Class slots (coach-level schedule) ──
 export const classSlots = pgTable("class_slots", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -235,3 +258,6 @@ export type PartnerVisit = typeof partnerVisits.$inferSelect;
 export type NewPartnerVisit = typeof partnerVisits.$inferInsert;
 export type ClassSlot = typeof classSlots.$inferSelect;
 export type NewClassSlot = typeof classSlots.$inferInsert;
+export type Reservation = typeof reservations.$inferSelect;
+export type NewReservation = typeof reservations.$inferInsert;
+export type ReservationStatus = (typeof reservationStatus.enumValues)[number];

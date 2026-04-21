@@ -7,6 +7,7 @@ const links = [
   { href: "/partner", label: "Acasă" },
   { href: "/partner/scan", label: "Scanează" },
   { href: "/partner/history", label: "Istoric" },
+  { href: "/partner/settings", label: "Setări" },
 ];
 
 export default function PartnerNav({

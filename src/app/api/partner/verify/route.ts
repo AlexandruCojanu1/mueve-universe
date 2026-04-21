@@ -104,6 +104,7 @@ export async function POST(req: Request) {
       percent: partner.discountPercent,
       description: partner.discountDescription,
       company: partner.companyName,
+      logoUrl: partner.logoUrl,
     },
     reason: valid ? null : "Membrul nu are Pass activ.",
   });

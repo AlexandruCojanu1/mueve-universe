@@ -22,6 +22,7 @@ export default function PartnersManager() {
     companyName: "",
     discountPercent: 10,
     discountDescription: "",
+    logoUrl: "",
   });
   const [busy, setBusy] = useState(false);
   const [creds, setCreds] = useState<{ email: string; tempPassword: string } | null>(null);
@@ -61,6 +62,7 @@ export default function PartnersManager() {
           companyName: "",
           discountPercent: 10,
           discountDescription: "",
+          logoUrl: "",
         });
         await load();
       }
@@ -173,6 +175,16 @@ export default function PartnersManager() {
                 setForm({ ...form, discountDescription: e.target.value })
               }
               placeholder="la toată cafeaua"
+            />
+          </label>
+          <label className="field-col" style={{ gridColumn: "1 / -1" }}>
+            <span className="field-label">URL logo firmă (opțional)</span>
+            <input
+              className="field-input"
+              type="url"
+              value={form.logoUrl}
+              onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+              placeholder="https://cdn.firma.ro/logo.png"
             />
           </label>
           <div style={{ gridColumn: "1 / -1", display: "flex", gap: 12, alignItems: "center" }}>

@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { attendances } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
-import { getProgramData } from "@/lib/coach-schedule";
+import ReserveBoard from "@/components/dashboard/ReserveBoard";
 
 export const dynamic = "force-dynamic";
 
@@ -17,27 +17,33 @@ export default async function SessionsPage() {
         .orderBy(desc(attendances.validatedAt))
         .limit(100)
     : [];
-  const program = await getProgramData();
-  const slotMap = new Map<
-    string,
-    (typeof program extends null ? never : NonNullable<typeof program>)["slots"][number]
-  >();
-  program?.slots.forEach((s) => slotMap.set(s.id, s));
 
   return (
     <>
       <header className="dash-page-head">
-        <div className="dash-page-eyebrow">Istoric</div>
-        <h1 className="dash-page-title">Sesiunile mele</h1>
+        <div className="dash-page-eyebrow">Program</div>
+        <h1 className="dash-page-title">Rezervă & istoric</h1>
         <p className="dash-page-sub">
-          {rows.length} prezențe validate · ultimele 100 vizibile.
+          Rezervă-ți loc la sesiuni — se consumă o clasă. Dacă anulezi cu peste
+          2h înainte, clasa se întoarce.
         </p>
       </header>
 
+      <ReserveBoard />
+
+      <div className="dash-page-head" style={{ marginTop: "2.5rem" }}>
+        <h2 className="dash-page-title" style={{ fontSize: "1.4rem" }}>
+          Istoric prezențe
+        </h2>
+        <p className="dash-page-sub">
+          {rows.length} prezențe validate · ultimele 100 vizibile.
+        </p>
+      </div>
+
       {rows.length === 0 ? (
         <div className="dash-empty">
-          Încă nu ai fost marcat la nicio sesiune. Arată cardul tău QR coach-ului la
-          intrarea în sesiune.
+          Încă nu ai fost marcat la nicio sesiune. Arată cardul tău QR
+          coach-ului la intrarea în sesiune.
         </div>
       ) : (
         <div className="dash-table-wrap">
@@ -46,29 +52,20 @@ export default async function SessionsPage() {
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Activitate</th>
-                  <th>Lume</th>
+                  <th>Slot</th>
                   <th>Validat la</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
-                  const slot = slotMap.get(r.slotId);
-                  return (
-                    <tr key={`${r.slotId}-${r.slotDate}`}>
-                      <td>{r.slotDate}</td>
-                      <td>
-                        <span className="dash-table-strong">
-                          {slot?.activity.ro || r.slotId}
-                        </span>
-                      </td>
-                      <td className="dash-table-muted">{slot?.world.ro || "—"}</td>
-                      <td className="dash-table-muted">
-                        {r.validatedAt.toLocaleString("ro-RO")}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {rows.map((r) => (
+                  <tr key={`${r.slotId}-${r.slotDate}`}>
+                    <td>{r.slotDate}</td>
+                    <td className="dash-table-muted">{r.slotId.slice(0, 8)}…</td>
+                    <td className="dash-table-muted">
+                      {r.validatedAt.toLocaleString("ro-RO")}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

@@ -3159,3 +3159,21 @@ body.is-day .nav-merch-soon {
   border-color: var(--sun);
   background: rgba(0, 0, 0, 0.5);
 }
+
+.q-discount-logo {
+  display: block;
+  margin: 0 auto 0.75rem;
+  max-height: 48px;
+  max-width: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+.q-discount-company {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  opacity: 0.85;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users, attendances, classSlots } from "@/db/schema";
+import { users, attendances, classSlots, reservations } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
@@ -125,8 +125,34 @@ export async function POST(req: Request) {
     }
   }
 
+  const existingReservation = await db
+    .select()
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.userId, user.id),
+        eq(reservations.slotId, slotId),
+        eq(reservations.slotDate, slotDate),
+      ),
+    )
+    .limit(1);
+  const hasActiveReservation =
+    existingReservation[0]?.status === "active";
+
   let consumedCreditId: string | undefined;
-  if (!force) {
+  if (hasActiveReservation) {
+    await db
+      .update(reservations)
+      .set({ status: "attended" })
+      .where(
+        and(
+          eq(reservations.userId, user.id),
+          eq(reservations.slotId, slotId),
+          eq(reservations.slotDate, slotDate),
+        ),
+      );
+    consumedCreditId = existingReservation[0].creditId ?? undefined;
+  } else if (!force) {
     const res = await consumeOldestCredit({
       userId: user.id,
       slotId,

@@ -5,7 +5,12 @@ type Result = {
   valid: boolean;
   member?: { name: string | null; email: string } | null;
   pass?: { planName: string | null; periodEnd: string | null } | null;
-  discount?: { percent: number; description: string; company: string };
+  discount?: {
+    percent: number;
+    description: string;
+    company: string;
+    logoUrl?: string | null;
+  };
   reason?: string | null;
 };
 
@@ -151,6 +156,14 @@ export default function PartnerScanner() {
               <div className="q-card-sub">{last.member.email}</div>
             )}
             <div className="q-discount">
+              {last.discount?.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={last.discount.logoUrl}
+                  alt={last.discount.company}
+                  className="q-discount-logo"
+                />
+              )}
               <div className="q-discount-label">Aplică</div>
               <div className="q-discount-val">-{last.discount?.percent}%</div>
               {last.discount?.description && (
