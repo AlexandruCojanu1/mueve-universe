@@ -59,22 +59,15 @@ function SignupForm() {
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <div className="text-[0.62rem] uppercase tracking-[0.35em] font-black text-[var(--sun)] mb-3">
-          Cont nou
-        </div>
-        <h2
-          className="text-2xl md:text-[1.8rem] font-black tracking-tight leading-tight"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          Creează-ți contul
-        </h2>
-        <p className="text-sm opacity-70 mt-3">
+    <div className="auth-form">
+      <header className="auth-form-head">
+        <div className="auth-form-eyebrow">Cont nou</div>
+        <h2 className="auth-form-title">Creează-ți contul</h2>
+        <p className="auth-form-sub">
           Ai deja cont?{" "}
           <Link
             href={`/login?from=${encodeURIComponent(from)}`}
-            className="text-[var(--sun)] font-bold hover:opacity-80 transition"
+            className="auth-form-link"
           >
             Intră →
           </Link>
@@ -90,7 +83,7 @@ function SignupForm() {
 
       <Divider label="sau cu email" />
 
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="auth-form-body">
         <Field
           label="Nume"
           type="text"
@@ -125,13 +118,13 @@ function SignupForm() {
         </SubmitButton>
       </form>
 
-      <p className="text-[0.65rem] opacity-50 leading-relaxed">
+      <p className="auth-legal">
         Prin crearea contului accepți{" "}
-        <Link href="/terms" className="underline hover:opacity-100">
+        <Link href="/terms" className="auth-legal-link">
           Termenii
         </Link>{" "}
         și{" "}
-        <Link href="/privacy" className="underline hover:opacity-100">
+        <Link href="/privacy" className="auth-legal-link">
           Politica de confidențialitate
         </Link>
         .
@@ -162,7 +155,7 @@ export default function SignupPage() {
         },
       ]}
     >
-      <Suspense fallback={<div className="opacity-60 text-sm">…</div>}>
+      <Suspense fallback={<div style={{ opacity: 0.6, fontSize: "0.85rem" }}>…</div>}>
         <SignupForm />
       </Suspense>
     </AuthShell>

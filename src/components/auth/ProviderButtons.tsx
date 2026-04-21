@@ -16,7 +16,7 @@ export default function ProviderButtons({
   onMagicClick?: () => void;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="auth-providers">
       <ProviderButton
         enabled={hasGoogle}
         onClick={() => signIn("google", { callbackUrl })}
@@ -57,40 +57,11 @@ function ProviderButton({
       type="button"
       onClick={enabled ? onClick : undefined}
       disabled={!enabled}
-      className="w-full rounded-xl transition flex items-center justify-center gap-3 relative"
-      style={{
-        height: "52px",
-        background: enabled ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
-        border: `1px solid ${enabled ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)"}`,
-        color: enabled ? "var(--w)" : "rgba(255,255,255,0.4)",
-        cursor: enabled ? "pointer" : "not-allowed",
-      }}
-      onMouseEnter={(e) => {
-        if (!enabled) return;
-        e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
-      }}
-      onMouseLeave={(e) => {
-        if (!enabled) return;
-        e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
-      }}
+      className={"auth-provider-btn" + (enabled ? "" : " is-disabled")}
     >
-      <span className="inline-flex items-center justify-center w-5 h-5">{icon}</span>
-      <span className="text-sm font-bold">{label}</span>
-      {!enabled && (
-        <span
-          className="absolute right-4 text-[0.52rem] uppercase tracking-[0.25em] font-black"
-          style={{
-            padding: "0.15rem 0.5rem",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.15)",
-            background: "rgba(255,255,255,0.04)",
-          }}
-        >
-          Curând
-        </span>
-      )}
+      <span className="auth-provider-icon">{icon}</span>
+      <span className="auth-provider-label">{label}</span>
+      {!enabled && <span className="auth-provider-soon">Curând</span>}
     </button>
   );
 }

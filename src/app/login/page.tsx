@@ -57,22 +57,15 @@ function LoginForm() {
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <div className="text-[0.62rem] uppercase tracking-[0.35em] font-black text-[var(--sun)] mb-3">
-          Autentificare
-        </div>
-        <h2
-          className="text-2xl md:text-[1.8rem] font-black tracking-tight leading-tight"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          Intră în cont
-        </h2>
-        <p className="text-sm opacity-70 mt-3">
+    <div className="auth-form">
+      <header className="auth-form-head">
+        <div className="auth-form-eyebrow">Autentificare</div>
+        <h2 className="auth-form-title">Intră în cont</h2>
+        <p className="auth-form-sub">
           Nu ai încă cont?{" "}
           <Link
             href={`/signup?from=${encodeURIComponent(from)}`}
-            className="text-[var(--sun)] font-bold hover:opacity-80 transition"
+            className="auth-form-link"
           >
             Creează unul →
           </Link>
@@ -89,7 +82,7 @@ function LoginForm() {
 
       <Divider label="sau cu email" />
 
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="auth-form-body">
         <Field
           label="Email"
           type="email"
@@ -107,10 +100,7 @@ function LoginForm() {
           autoComplete="current-password"
           required
           rightLink={
-            <Link
-              href="/forgot-password"
-              className="text-[0.6rem] uppercase tracking-[0.25em] font-bold text-[var(--sun)] hover:opacity-80 transition"
-            >
+            <Link href="/forgot-password" className="auth-small-link">
               Ai uitat?
             </Link>
           }
@@ -129,13 +119,13 @@ function LoginForm() {
         </SubmitButton>
       </form>
 
-      <p className="text-[0.65rem] opacity-50 leading-relaxed">
+      <p className="auth-legal">
         Prin autentificare accepți{" "}
-        <Link href="/terms" className="underline hover:opacity-100">
+        <Link href="/terms" className="auth-legal-link">
           Termenii
         </Link>{" "}
         și{" "}
-        <Link href="/privacy" className="underline hover:opacity-100">
+        <Link href="/privacy" className="auth-legal-link">
           Politica de confidențialitate
         </Link>
         .
@@ -166,7 +156,7 @@ export default function LoginPage() {
         },
       ]}
     >
-      <Suspense fallback={<div className="opacity-60 text-sm">…</div>}>
+      <Suspense fallback={<div style={{ opacity: 0.6, fontSize: "0.85rem" }}>…</div>}>
         <LoginForm />
       </Suspense>
     </AuthShell>

@@ -54,42 +54,35 @@ function ResetForm() {
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <div className="text-[0.62rem] uppercase tracking-[0.35em] font-black text-[var(--sun)] mb-3">
-          Parolă nouă
-        </div>
-        <h2
-          className="text-2xl md:text-[1.8rem] font-black tracking-tight leading-tight"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          Setează o parolă nouă
-        </h2>
+    <div className="auth-form">
+      <header className="auth-form-head">
+        <div className="auth-form-eyebrow">Parolă nouă</div>
+        <h2 className="auth-form-title">Setează o parolă nouă</h2>
         {email && (
-          <p className="text-sm opacity-70 mt-3">
+          <p className="auth-form-sub">
             Cont: <strong>{email}</strong>
           </p>
         )}
       </header>
 
       {missingParams ? (
-        <div className="space-y-4">
+        <div className="auth-form-body">
           <Alert>
             Linkul nu conține token valid. Cere altul din pagina{" "}
-            <Link href="/forgot-password" className="underline font-bold">
+            <Link href="/forgot-password" className="auth-legal-link">
               recuperare parolă
             </Link>
             .
           </Alert>
         </div>
       ) : done ? (
-        <div className="space-y-4">
+        <div className="auth-form-body">
           <Alert kind="success">
             Parola a fost actualizată. Te redirecționăm la login…
           </Alert>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="auth-form-body">
           <Field
             label="Parolă nouă"
             type="password"
@@ -126,10 +119,13 @@ export default function ResetPasswordPage() {
       sub="Parolele sunt stocate criptat (bcrypt). Nici noi nu le vedem — doar tu o știi."
       bullets={[
         { title: "Minim 8 caractere", desc: "Mai lungă = mai sigură." },
-        { title: "Link de unică folosință", desc: "După ce setezi parola, tokenul expiră." },
+        {
+          title: "Link de unică folosință",
+          desc: "După ce setezi parola, tokenul expiră.",
+        },
       ]}
     >
-      <Suspense fallback={<div className="opacity-60 text-sm">…</div>}>
+      <Suspense fallback={<div style={{ opacity: 0.6, fontSize: "0.85rem" }}>…</div>}>
         <ResetForm />
       </Suspense>
     </AuthShell>
