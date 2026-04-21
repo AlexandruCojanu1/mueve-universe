@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { generateQrToken } from "@/lib/qr-token";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
+import { sendEmail, emailEnabled, wrapBrandHtml } from "@/lib/mailer";
 
 function generateTempPassword(): string {
   return randomBytes(9).toString("base64").replace(/[+/=]/g, "").slice(0, 12);
@@ -127,10 +128,46 @@ export async function POST(req: Request) {
     })
     .returning();
 
+  const origin =
+    process.env.NEXTAUTH_URL ||
+    new URL(req.url).origin;
+  const loginUrl = `${origin}/login`;
+
+  let emailSent = false;
+  if (emailEnabled()) {
+    const result = await sendEmail({
+      to: email,
+      subject: `Bun venit în rețeaua MUEVE UNIVERSE — ${companyName}`,
+      text: `Salut,
+
+Echipa MUEVE UNIVERSE te-a adăugat ca partener cu o reducere de ${discountPercent}% pentru membri.
+
+Intrare în cont:
+Email: ${email}
+Parolă temporară: ${tempPassword}
+Login: ${loginUrl}
+
+Recomandăm să îți schimbi parola după prima intrare (Setări cont).
+
+Mișcă-te · Trăiește · Evoluează`,
+      html: wrapBrandHtml({
+        heading: `Bun venit, ${companyName}`,
+        body: `<p>Echipa MUEVE UNIVERSE te-a adăugat ca partener cu o reducere de <strong>${discountPercent}%</strong> pentru membri activi.</p>
+<p>Intrare în cont:</p>
+<p><strong>Email:</strong> <code>${email}</code><br/>
+<strong>Parolă temporară:</strong> <code style="background:rgba(245,245,10,.15);padding:4px 8px;border-radius:4px;color:#F5F50A">${tempPassword}</code></p>
+<p style="opacity:.7;font-size:13px">Recomandăm să îți schimbi parola după prima intrare.</p>`,
+        cta: { href: loginUrl, label: "Intră în cont" },
+      }),
+    });
+    emailSent = result.ok;
+  }
+
   return NextResponse.json({
     ok: true,
     partner: created,
     credentials: { email, tempPassword },
+    emailSent,
   });
 }
 

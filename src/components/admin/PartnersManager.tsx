@@ -25,7 +25,11 @@ export default function PartnersManager() {
     logoUrl: "",
   });
   const [busy, setBusy] = useState(false);
-  const [creds, setCreds] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [creds, setCreds] = useState<{
+    email: string;
+    tempPassword: string;
+    emailSent: boolean;
+  } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -56,7 +60,8 @@ export default function PartnersManager() {
       if (!res.ok) {
         setErr(data.error || "Eroare");
       } else {
-        if (data.credentials) setCreds(data.credentials);
+        if (data.credentials)
+          setCreds({ ...data.credentials, emailSent: !!data.emailSent });
         setForm({
           email: "",
           companyName: "",
@@ -94,12 +99,16 @@ export default function PartnersManager() {
           style={{ marginBottom: "1rem" }}
         >
           <div style={{ flex: 1 }}>
-            <div className="dash-banner-title">Partener creat — trimite-i datele</div>
+            <div className="dash-banner-title">
+              Partener creat{creds.emailSent ? " — email trimis" : " — trimite-i datele"}
+            </div>
             <div className="dash-banner-body">
               Email: <code>{creds.email}</code> · Parolă temporară:{" "}
               <code style={{ fontSize: "1.05em" }}>{creds.tempPassword}</code>
               <br />
-              Apare o singură dată. Copiaz-o și trimite-i-o. Intrare la /login.
+              {creds.emailSent
+                ? "Am trimis un email cu credențialele. Păstrează parola și tu ca backup — apare o singură dată."
+                : "Email neconfigurat. Copiaz-o și trimite-i-o manual. Apare o singură dată."}
             </div>
           </div>
           <button
