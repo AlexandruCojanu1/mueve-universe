@@ -10,71 +10,73 @@ import Divider from "@/components/auth/Divider";
 import SubmitButton from "@/components/auth/SubmitButton";
 import Alert from "@/components/auth/Alert";
 
-function LoginForm() {
+function SignupForm() {
   const router = useRouter();
   const sp = useSearchParams();
   const from = sp.get("from") || "/dashboard";
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [magicBusy, setMagicBusy] = useState(false);
-  const [magicSent, setMagicSent] = useState(false);
 
   const hasGoogle = process.env.NEXT_PUBLIC_AUTH_GOOGLE === "1";
   const hasApple = process.env.NEXT_PUBLIC_AUTH_APPLE === "1";
-  const hasMagic = process.env.NEXT_PUBLIC_AUTH_EMAIL === "1";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setLoading(true);
-    const res = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
-    if (res?.error) {
-      setErr("Email sau parolă greșite.");
-      return;
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name || undefined, email, password }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setErr(data.error ?? "Nu am putut crea contul.");
+        setLoading(false);
+        return;
+      }
+      const signRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      setLoading(false);
+      if (signRes?.error) {
+        router.push("/login");
+        return;
+      }
+      router.push(from);
+      router.refresh();
+    } catch {
+      setErr("Eroare de rețea. Reîncearcă.");
+      setLoading(false);
     }
-    router.push(from);
-    router.refresh();
-  }
-
-  async function sendMagic() {
-    if (!email) {
-      setErr("Completează întâi email-ul.");
-      return;
-    }
-    setErr(null);
-    setMagicBusy(true);
-    const res = await signIn("nodemailer", { email, redirect: false, callbackUrl: from });
-    setMagicBusy(false);
-    if (res?.error) {
-      setErr("Nu am putut trimite linkul. Încearcă din nou.");
-      return;
-    }
-    setMagicSent(true);
   }
 
   return (
     <div className="space-y-7">
       <header>
         <div className="text-[0.62rem] uppercase tracking-[0.35em] font-black text-[var(--sun)] mb-3">
-          Autentificare
+          Cont nou
         </div>
         <h2
           className="text-2xl md:text-[1.8rem] font-black tracking-tight leading-tight"
           style={{ fontFamily: "var(--font-heading)" }}
         >
-          Intră în cont
+          Creează-ți contul
         </h2>
         <p className="text-sm opacity-70 mt-3">
-          Nu ai încă cont?{" "}
+          Ai deja cont?{" "}
           <Link
-            href={`/signup?from=${encodeURIComponent(from)}`}
+            href={`/login?from=${encodeURIComponent(from)}`}
             className="text-[var(--sun)] font-bold hover:opacity-80 transition"
           >
-            Creează unul →
+            Intră →
           </Link>
         </p>
       </header>
@@ -83,13 +85,20 @@ function LoginForm() {
         callbackUrl={from}
         hasGoogle={hasGoogle}
         hasApple={hasApple}
-        hasMagic={hasMagic}
-        onMagicClick={sendMagic}
+        hasMagic={false}
       />
 
       <Divider label="sau cu email" />
 
       <form onSubmit={submit} className="space-y-4">
+        <Field
+          label="Nume"
+          type="text"
+          value={name}
+          onChange={setName}
+          autoComplete="name"
+          placeholder="Cum îți spunem?"
+        />
         <Field
           label="Email"
           type="email"
@@ -104,33 +113,20 @@ function LoginForm() {
           type="password"
           value={password}
           onChange={setPassword}
-          autoComplete="current-password"
+          autoComplete="new-password"
           required
-          rightLink={
-            <Link
-              href="/forgot-password"
-              className="text-[0.6rem] uppercase tracking-[0.25em] font-bold text-[var(--sun)] hover:opacity-80 transition"
-            >
-              Ai uitat?
-            </Link>
-          }
+          hint="Minim 8 caractere."
         />
 
         {err && <Alert>{err}</Alert>}
-        {magicBusy && <Alert kind="info">Trimitem linkul magic…</Alert>}
-        {magicSent && (
-          <Alert kind="success">
-            Link trimis pe <strong>{email}</strong>. Verifică inbox-ul.
-          </Alert>
-        )}
 
-        <SubmitButton loading={loading} loadingLabel="Se conectează…">
-          Intră
+        <SubmitButton loading={loading} loadingLabel="Se creează contul…">
+          Creează cont
         </SubmitButton>
       </form>
 
       <p className="text-[0.65rem] opacity-50 leading-relaxed">
-        Prin autentificare accepți{" "}
+        Prin crearea contului accepți{" "}
         <Link href="/terms" className="underline hover:opacity-100">
           Termenii
         </Link>{" "}
@@ -144,30 +140,30 @@ function LoginForm() {
   );
 }
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <AuthShell
-      eyebrow="Universul mișcării"
-      headline="Bine ai"
-      headlineAccent="revenit."
-      sub="Continuă ritualul — sesiuni, wallet, comunitate. Totul te așteaptă unde l-ai lăsat."
+      eyebrow="Intră în universul mișcării"
+      headline="Începe"
+      headlineAccent="ritualul."
+      sub="Cont gratuit. Fără carduri la înregistrare. Alegi abonamentul după ce intri."
       bullets={[
         {
-          title: "Toate lumile într-un loc",
-          desc: "Calisthenics · Yoga · Alergare · Team sports.",
+          title: "Prima sesiune gratuită",
+          desc: "Testează orice lume — calisthenics, yoga, alergare.",
         },
         {
-          title: "Wallet cosmic",
-          desc: "Prezențe, abonament, plăți — istoric complet.",
+          title: "Cont unic",
+          desc: "Rezervări, abonament, wallet digital — într-un loc.",
         },
         {
-          title: "Comunitate reală",
-          desc: "Antrenori, evenimente, oameni care se mișcă.",
+          title: "Anulare oricând",
+          desc: "Zero obligație. Rămâi atâta timp cât îți place.",
         },
       ]}
     >
       <Suspense fallback={<div className="opacity-60 text-sm">…</div>}>
-        <LoginForm />
+        <SignupForm />
       </Suspense>
     </AuthShell>
   );

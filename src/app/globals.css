@@ -1642,10 +1642,11 @@ body.is-day .nav-merch-soon {
   color: var(--w);
   min-height: 100vh;
 }
-.login-shell,
-.login-shell * {
+.auth-shell,
+.auth-shell * {
   cursor: auto !important;
 }
-.login-shell {
+.auth-shell {
   color: var(--w);
+  background: #060a1c;
 }
