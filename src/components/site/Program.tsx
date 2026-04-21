@@ -118,7 +118,9 @@ export default function Program({ data }: { data: ProgramData }) {
             <div className="dx-time">{open.time}</div>
             <div className="dx-world">{pick(open.world, lang)}</div>
             {open.description && <p>{pick(open.description, lang)}</p>}
-            <button className="btn-join">{pick(data.joinLabel, lang)}</button>
+            <a href="/dashboard/sessions" className="btn-join">
+              {pick(data.joinLabel, lang)}
+            </a>
           </div>
         )}
       </div>
