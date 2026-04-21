@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { users, subscriptions } from "@/db/schema";
@@ -39,12 +40,19 @@ export async function GET() {
       .limit(1)
   )[0];
 
+  const hdrs = await headers();
+  const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
+  const proto = hdrs.get("x-forwarded-proto") || "https";
+  const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
+  const qrUrl = origin ? `${origin}/q/${qrToken}` : null;
+
   try {
     const buf = await buildApplePass({
       userId: user.id,
       name: user.name,
       email: user.email,
       qrToken,
+      qrUrl,
       planName: sub?.planName ?? null,
     });
     return new NextResponse(new Uint8Array(buf), {

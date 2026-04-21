@@ -66,6 +66,7 @@ export type AppleUserData = {
   name: string | null;
   email: string;
   qrToken: string;
+  qrUrl?: string | null;
   planName?: string | null;
 };
 
@@ -104,7 +105,7 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
 
   pass.type = "generic";
   pass.setBarcodes({
-    message: user.qrToken,
+    message: user.qrUrl || user.qrToken,
     format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
     altText: "Scan to validate",

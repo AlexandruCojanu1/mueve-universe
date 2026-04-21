@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { users, partners, partnerVisits } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte } from "drizzle-orm";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { getActivePassRow } from "@/lib/credits";
 
@@ -62,14 +62,30 @@ export async function POST(req: Request) {
   const pass = await getActivePassRow(member.id);
   const valid = !!pass;
 
-  await db.insert(partnerVisits).values({
-    partnerId: partner.id,
-    userId: member.id,
-    memberEmail: member.email,
-    memberName: member.name,
-    valid,
-    reason: valid ? null : "Pass inactiv",
-  });
+  const since = new Date(Date.now() - 60_000);
+  const recent = await db
+    .select({ id: partnerVisits.id })
+    .from(partnerVisits)
+    .where(
+      and(
+        eq(partnerVisits.partnerId, partner.id),
+        eq(partnerVisits.userId, member.id),
+        gte(partnerVisits.createdAt, since),
+      ),
+    )
+    .orderBy(desc(partnerVisits.createdAt))
+    .limit(1);
+
+  if (recent.length === 0) {
+    await db.insert(partnerVisits).values({
+      partnerId: partner.id,
+      userId: member.id,
+      memberEmail: member.email,
+      memberName: member.name,
+      valid,
+      reason: valid ? null : "Pass inactiv",
+    });
+  }
 
   return NextResponse.json({
     valid,

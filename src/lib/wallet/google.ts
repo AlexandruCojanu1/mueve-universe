@@ -27,6 +27,7 @@ export type GoogleUserData = {
   name: string | null;
   email: string;
   qrToken: string;
+  qrUrl?: string | null;
   planName?: string | null;
 };
 
@@ -52,7 +53,11 @@ export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> 
     subheader: {
       defaultValue: { language: "en", value: user.name ?? user.email },
     },
-    barcode: { type: "QR_CODE", value: user.qrToken, alternateText: "" },
+    barcode: {
+      type: "QR_CODE",
+      value: user.qrUrl || user.qrToken,
+      alternateText: "",
+    },
     hexBackgroundColor: "#F5F50A",
     logo: {
       sourceUri: { uri: process.env.GOOGLE_WALLET_LOGO_URL ?? "" },

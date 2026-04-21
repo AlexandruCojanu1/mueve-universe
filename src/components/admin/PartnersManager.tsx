@@ -24,6 +24,7 @@ export default function PartnersManager() {
     discountDescription: "",
   });
   const [busy, setBusy] = useState(false);
+  const [creds, setCreds] = useState<{ email: string; tempPassword: string } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -54,6 +55,7 @@ export default function PartnersManager() {
       if (!res.ok) {
         setErr(data.error || "Eroare");
       } else {
+        if (data.credentials) setCreds(data.credentials);
         setForm({
           email: "",
           companyName: "",
@@ -84,6 +86,39 @@ export default function PartnersManager() {
 
   return (
     <>
+      {creds && (
+        <div
+          className="dash-banner dash-banner-success"
+          style={{ marginBottom: "1rem" }}
+        >
+          <div style={{ flex: 1 }}>
+            <div className="dash-banner-title">Partener creat — trimite-i datele</div>
+            <div className="dash-banner-body">
+              Email: <code>{creds.email}</code> · Parolă temporară:{" "}
+              <code style={{ fontSize: "1.05em" }}>{creds.tempPassword}</code>
+              <br />
+              Apare o singură dată. Copiaz-o și trimite-i-o. Intrare la /login.
+            </div>
+          </div>
+          <button
+            className="dash-btn dash-btn-light"
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `Email: ${creds.email}\nParolă: ${creds.tempPassword}\nLogin: ${location.origin}/login`,
+              );
+            }}
+          >
+            Copiază
+          </button>
+          <button
+            className="dash-btn dash-btn-light"
+            onClick={() => setCreds(null)}
+            style={{ marginLeft: 8 }}
+          >
+            ×
+          </button>
+        </div>
+      )}
       <div className="dash-card">
         <div className="dash-card-head">
           <div>

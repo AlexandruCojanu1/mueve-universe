@@ -4,6 +4,12 @@ import { db } from "@/db";
 import { users, partners } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { generateQrToken } from "@/lib/qr-token";
+import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
+
+function generateTempPassword(): string {
+  return randomBytes(9).toString("base64").replace(/[+/=]/g, "").slice(0, 12);
+}
 
 async function requireAdmin() {
   const session = await auth();
@@ -66,6 +72,9 @@ export async function POST(req: Request) {
     .where(eq(users.email, email))
     .limit(1);
 
+  const tempPassword = generateTempPassword();
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+
   let userId: string;
   if (existingUser[0]) {
     const u = existingUser[0];
@@ -76,6 +85,8 @@ export async function POST(req: Request) {
         role: "partner",
         name: u.name || body.name || companyName,
         qrToken: u.qrToken ?? generateQrToken(),
+        passwordHash,
+        emailVerified: u.emailVerified ?? new Date(),
       })
       .where(eq(users.id, u.id));
 
@@ -98,6 +109,8 @@ export async function POST(req: Request) {
         name: body.name || companyName,
         role: "partner",
         qrToken: generateQrToken(),
+        passwordHash,
+        emailVerified: new Date(),
       })
       .returning({ id: users.id });
     userId = inserted[0].id;
@@ -114,7 +127,11 @@ export async function POST(req: Request) {
     })
     .returning();
 
-  return NextResponse.json({ ok: true, partner: created });
+  return NextResponse.json({
+    ok: true,
+    partner: created,
+    credentials: { email, tempPassword },
+  });
 }
 
 export async function PATCH(req: Request) {

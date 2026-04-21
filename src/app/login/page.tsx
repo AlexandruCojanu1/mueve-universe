@@ -13,7 +13,21 @@ import Alert from "@/components/auth/Alert";
 function LoginForm() {
   const router = useRouter();
   const sp = useSearchParams();
-  const from = sp.get("from") || "/dashboard";
+  const fromRaw = sp.get("from");
+  const from = fromRaw || "/dashboard";
+
+  async function resolveRedirect(): Promise<string> {
+    if (fromRaw) return fromRaw;
+    try {
+      const res = await fetch("/api/auth/session");
+      const s = await res.json();
+      const role = s?.user?.role;
+      if (role === "partner") return "/partner";
+      if (role === "admin") return "/admin";
+      if (role === "coach") return "/coach";
+    } catch {}
+    return "/dashboard";
+  }
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +50,8 @@ function LoginForm() {
       setErr("Email sau parolă greșite.");
       return;
     }
-    router.push(from);
+    const to = await resolveRedirect();
+    router.push(to);
     router.refresh();
   }
 

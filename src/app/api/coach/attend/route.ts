@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users, attendances } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { users, attendances, classSlots } from "@/db/schema";
+import { and, eq, sql } from "drizzle-orm";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
 
@@ -45,6 +45,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Lipsește token sau email." }, { status: 400 });
   }
 
+  const slotRows = await db
+    .select()
+    .from(classSlots)
+    .where(eq(classSlots.id, slotId))
+    .limit(1);
+  const slot = slotRows[0];
+  if (slot) {
+    const d = new Date(`${slotDate}T00:00:00`);
+    const jsDay = d.getDay();
+    const dayOfWeek = jsDay === 0 ? 7 : jsDay;
+    if (dayOfWeek !== slot.dayOfWeek && !force) {
+      return NextResponse.json(
+        { error: "Data nu corespunde zilei slot-ului. force=true pentru override." },
+        { status: 400 },
+      );
+    }
+    if (!slot.active && !force) {
+      return NextResponse.json(
+        { error: "Slot inactiv. force=true pentru override." },
+        { status: 400 },
+      );
+    }
+  }
+
   const where = token
     ? eq(users.qrToken, token)
     : eq(users.email, String(email).trim().toLowerCase());
@@ -81,6 +105,24 @@ export async function POST(req: Request) {
         creditsRemaining: balance.total,
       },
     });
+  }
+
+  if (slot && !force) {
+    const countRows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(attendances)
+      .where(and(eq(attendances.slotId, slotId), eq(attendances.slotDate, slotDate)));
+    const taken = countRows[0]?.count ?? 0;
+    if (taken >= slot.capacity) {
+      return NextResponse.json(
+        {
+          ok: false,
+          full: true,
+          error: `Slot plin (${taken}/${slot.capacity}). Retrimite cu force=true.`,
+        },
+        { status: 409 },
+      );
+    }
   }
 
   let consumedCreditId: string | undefined;
