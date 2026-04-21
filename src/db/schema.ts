@@ -148,6 +148,26 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Class credits (pass-gated access) ──
+export const creditSource = pgEnum("credit_source", ["purchase", "pass_included"]);
+
+export const classCredits = pgTable("class_credits", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  sourceType: creditSource("source_type").notNull().default("purchase"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+  planId: text("plan_id"),
+  planName: text("plan_name"),
+  purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  consumedAt: timestamp("consumed_at"),
+  consumedSlotId: text("consumed_slot_id"),
+  consumedSlotDate: text("consumed_slot_date"),
+});
+
 // ── Types ──
 export type Theme = typeof theme.$inferSelect;
 export type Section = typeof sections.$inferSelect;
@@ -159,3 +179,6 @@ export type Payment = typeof payments.$inferSelect;
 export type SubscriptionStatus = (typeof subscriptionStatus.enumValues)[number];
 export type Attendance = typeof attendances.$inferSelect;
 export type AttendanceMethod = (typeof attendanceMethod.enumValues)[number];
+export type ClassCredit = typeof classCredits.$inferSelect;
+export type NewClassCredit = typeof classCredits.$inferInsert;
+export type CreditSource = (typeof creditSource.enumValues)[number];

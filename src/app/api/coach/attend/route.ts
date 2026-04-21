@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users, attendances, subscriptions, payments } from "@/db/schema";
-import { and, eq, gte, inArray } from "drizzle-orm";
+import { users, attendances } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-
-const ACTIVE_STATUSES = ["active", "trialing", "past_due"] as const;
+import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
 
 export async function POST(req: Request) {
   const rl = rateLimit(clientKey(req, "attend"), 120, 60_000);
@@ -59,67 +58,67 @@ export async function POST(req: Request) {
     .limit(1);
   const already = existing.length > 0;
 
-  let noAccess = false;
-  if (!already && !force) {
-    const activeSub = await db
-      .select({ id: subscriptions.id })
-      .from(subscriptions)
-      .where(
-        and(
-          eq(subscriptions.userId, user.id),
-          inArray(subscriptions.status, [...ACTIVE_STATUSES]),
-        ),
-      )
-      .limit(1);
-
-    let hasRecentClass = false;
-    if (activeSub.length === 0) {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const recentPayments = await db
-        .select({ id: payments.id })
-        .from(payments)
-        .where(
-          and(
-            eq(payments.userId, user.id),
-            eq(payments.mode, "payment"),
-            gte(payments.createdAt, sevenDaysAgo),
-          ),
-        )
-        .limit(1);
-      hasRecentClass = recentPayments.length > 0;
-    }
-
-    if (activeSub.length === 0 && !hasRecentClass) {
-      noAccess = true;
-    }
-  }
-
-  if (noAccess) {
-    return NextResponse.json(
-      {
-        ok: false,
-        noAccess: true,
-        error: "Fără abonament activ. Retrimite cu force=true dacă accepți oricum.",
-        attendee: { userId: user.id, name: user.name, email: user.email },
+  if (already) {
+    const balance = await getCreditBalance(user.id);
+    return NextResponse.json({
+      ok: true,
+      already: true,
+      attendee: {
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        method,
+        at: new Date().toISOString(),
+        creditsRemaining: balance.total,
       },
-      { status: 402 },
-    );
-  }
-
-  if (!already) {
-    await db.insert(attendances).values({
-      userId: user.id,
-      slotId,
-      slotDate,
-      method,
-      validatedBy: coachId,
-      notes: force ? "forced by coach" : null,
     });
   }
 
+  let consumedCreditId: string | undefined;
+  if (!force) {
+    const res = await consumeOldestCredit({
+      userId: user.id,
+      slotId,
+      slotDate,
+    });
+    if (!res.consumed) {
+      const balance = await getCreditBalance(user.id);
+      return NextResponse.json(
+        {
+          ok: false,
+          noAccess: true,
+          error: "Fără clase rămase. Retrimite cu force=true ca să marchezi oricum.",
+          attendee: {
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+            creditsRemaining: balance.total,
+          },
+        },
+        { status: 402 },
+      );
+    }
+    consumedCreditId = res.creditId;
+  }
+
+  await db.insert(attendances).values({
+    userId: user.id,
+    slotId,
+    slotDate,
+    method,
+    validatedBy: coachId,
+    notes: force
+      ? "forced by coach (no credit consumed)"
+      : consumedCreditId
+        ? `credit:${consumedCreditId}`
+        : null,
+  });
+
+  const balance = await getCreditBalance(user.id);
+
   return NextResponse.json({
     ok: true,
-    already,
+    already: false,
     forced: !!force,
     attendee: {
       userId: user.id,
@@ -127,6 +126,7 @@ export async function POST(req: Request) {
       email: user.email,
       method,
       at: new Date().toISOString(),
+      creditsRemaining: balance.total,
     },
   });
 }

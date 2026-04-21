@@ -5,6 +5,7 @@ import { subscriptions, payments, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireStripe } from "@/lib/stripe";
 import type { SubscriptionStatus } from "@/db/schema";
+import { grantCredits } from "@/lib/credits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -137,6 +138,23 @@ export async function POST(req: Request) {
           const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
           const pi = await stripe.paymentIntents.retrieve(piId);
           await recordPayment(pi, session);
+          const userId = await userIdFromCustomer(
+            typeof session.customer === "string"
+              ? session.customer
+              : session.customer?.id ?? null,
+          );
+          if (userId) {
+            const rawCount = Number(session.metadata?.classCount ?? "1");
+            const count = Number.isFinite(rawCount) && rawCount > 0 ? Math.floor(rawCount) : 1;
+            await grantCredits({
+              userId,
+              count,
+              stripePaymentIntentId: pi.id,
+              stripeCheckoutSessionId: session.id,
+              planId: (session.metadata?.planId as string) || null,
+              planName: (session.metadata?.planName as string) || null,
+            });
+          }
         }
         break;
       }

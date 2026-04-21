@@ -12,6 +12,7 @@ import {
   computeWorldBreakdown,
   upcomingSessions,
 } from "@/lib/user-stats";
+import { getCreditBalance } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function DashboardHome({
   const [userRow] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   const program = await getProgramData();
 
-  const [stats, worldRows, recentPayments, activeSubRows] = await Promise.all([
+  const [stats, worldRows, recentPayments, activeSubRows, credits] = await Promise.all([
     computeUserStats(userId),
     computeWorldBreakdown(userId, program),
     db
@@ -45,6 +46,7 @@ export default async function DashboardHome({
       .where(eq(subscriptions.userId, userId))
       .orderBy(desc(subscriptions.updatedAt))
       .limit(1),
+    getCreditBalance(userId),
   ]);
 
   const activeSub = activeSubRows[0];
@@ -79,7 +81,11 @@ export default async function DashboardHome({
           <h2 className="dash-section-title">Statistici</h2>
         </div>
         <div className="dash-grid-4">
-          <StatCard label="Total sesiuni" value={stats.total} />
+          <StatCard
+            label="Clase rămase"
+            value={credits.total}
+            suffix={credits.total === 1 ? "clasă" : "clase"}
+          />
           <StatCard label="Luna asta" value={stats.thisMonth} />
           <StatCard
             label="Streak"
@@ -93,11 +99,11 @@ export default async function DashboardHome({
       <section className="dash-section">
         <div className="dash-grid-2">
           <div className="dash-card">
-            <div className="dash-card-label">Plan activ</div>
+            <div className="dash-card-label">Pass</div>
             {activeSub ? (
               <>
                 <div className="dash-card-value">
-                  {activeSub.planName || "Abonament"}
+                  {activeSub.planName || "Pass activ"}
                 </div>
                 <div className="dash-card-meta">
                   Status:{" "}
@@ -108,13 +114,28 @@ export default async function DashboardHome({
                     <> · până la {activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")}</>
                   )}
                 </div>
+                <div className="dash-card-meta">
+                  {credits.total > 0
+                    ? `${credits.total} ${credits.total === 1 ? "clasă rămasă" : "clase rămase"}${
+                        credits.nextExpiry
+                          ? ` · expiră ${credits.nextExpiry.toLocaleDateString("ro-RO")}`
+                          : ""
+                      }`
+                    : "Nicio clasă cumpărată încă."}
+                </div>
+                <Link href="/#pricing" className="dash-link">
+                  Cumpără clase →
+                </Link>
                 <ManageSubscription />
               </>
             ) : (
               <>
-                <div className="dash-card-value">Fără abonament activ</div>
+                <div className="dash-card-value">Fără Pass activ</div>
+                <div className="dash-card-meta">
+                  Ai nevoie de Pass ca să cumperi clase și să intri la sesiuni.
+                </div>
                 <Link href="/#pricing" className="dash-link">
-                  Vezi prețurile →
+                  Vezi Pass-ul →
                 </Link>
               </>
             )}

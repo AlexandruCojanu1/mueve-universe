@@ -5,6 +5,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireStripe, stripeEnabled } from "@/lib/stripe";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { hasActivePass } from "@/lib/credits";
 
 export async function POST(req: Request) {
   const rl = rateLimit(clientKey(req, "checkout"), 10, 60_000);
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     planId?: string;
     planName?: string;
     mode?: "subscription" | "payment";
+    classCount?: number;
   };
 
   const priceId = body.priceId;
@@ -40,6 +42,25 @@ export async function POST(req: Request) {
   }
 
   const mode = body.mode === "payment" ? "payment" : "subscription";
+
+  if (mode === "payment") {
+    const ok = await hasActivePass(session.user.id);
+    if (!ok) {
+      return NextResponse.json(
+        {
+          error:
+            "Ai nevoie de Pass activ ca să cumperi clase. Cumpără întâi Pass-ul lunar.",
+          needsPass: true,
+        },
+        { status: 403 },
+      );
+    }
+  }
+
+  const classCount =
+    mode === "payment" && Number.isFinite(body.classCount) && (body.classCount ?? 0) > 0
+      ? Math.floor(body.classCount!)
+      : 1;
 
   const stripe = requireStripe();
 
@@ -79,6 +100,7 @@ export async function POST(req: Request) {
       userId: user.id,
       planId: body.planId ?? "",
       planName: body.planName ?? "",
+      classCount: mode === "payment" ? String(classCount) : "",
     },
     subscription_data:
       mode === "subscription"

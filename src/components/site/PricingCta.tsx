@@ -54,6 +54,7 @@ export default function PricingCta({
         url?: string;
         redirect?: string;
         error?: string;
+        needsPass?: boolean;
       };
       if (res.status === 401 || data.redirect) {
         window.location.href = "/login?from=/dashboard";
@@ -64,6 +65,13 @@ export default function PricingCta({
           sessionStorage.removeItem(PENDING_KEY);
         } catch {}
         window.location.href = data.url;
+        return;
+      }
+      if (data.needsPass) {
+        try {
+          sessionStorage.removeItem(PENDING_KEY);
+        } catch {}
+        setErr("Ai nevoie de Pass — ia-l întâi");
         return;
       }
       setErr(data.error ?? "Nu pot iniția plata acum.");
