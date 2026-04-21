@@ -32,8 +32,10 @@ export default function DashboardNav({
     <nav className="dash-nav">
       <div className="dash-nav-row">
         <div className="dash-nav-left">
-          <Link href="/dashboard" className="dash-nav-brand">
-            MUEVE<span className="dash-nav-brand-sub">Universe</span>
+          <Link href="/dashboard" className="dash-nav-brand" aria-label="Mueve Universe">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/mueve-logo.png" alt="Mueve" className="brand-logo-img" />
+            <span className="dash-nav-brand-sub">Universe</span>
           </Link>
           <div className="dash-nav-links">
             {links.map((l) => (

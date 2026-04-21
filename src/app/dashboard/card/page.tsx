@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { headers } from "next/headers";
 import { ensureQrToken } from "@/lib/qr-token";
 import { getCreditBalance, getActivePassRow } from "@/lib/credits";
 import QRCode from "qrcode";
@@ -8,12 +9,17 @@ export const dynamic = "force-dynamic";
 export default async function CardPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
-  const [token, credits, pass] = await Promise.all([
+  const [token, credits, pass, hdrs] = await Promise.all([
     ensureQrToken(session.user.id),
     getCreditBalance(session.user.id),
     getActivePassRow(session.user.id),
+    headers(),
   ]);
-  const dataUrl = await QRCode.toDataURL(token, {
+  const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
+  const proto = hdrs.get("x-forwarded-proto") || "https";
+  const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
+  const qrUrl = `${origin}/q/${token}`;
+  const dataUrl = await QRCode.toDataURL(qrUrl, {
     margin: 1,
     color: { dark: "#050816", light: "#F5F50A" },
     width: 512,

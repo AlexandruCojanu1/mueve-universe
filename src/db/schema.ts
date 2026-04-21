@@ -29,7 +29,7 @@ export const sections = pgTable("sections", {
 });
 
 // ── Auth + users ──
-export const userRole = pgEnum("user_role", ["user", "coach", "admin"]);
+export const userRole = pgEnum("user_role", ["user", "coach", "admin", "partner"]);
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -168,6 +168,53 @@ export const classCredits = pgTable("class_credits", {
   consumedSlotDate: text("consumed_slot_date"),
 });
 
+// ── Partners (reduceri) ──
+export const partners = pgTable("partners", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  companyName: text("company_name").notNull(),
+  discountPercent: integer("discount_percent").notNull().default(10),
+  discountDescription: text("discount_description").notNull().default(""),
+  logoUrl: text("logo_url"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const partnerVisits = pgTable("partner_visits", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  partnerId: uuid("partner_id")
+    .notNull()
+    .references(() => partners.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  memberEmail: text("member_email").notNull(),
+  memberName: text("member_name"),
+  valid: boolean("valid").notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ── Class slots (coach-level schedule) ──
+export const classSlots = pgTable("class_slots", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  coachId: uuid("coach_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  dayOfWeek: integer("day_of_week").notNull(),
+  startTime: text("start_time").notNull(),
+  durationMin: integer("duration_min").notNull().default(60),
+  classType: text("class_type").notNull().default(""),
+  capacity: integer("capacity").notNull().default(20),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ── Types ──
 export type Theme = typeof theme.$inferSelect;
 export type Section = typeof sections.$inferSelect;
@@ -182,3 +229,9 @@ export type AttendanceMethod = (typeof attendanceMethod.enumValues)[number];
 export type ClassCredit = typeof classCredits.$inferSelect;
 export type NewClassCredit = typeof classCredits.$inferInsert;
 export type CreditSource = (typeof creditSource.enumValues)[number];
+export type Partner = typeof partners.$inferSelect;
+export type NewPartner = typeof partners.$inferInsert;
+export type PartnerVisit = typeof partnerVisits.$inferSelect;
+export type NewPartnerVisit = typeof partnerVisits.$inferInsert;
+export type ClassSlot = typeof classSlots.$inferSelect;
+export type NewClassSlot = typeof classSlots.$inferInsert;

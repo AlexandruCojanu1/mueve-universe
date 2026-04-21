@@ -4,24 +4,27 @@ import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/admin", label: "Secțiuni" },
-  { href: "/admin/partners", label: "Parteneri" },
-  { href: "/admin/slots", label: "Slots" },
-  { href: "/admin/theme", label: "Temă" },
-  { href: "/dashboard", label: "Contul meu" },
-  { href: "/", label: "Vezi site" },
+  { href: "/partner", label: "Acasă" },
+  { href: "/partner/scan", label: "Scanează" },
+  { href: "/partner/history", label: "Istoric" },
 ];
 
-export default function AdminNav({ email }: { email: string }) {
+export default function PartnerNav({
+  email,
+  companyName,
+}: {
+  email: string;
+  companyName: string;
+}) {
   const p = usePathname();
   return (
     <nav className="dash-nav">
       <div className="dash-nav-row">
         <div className="dash-nav-left">
-          <Link href="/admin" className="dash-nav-brand" aria-label="Mueve Admin">
+          <Link href="/partner" className="dash-nav-brand" aria-label="Mueve Partner">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/mueve-logo.png" alt="Mueve" className="brand-logo-img" />
-            <span className="dash-nav-brand-sub">Admin</span>
+            <span className="dash-nav-brand-sub">Partener</span>
           </Link>
           <div className="dash-nav-links">
             {links.map((l) => (
@@ -38,9 +41,9 @@ export default function AdminNav({ email }: { email: string }) {
           </div>
         </div>
         <div className="dash-nav-right">
-          <span className="dash-nav-user">{email}</span>
+          <span className="dash-nav-user">{companyName || email}</span>
           <button
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
+            onClick={() => signOut({ callbackUrl: "/login" })}
             className="dash-nav-signout"
           >
             Ieși

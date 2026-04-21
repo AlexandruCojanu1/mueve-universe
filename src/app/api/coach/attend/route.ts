@@ -26,8 +26,17 @@ export async function POST(req: Request) {
     method?: "qr" | "manual";
     force?: boolean;
   };
-  const { token, email, slotId, slotDate, force } = body;
+  const { email, slotId, slotDate, force } = body;
   const method = body.method === "manual" ? "manual" : "qr";
+  const rawToken = body.token?.toString().trim() || "";
+  let token = rawToken;
+  if (rawToken) {
+    try {
+      const u = new URL(rawToken);
+      const parts = u.pathname.split("/").filter(Boolean);
+      token = parts[parts.length - 1] || rawToken;
+    } catch {}
+  }
 
   if (!slotId || !slotDate) {
     return NextResponse.json({ error: "Lipsesc slotId / slotDate." }, { status: 400 });

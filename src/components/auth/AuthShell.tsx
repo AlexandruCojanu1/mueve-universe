@@ -32,7 +32,10 @@ export default function AuthShell({
               <span aria-hidden>←</span>
               Acasă
             </Link>
-            <SunBadge />
+            <Link href="/" className="auth-shell-logo" aria-label="Mueve Universe">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/mueve-logo.png" alt="Mueve" className="brand-logo-img" />
+            </Link>
           </div>
 
           <div className="auth-shell-brand-body">
@@ -79,20 +82,3 @@ export default function AuthShell({
   );
 }
 
-function SunBadge() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        height: "44px",
-        width: "44px",
-        borderRadius: "50%",
-        background:
-          "radial-gradient(circle at 35% 30%, #FFF3A8 0%, #F5DD5A 45%, #C99818 100%)",
-        boxShadow:
-          "0 0 0 1px rgba(245,221,90,0.4), 0 0 48px 6px rgba(245,221,90,0.5)",
-        flexShrink: 0,
-      }}
-    />
-  );
-}

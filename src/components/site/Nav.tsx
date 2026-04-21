@@ -14,8 +14,9 @@ export default function Nav({ data }: { data: NavData }) {
   return (
     <>
       <nav className="nav">
-        <a href="#" className="nav-logo">
-          {data.logo}
+        <a href="#" className="nav-logo" aria-label={data.logo}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/mueve-logo.png" alt={data.logo} className="brand-logo-img" />
         </a>
         <div className="nav-r">
           {data.links.map((l, i) => (
