@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { pick } from "@/lib/bilingual";
 import type { ProgramData, ProgramSlot } from "@/lib/content-types";
@@ -11,9 +11,42 @@ const DOT_COLOR: Record<ProgramSlot["color"], { bg: string; glow: string }> = {
   orange: { bg: "var(--sanctuary)", glow: "rgba(245,158,11,.4)" },
 };
 
+function timeToMin(t: string): number {
+  const [h, m] = t.split(":").map((n) => parseInt(n, 10) || 0);
+  return h * 60 + m;
+}
+
 export default function Program({ data }: { data: ProgramData }) {
   const { lang } = useLang();
   const [open, setOpen] = useState<ProgramSlot | null>(null);
+  const [now, setNow] = useState<{ day: number; min: number } | null>(null);
+
+  useEffect(() => {
+    function tick() {
+      const d = new Date();
+      const jsDay = d.getDay(); // 0=Sun..6=Sat
+      const day = (jsDay + 6) % 7; // schema 0=Mon..6=Sun
+      setNow({ day, min: d.getHours() * 60 + d.getMinutes() });
+    }
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const nextSlotId = useMemo(() => {
+    if (!now) return null;
+    const candidates = data.slots
+      .map((s) => {
+        const dayDelta = (s.day - now.day + 7) % 7;
+        const isToday = dayDelta === 0;
+        const sMin = timeToMin(s.time || "00:00");
+        if (isToday && sMin <= now.min) return null;
+        return { id: s.id, sortKey: dayDelta * 1440 + sMin };
+      })
+      .filter((x): x is { id: string; sortKey: number } => x !== null)
+      .sort((a, b) => a.sortKey - b.sortKey);
+    return candidates[0]?.id ?? null;
+  }, [data.slots, now]);
 
   const grid = useMemo(() => {
     const rows: Record<"am" | "pm", (ProgramSlot | null)[]> = {
@@ -46,8 +79,16 @@ export default function Program({ data }: { data: ProgramData }) {
       <div className="prog-table">
         <div className="pt-corner" />
         {data.dayLabels.map((d, i) => (
-          <div key={i} className={"pt-head" + (i === 6 ? " pt-head-boss" : "")}>
+          <div
+            key={i}
+            className={
+              "pt-head" +
+              (i === 6 ? " pt-head-boss" : "") +
+              (now?.day === i ? " pt-head-today" : "")
+            }
+          >
             {pick(d, lang)}
+            {now?.day === i && <span className="pt-today-dot" aria-hidden />}
           </div>
         ))}
         {rowKeys.map((rowKey) => (
@@ -58,6 +99,8 @@ export default function Program({ data }: { data: ProgramData }) {
             rowKey={rowKey}
             slots={grid[rowKey]}
             lang={lang}
+            todayIdx={now?.day ?? -1}
+            nextSlotId={nextSlotId}
             onOpen={setOpen}
           />
         ))}
@@ -89,6 +132,8 @@ function RowBlock({
   rowKey,
   slots,
   lang,
+  todayIdx,
+  nextSlotId,
   onOpen,
 }: {
   label: string;
@@ -96,6 +141,8 @@ function RowBlock({
   rowKey: "am" | "pm";
   slots: (ProgramSlot | null)[];
   lang: ReturnType<typeof useLang>["lang"];
+  todayIdx: number;
+  nextSlotId: string | null;
   onOpen: (s: ProgramSlot) => void;
 }) {
   return (
@@ -105,18 +152,31 @@ function RowBlock({
         <span className="pt-label-icon">{icon}</span>
       </div>
       {slots.map((s, i) => {
+        const isToday = i === todayIdx;
         if (!s) {
           void rowKey;
-          return <div key={i} className="pt-cell pt-empty" />;
+          return (
+            <div
+              key={i}
+              className={"pt-cell pt-empty" + (isToday ? " pt-cell-today" : "")}
+            />
+          );
         }
         const dot = DOT_COLOR[s.color];
+        const isNext = s.id === nextSlotId;
         return (
           <div
             key={s.id}
-            className={"pt-cell pt-has" + (s.boss ? " pt-boss-cell" : "")}
+            className={
+              "pt-cell pt-has" +
+              (s.boss ? " pt-boss-cell" : "") +
+              (isToday ? " pt-cell-today" : "") +
+              (isNext ? " pt-cell-next" : "")
+            }
             data-c={s.color}
             onClick={() => onOpen(s)}
           >
+            {isNext && <div className="pt-next-badge">URMĂTOAREA</div>}
             <div
               className="pt-dot"
               style={{ background: dot.bg, boxShadow: `0 0 12px ${dot.glow}` }}
