@@ -36,7 +36,7 @@ export default function CookieBanner() {
     <div
       role="dialog"
       aria-live="polite"
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-50 bg-[rgba(10,14,30,0.55)] backdrop-blur-3xl backdrop-saturate-200 border border-white/20 rounded-2xl p-5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-white/10 text-sm space-y-3"
+      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-md z-50 bg-[rgba(10,14,30,0.55)] backdrop-blur-3xl backdrop-saturate-200 border border-white/20 rounded-2xl p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-white/10 text-sm space-y-4"
     >
       <div className="font-black uppercase tracking-widest text-xs text-[var(--sun)]">
         {lang === "ro" ? "Cookie-uri" : "Cookies"}
