@@ -207,6 +207,32 @@ h5 {
   background: var(--sun);
   color: var(--deep) !important;
 }
+.nav-merch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: not-allowed;
+  opacity: 0.55 !important;
+}
+.nav-merch:hover {
+  opacity: 0.7 !important;
+}
+.nav-merch-soon {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--w);
+  opacity: 0.85;
+}
+body.is-day .nav-merch-soon {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(10, 25, 50, 0.25);
+}
 .lang-sw {
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -1615,4 +1641,11 @@ h5 {
   background: #0b0f24;
   color: var(--w);
   min-height: 100vh;
+}
+.login-shell,
+.login-shell * {
+  cursor: auto !important;
+}
+.login-shell {
+  color: var(--w);
 }

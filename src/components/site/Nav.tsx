@@ -8,6 +8,9 @@ export default function Nav({ data }: { data: NavData }) {
   const { lang, toggle } = useLang();
   const [mob, setMob] = useState(false);
 
+  const merchLabel = lang === "ro" ? "Merch" : "Merch";
+  const soonLabel = lang === "ro" ? "În curând" : "Soon";
+
   return (
     <>
       <nav className="nav">
@@ -20,6 +23,15 @@ export default function Nav({ data }: { data: NavData }) {
               {pick(l.label, lang)}
             </a>
           ))}
+          <a
+            href="#"
+            className="nav-merch"
+            aria-disabled="true"
+            onClick={(e) => e.preventDefault()}
+          >
+            {merchLabel}
+            <span className="nav-merch-soon">{soonLabel}</span>
+          </a>
           <a href="/dashboard" className="nav-account">
             {lang === "ro" ? "Cont" : "Account"}
           </a>
@@ -43,6 +55,18 @@ export default function Nav({ data }: { data: NavData }) {
             {pick(l.label, lang)}
           </a>
         ))}
+        <a
+          href="#"
+          className="nav-merch"
+          aria-disabled="true"
+          onClick={(e) => {
+            e.preventDefault();
+            setMob(false);
+          }}
+        >
+          {merchLabel}
+          <span className="nav-merch-soon">{soonLabel}</span>
+        </a>
         <a href="/dashboard" onClick={() => setMob(false)}>
           {lang === "ro" ? "Cont" : "Account"}
         </a>

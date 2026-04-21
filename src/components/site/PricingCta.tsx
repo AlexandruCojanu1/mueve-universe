@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 
+const PENDING_KEY = "mueve-pending-checkout";
+
 export default function PricingCta({
   label,
   priceId,
@@ -22,10 +24,26 @@ export default function PricingCta({
   const [err, setErr] = useState<string | null>(null);
 
   async function handle(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (!priceId) return; // no Stripe wired — let the anchor navigate to fallbackHref
+    if (!priceId) {
+      e.preventDefault();
+      try {
+        sessionStorage.setItem(
+          PENDING_KEY,
+          JSON.stringify({ planId, planName, mode, ts: Date.now() }),
+        );
+      } catch {}
+      window.location.href = "/login?from=/dashboard";
+      return;
+    }
     e.preventDefault();
     setErr(null);
     setBusy(true);
+    try {
+      sessionStorage.setItem(
+        PENDING_KEY,
+        JSON.stringify({ priceId, planId, planName, mode, ts: Date.now() }),
+      );
+    } catch {}
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -37,11 +55,14 @@ export default function PricingCta({
         redirect?: string;
         error?: string;
       };
-      if (data.redirect) {
-        window.location.href = data.redirect;
+      if (res.status === 401 || data.redirect) {
+        window.location.href = "/login?from=/dashboard";
         return;
       }
       if (data.url) {
+        try {
+          sessionStorage.removeItem(PENDING_KEY);
+        } catch {}
         window.location.href = data.url;
         return;
       }
@@ -55,7 +76,7 @@ export default function PricingCta({
 
   return (
     <a
-      href={fallbackHref || "#join"}
+      href={fallbackHref || "/login?from=/dashboard"}
       onClick={handle}
       className={className}
       aria-busy={busy}

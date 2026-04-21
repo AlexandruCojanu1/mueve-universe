@@ -5,6 +5,7 @@ import { subscriptions, payments, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import CheckoutBanner from "@/components/dashboard/CheckoutBanner";
+import AutoCheckout from "@/components/dashboard/AutoCheckout";
 import { getProgramData } from "@/lib/coach-schedule";
 import {
   computeUserStats,
@@ -60,6 +61,7 @@ export default async function DashboardHome({
 
   return (
     <div className="space-y-8">
+      <AutoCheckout />
       <CheckoutBanner status={sp.checkout} />
       <header>
         <h1 className="text-3xl font-black uppercase tracking-tight">Bună, {name}</h1>
