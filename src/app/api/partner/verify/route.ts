@@ -3,8 +3,9 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { users, partners, partnerVisits } from "@/db/schema";
 import { and, desc, eq, gte } from "drizzle-orm";
-import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { getActivePassRow } from "@/lib/credits";
+import { verifyTokenSchema } from "@/lib/validators";
 
 function extractToken(raw: string): string {
   const s = raw.trim();
@@ -18,7 +19,7 @@ function extractToken(raw: string): string {
 }
 
 export async function POST(req: Request) {
-  const rl = rateLimit(clientKey(req, "partner-verify"), 60, 60_000);
+  const rl = await rateLimitAsync(clientKey(req, "partner-verify"), 60, 60_000);
   if (!rl.ok) return NextResponse.json({ error: "Rate limit" }, { status: 429 });
 
   const session = await auth();
@@ -28,10 +29,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = (await req.json().catch(() => ({}))) as { token?: string };
-  const raw = (body.token || "").toString();
-  if (!raw) return NextResponse.json({ error: "Token lipsă" }, { status: 400 });
-  const token = extractToken(raw);
+  const parsed = verifyTokenSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Token lipsă" }, { status: 400 });
+  }
+  const token = extractToken(parsed.data.token);
 
   const partnerRows = await db
     .select()

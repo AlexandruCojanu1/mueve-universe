@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import bcrypt from "bcryptjs";
 import { db } from "@/db";
 import { users, verificationTokens } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
+import { hashPassword } from "@/lib/passwords";
 
 const schema = z.object({
   email: z.string().email().max(200),
@@ -13,7 +13,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const rl = rateLimit(clientKey(req, "reset"), 10, 60_000);
+  const rl = await rateLimitAsync(clientKey(req, "reset"), 10, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Prea multe încercări. Reîncearcă într-un minut." },
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await hashPassword(parsed.data.password);
   await db.update(users).set({ passwordHash }).where(eq(users.email, email));
 
   await db

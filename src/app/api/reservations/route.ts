@@ -8,7 +8,8 @@ import {
   classCredits,
 } from "@/db/schema";
 import { and, asc, desc, eq, gte, isNull, sql } from "drizzle-orm";
-import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
+import { reservationCreateSchema } from "@/lib/validators";
 
 function toDayOfWeek(date: Date): number {
   const js = date.getDay();
@@ -41,21 +42,21 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const rl = rateLimit(clientKey(req, "reserve"), 30, 60_000);
+  const rl = await rateLimitAsync(clientKey(req, "reserve"), 30, 60_000);
   if (!rl.ok) return NextResponse.json({ error: "Rate limit" }, { status: 429 });
 
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  const body = (await req.json().catch(() => ({}))) as {
-    slotId?: string;
-    slotDate?: string;
-  };
-  if (!body.slotId || !body.slotDate) {
-    return NextResponse.json({ error: "Lipsesc slotId / slotDate" }, { status: 400 });
+  const parsed = reservationCreateSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Date invalide" },
+      { status: 400 },
+    );
   }
-
+  const body = parsed.data;
   const d = new Date(`${body.slotDate}T00:00:00`);
   if (Number.isNaN(d.valueOf())) {
     return NextResponse.json({ error: "Dată invalidă" }, { status: 400 });

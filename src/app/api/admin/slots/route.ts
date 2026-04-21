@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { users, classSlots } from "@/db/schema";
 import { and, asc, eq, or } from "drizzle-orm";
+import { slotCreateSchema, slotPatchSchema } from "@/lib/validators";
 
 async function requireAdmin() {
   const session = await auth();
@@ -44,29 +45,23 @@ export async function GET() {
 export async function POST(req: Request) {
   const err = await requireAdmin();
   if (err) return err;
-  const body = (await req.json().catch(() => ({}))) as {
-    coachId?: string;
-    dayOfWeek?: number;
-    startTime?: string;
-    durationMin?: number;
-    classType?: string;
-    capacity?: number;
-  };
-  if (!body.coachId || body.dayOfWeek === undefined || !body.startTime) {
+  const parsed = slotCreateSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "coachId, dayOfWeek, startTime obligatorii" },
+      { error: parsed.error.issues[0]?.message ?? "Date invalide" },
       { status: 400 },
     );
   }
+  const b = parsed.data;
   const [created] = await db
     .insert(classSlots)
     .values({
-      coachId: body.coachId,
-      dayOfWeek: Number(body.dayOfWeek),
-      startTime: String(body.startTime),
-      durationMin: Number(body.durationMin ?? 60),
-      classType: String(body.classType ?? ""),
-      capacity: Number(body.capacity ?? 20),
+      coachId: b.coachId,
+      dayOfWeek: b.dayOfWeek,
+      startTime: b.startTime,
+      durationMin: b.durationMin ?? 60,
+      classType: b.classType ?? "",
+      capacity: b.capacity ?? 20,
     })
     .returning();
   return NextResponse.json({ ok: true, slot: created });
@@ -75,25 +70,22 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   const err = await requireAdmin();
   if (err) return err;
-  const body = (await req.json().catch(() => ({}))) as {
-    id?: string;
-    coachId?: string;
-    dayOfWeek?: number;
-    startTime?: string;
-    durationMin?: number;
-    classType?: string;
-    capacity?: number;
-    active?: boolean;
-  };
-  if (!body.id) return NextResponse.json({ error: "id lipsă" }, { status: 400 });
+  const parsed = slotPatchSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Date invalide" },
+      { status: 400 },
+    );
+  }
+  const body = parsed.data;
   const set: Record<string, unknown> = { updatedAt: new Date() };
   if (body.coachId !== undefined) set.coachId = body.coachId;
-  if (body.dayOfWeek !== undefined) set.dayOfWeek = Number(body.dayOfWeek);
-  if (body.startTime !== undefined) set.startTime = String(body.startTime);
-  if (body.durationMin !== undefined) set.durationMin = Number(body.durationMin);
-  if (body.classType !== undefined) set.classType = String(body.classType);
-  if (body.capacity !== undefined) set.capacity = Number(body.capacity);
-  if (body.active !== undefined) set.active = !!body.active;
+  if (body.dayOfWeek !== undefined) set.dayOfWeek = body.dayOfWeek;
+  if (body.startTime !== undefined) set.startTime = body.startTime;
+  if (body.durationMin !== undefined) set.durationMin = body.durationMin;
+  if (body.classType !== undefined) set.classType = body.classType;
+  if (body.capacity !== undefined) set.capacity = body.capacity;
+  if (body.active !== undefined) set.active = body.active;
 
   const [updated] = await db
     .update(classSlots)

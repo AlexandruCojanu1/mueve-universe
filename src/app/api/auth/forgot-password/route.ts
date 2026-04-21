@@ -4,13 +4,13 @@ import { randomBytes } from "crypto";
 import { db } from "@/db";
 import { users, verificationTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { sendEmail, emailEnabled, wrapBrandHtml } from "@/lib/mailer";
 
 const schema = z.object({ email: z.string().email().max(200) });
 
 export async function POST(req: Request) {
-  const rl = rateLimit(clientKey(req, "forgot"), 3, 60_000);
+  const rl = await rateLimitAsync(clientKey(req, "forgot"), 3, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Prea multe încercări. Reîncearcă într-un minut." },

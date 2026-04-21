@@ -3,11 +3,11 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { users, attendances, classSlots, reservations } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
-import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
 
 export async function POST(req: Request) {
-  const rl = rateLimit(clientKey(req, "attend"), 120, 60_000);
+  const rl = await rateLimitAsync(clientKey(req, "attend"), 120, 60_000);
   if (!rl.ok) {
     return NextResponse.json({ error: "Rate limit" }, { status: 429 });
   }

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { users, partners } from "@/db/schema";
 import { and, asc, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import type { UserRole } from "@/db/schema";
+import { userPatchSchema } from "@/lib/validators";
 
 const VALID_ROLES: UserRole[] = ["user", "coach", "admin", "partner"];
 
@@ -61,16 +62,14 @@ export async function PATCH(req: Request) {
   const r = await requireAdmin();
   if ("err" in r) return r.err;
 
-  const body = (await req.json().catch(() => ({}))) as {
-    id?: string;
-    role?: UserRole;
-  };
-  if (!body.id || !body.role) {
-    return NextResponse.json({ error: "id + role obligatorii" }, { status: 400 });
+  const parsed = userPatchSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Date invalide" },
+      { status: 400 },
+    );
   }
-  if (!VALID_ROLES.includes(body.role)) {
-    return NextResponse.json({ error: "Rol invalid" }, { status: 400 });
-  }
+  const body = parsed.data;
   if (body.id === r.userId && body.role !== "admin") {
     return NextResponse.json(
       { error: "Nu te poți demota singur (măsură de siguranță)." },

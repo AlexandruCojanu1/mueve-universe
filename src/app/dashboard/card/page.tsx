@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { ensureQrToken } from "@/lib/qr-token";
 import { getCreditBalance, getActivePassRow } from "@/lib/credits";
 import QRCode from "qrcode";
+import RotateQrButton from "@/components/dashboard/RotateQrButton";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,18 @@ export default async function CardPage() {
             )}
           </div>
         </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginTop: "1rem",
+          fontSize: "0.8rem",
+          opacity: 0.7,
+        }}
+      >
+        <RotateQrButton />
       </div>
 
       {!pass && (

@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { captureError } from "./observability";
 
 let cached: Transporter | null = null;
 let cachedUrl: string | null = null;
@@ -40,6 +41,7 @@ export async function sendEmail(args: SendArgs): Promise<
     return { ok: true, id: info.messageId };
   } catch (error) {
     console.error("[mailer] send failed", error);
+    captureError(error, { scope: "mailer", subject: args.subject, to: args.to });
     return { ok: false, reason: "send_failed", error };
   }
 }

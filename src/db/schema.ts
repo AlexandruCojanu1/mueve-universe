@@ -148,6 +148,13 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Webhook idempotency (Stripe event replay protection) ──
+export const processedWebhookEvents = pgTable("processed_webhook_events", {
+  eventId: text("event_id").primaryKey(),
+  source: text("source").notNull().default("stripe"),
+  processedAt: timestamp("processed_at").defaultNow().notNull(),
+});
+
 // ── Class credits (pass-gated access) ──
 export const creditSource = pgEnum("credit_source", ["purchase", "pass_included"]);
 

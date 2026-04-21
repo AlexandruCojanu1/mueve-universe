@@ -1,6 +1,6 @@
 import { db } from "./index";
 import { theme, sections, users } from "./schema";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "../lib/passwords";
 import {
   DEFAULT_COLORS,
   DEFAULT_FONTS,
@@ -35,7 +35,7 @@ async function main() {
   // Admin user
   const email = process.env.ADMIN_EMAIL || "admin@example.com";
   const pw = process.env.ADMIN_PASSWORD || "changeme";
-  const hash = await bcrypt.hash(pw, 10);
+  const hash = await hashPassword(pw);
   await db.insert(users).values({
     email,
     passwordHash: hash,

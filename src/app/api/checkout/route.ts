@@ -4,11 +4,11 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireStripe, stripeEnabled } from "@/lib/stripe";
-import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { hasActivePass } from "@/lib/credits";
 
 export async function POST(req: Request) {
-  const rl = rateLimit(clientKey(req, "checkout"), 10, 60_000);
+  const rl = await rateLimitAsync(clientKey(req, "checkout"), 10, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Prea multe încercări. Reîncearcă în puțin timp." },

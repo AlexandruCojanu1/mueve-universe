@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { partners } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { partnerProfileSchema } from "@/lib/validators";
 
 async function requirePartner() {
   const session = await auth();
@@ -29,15 +30,18 @@ export async function GET() {
 export async function PATCH(req: Request) {
   const r = await requirePartner();
   if ("err" in r) return r.err;
-  const body = (await req.json().catch(() => ({}))) as {
-    companyName?: string;
-    discountDescription?: string;
-    logoUrl?: string | null;
-  };
+  const parsed = partnerProfileSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Date invalide" },
+      { status: 400 },
+    );
+  }
+  const body = parsed.data;
   const set: Record<string, unknown> = { updatedAt: new Date() };
-  if (body.companyName !== undefined) set.companyName = String(body.companyName);
+  if (body.companyName !== undefined) set.companyName = body.companyName;
   if (body.discountDescription !== undefined)
-    set.discountDescription = String(body.discountDescription);
+    set.discountDescription = body.discountDescription;
   if (body.logoUrl !== undefined) set.logoUrl = body.logoUrl || null;
 
   const [updated] = await db

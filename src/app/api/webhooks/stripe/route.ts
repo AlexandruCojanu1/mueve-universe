@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/db";
-import { subscriptions, payments, users } from "@/db/schema";
+import { subscriptions, payments, users, processedWebhookEvents } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireStripe } from "@/lib/stripe";
 import type { SubscriptionStatus } from "@/db/schema";
 import { grantCredits } from "@/lib/credits";
+import { captureError } from "@/lib/observability";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -122,7 +123,17 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(raw, sig, secret);
   } catch (err) {
     console.error("Stripe webhook signature verification failed", err);
+    captureError(err, { scope: "stripe-webhook-signature" });
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  const marker = await db
+    .insert(processedWebhookEvents)
+    .values({ eventId: event.id, source: "stripe" })
+    .onConflictDoNothing({ target: processedWebhookEvents.eventId })
+    .returning({ eventId: processedWebhookEvents.eventId });
+  if (marker.length === 0) {
+    return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
@@ -176,6 +187,10 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error("Stripe webhook handler error", err);
+    captureError(err, { scope: "stripe-webhook-handler", eventType: event.type, eventId: event.id });
+    await db
+      .delete(processedWebhookEvents)
+      .where(eq(processedWebhookEvents.eventId, event.id));
     return NextResponse.json({ error: "Handler error" }, { status: 500 });
   }
 

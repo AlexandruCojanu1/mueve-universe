@@ -5,8 +5,9 @@ import { users, partners } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { generateQrToken } from "@/lib/qr-token";
 import { randomBytes } from "crypto";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/passwords";
 import { sendEmail, emailEnabled, wrapBrandHtml } from "@/lib/mailer";
+import { partnerCreateSchema, partnerPatchSchema } from "@/lib/validators";
 
 function generateTempPassword(): string {
   return randomBytes(9).toString("base64").replace(/[+/=]/g, "").slice(0, 12);
@@ -46,26 +47,23 @@ export async function POST(req: Request) {
   const err = await requireAdmin();
   if (err) return err;
 
-  const body = (await req.json().catch(() => ({}))) as {
-    email?: string;
-    name?: string;
-    companyName?: string;
-    discountPercent?: number;
-    discountDescription?: string;
-    logoUrl?: string;
-  };
-  const email = String(body.email || "").trim().toLowerCase();
-  const companyName = String(body.companyName || "").trim();
-  const discountPercent = Math.max(0, Math.min(100, Number(body.discountPercent ?? 10)));
-  const discountDescription = String(body.discountDescription || "").trim();
-  const logoUrl = body.logoUrl ? String(body.logoUrl).trim() : null;
-
-  if (!email || !companyName) {
+  const raw = await req.json().catch(() => ({}));
+  const parsed = partnerCreateSchema.safeParse(raw);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Email și nume firmă obligatorii." },
+      { error: parsed.error.issues[0]?.message ?? "Date invalide" },
       { status: 400 },
     );
   }
+  const body = parsed.data;
+  const {
+    email,
+    companyName,
+    discountPercent = 10,
+    discountDescription = "",
+    logoUrl: rawLogo,
+  } = body;
+  const logoUrl = rawLogo ? rawLogo : null;
 
   const existingUser = await db
     .select()
@@ -74,7 +72,7 @@ export async function POST(req: Request) {
     .limit(1);
 
   const tempPassword = generateTempPassword();
-  const passwordHash = await bcrypt.hash(tempPassword, 10);
+  const passwordHash = await hashPassword(tempPassword);
 
   let userId: string;
   if (existingUser[0]) {
@@ -174,24 +172,21 @@ Mișcă-te · Trăiește · Evoluează`,
 export async function PATCH(req: Request) {
   const err = await requireAdmin();
   if (err) return err;
-  const body = (await req.json().catch(() => ({}))) as {
-    id?: string;
-    companyName?: string;
-    discountPercent?: number;
-    discountDescription?: string;
-    logoUrl?: string | null;
-    active?: boolean;
-  };
-  if (!body.id) return NextResponse.json({ error: "id lipsă" }, { status: 400 });
-
+  const parsed = partnerPatchSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Date invalide" },
+      { status: 400 },
+    );
+  }
+  const body = parsed.data;
   const set: Record<string, unknown> = { updatedAt: new Date() };
-  if (body.companyName !== undefined) set.companyName = String(body.companyName);
-  if (body.discountPercent !== undefined)
-    set.discountPercent = Math.max(0, Math.min(100, Number(body.discountPercent)));
+  if (body.companyName !== undefined) set.companyName = body.companyName;
+  if (body.discountPercent !== undefined) set.discountPercent = body.discountPercent;
   if (body.discountDescription !== undefined)
-    set.discountDescription = String(body.discountDescription);
-  if (body.logoUrl !== undefined) set.logoUrl = body.logoUrl;
-  if (body.active !== undefined) set.active = !!body.active;
+    set.discountDescription = body.discountDescription;
+  if (body.logoUrl !== undefined) set.logoUrl = body.logoUrl || null;
+  if (body.active !== undefined) set.active = body.active;
 
   const [updated] = await db
     .update(partners)
