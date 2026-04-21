@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSlotsForDate, isoDate } from "@/lib/coach-schedule";
 import Scanner from "@/components/coach/Scanner";
@@ -20,18 +21,19 @@ export default async function ScanPage({
   if (!slot) redirect("/coach");
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <a href="/coach" className="text-xs uppercase tracking-widest opacity-60 hover:opacity-100">
-          ← Înapoi la sesiuni
-        </a>
-        <h1 className="text-3xl font-black uppercase tracking-tight">{slot.activity.ro}</h1>
-        <div className="text-sm opacity-70">
+    <>
+      <Link href="/coach" className="dash-back">
+        ← Înapoi la sesiuni
+      </Link>
+      <header className="dash-page-head">
+        <div className="dash-page-eyebrow">Validare prezență</div>
+        <h1 className="dash-page-title">{slot.activity.ro}</h1>
+        <p className="dash-page-sub">
           {slot.time} · {slot.world.ro} · {dateStr}
-        </div>
+        </p>
       </header>
 
       <Scanner slotId={slotId} slotDate={dateStr} />
-    </div>
+    </>
   );
 }

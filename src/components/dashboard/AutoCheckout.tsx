@@ -76,21 +76,20 @@ export default function AutoCheckout() {
       role="status"
       aria-live="polite"
       className={
-        "rounded-lg p-4 border " +
-        (state === "error"
-          ? "bg-red-500/10 border-red-500/40 text-red-300"
-          : "bg-[var(--sun)]/10 border-[var(--sun)]/40 text-[var(--sun)]")
+        "dash-banner " + (state === "error" ? "dash-banner-error" : "dash-banner-success")
       }
     >
-      <div className="font-black uppercase tracking-widest text-xs">
-        {state === "error" ? "Plată indisponibilă" : "Te ducem la plată…"}
-      </div>
-      <div className="text-sm opacity-90 mt-1">
-        {state === "error"
-          ? "Nu am putut iniția Stripe. Reîncearcă din secțiunea Abonamente."
-          : planName
-            ? `Pregătim checkout pentru ${planName}.`
-            : "Pregătim checkout-ul Stripe."}
+      <div>
+        <div className="dash-banner-title">
+          {state === "error" ? "Plată indisponibilă" : "Te ducem la plată…"}
+        </div>
+        <div className="dash-banner-body">
+          {state === "error"
+            ? "Nu am putut iniția Stripe. Reîncearcă din secțiunea Abonamente."
+            : planName
+              ? `Pregătim checkout pentru ${planName}.`
+              : "Pregătim checkout-ul Stripe."}
+        </div>
       </div>
     </div>
   );

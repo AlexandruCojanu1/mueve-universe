@@ -14,37 +14,34 @@ export default function DashboardNav({
   role: UserRole;
 }) {
   const p = usePathname();
-  const links = [
+  const links: { href: string; label: string }[] = [
     { href: "/dashboard", label: "Acasă" },
     { href: "/dashboard/card", label: "Cardul meu" },
     { href: "/dashboard/sessions", label: "Sesiuni" },
     { href: "/dashboard/wallet", label: "Portofel" },
-    { href: "/", label: "Site" },
   ];
   if (role === "admin" || role === "coach") {
-    links.splice(3, 0, { href: "/coach", label: "Coach" });
+    links.push({ href: "/coach", label: "Coach" });
   }
   if (role === "admin") {
-    links.splice(4, 0, { href: "/admin", label: "Admin" });
+    links.push({ href: "/admin", label: "Admin" });
   }
+  links.push({ href: "/", label: "Site" });
+
   return (
-    <nav className="border-b border-white/10 bg-black/40 backdrop-blur sticky top-0 z-40">
-      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link
-            href="/dashboard"
-            className="font-black italic uppercase tracking-wider text-[var(--sun)]"
-          >
-            MUEVE UNIVERSE
+    <nav className="dash-nav">
+      <div className="dash-nav-row">
+        <div className="dash-nav-left">
+          <Link href="/dashboard" className="dash-nav-brand">
+            MUEVE<span className="dash-nav-brand-sub">Universe</span>
           </Link>
-          <div className="flex gap-1 flex-wrap">
+          <div className="dash-nav-links">
             {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 className={
-                  "px-3 py-1.5 rounded-md text-xs uppercase tracking-widest font-bold transition " +
-                  (p === l.href ? "bg-white/10" : "opacity-60 hover:opacity-100")
+                  "dash-nav-link" + (p === l.href ? " dash-nav-link-active" : "")
                 }
               >
                 {l.label}
@@ -52,11 +49,11 @@ export default function DashboardNav({
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-xs opacity-60">{name || email}</span>
+        <div className="dash-nav-right">
+          <span className="dash-nav-user">{name || email}</span>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="text-xs uppercase tracking-widest opacity-60 hover:opacity-100"
+            className="dash-nav-signout"
           >
             Ieși
           </button>

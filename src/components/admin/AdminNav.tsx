@@ -6,26 +6,26 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/admin", label: "Secțiuni" },
   { href: "/admin/theme", label: "Temă" },
+  { href: "/dashboard", label: "Contul meu" },
   { href: "/", label: "Vezi site" },
 ];
 
 export default function AdminNav({ email }: { email: string }) {
   const p = usePathname();
   return (
-    <nav className="border-b border-white/10 bg-black/40 backdrop-blur sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/admin" className="font-black italic uppercase tracking-wider text-[var(--sun)]">
-            MUEVE UNIVERSE Admin
+    <nav className="dash-nav">
+      <div className="dash-nav-row">
+        <div className="dash-nav-left">
+          <Link href="/admin" className="dash-nav-brand">
+            MUEVE<span className="dash-nav-brand-sub">Admin</span>
           </Link>
-          <div className="flex gap-1">
+          <div className="dash-nav-links">
             {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 className={
-                  "px-3 py-1.5 rounded-md text-xs uppercase tracking-widest font-bold transition " +
-                  (p === l.href ? "bg-white/10" : "opacity-60 hover:opacity-100")
+                  "dash-nav-link" + (p === l.href ? " dash-nav-link-active" : "")
                 }
               >
                 {l.label}
@@ -33,11 +33,11 @@ export default function AdminNav({ email }: { email: string }) {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-xs opacity-50">{email}</span>
+        <div className="dash-nav-right">
+          <span className="dash-nav-user">{email}</span>
           <button
             onClick={() => signOut({ callbackUrl: "/admin/login" })}
-            className="text-xs uppercase tracking-widest opacity-60 hover:opacity-100"
+            className="dash-nav-signout"
           >
             Ieși
           </button>

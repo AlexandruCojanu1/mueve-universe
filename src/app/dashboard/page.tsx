@@ -60,139 +60,154 @@ export default async function DashboardHome({
     : null;
 
   return (
-    <div className="space-y-8">
+    <>
       <AutoCheckout />
       <CheckoutBanner status={sp.checkout} />
-      <header>
-        <h1 className="text-3xl font-black uppercase tracking-tight">Bună, {name}</h1>
-        {memberSince && (
-          <p className="opacity-60 mt-2 text-sm">Membru din {memberSince}</p>
-        )}
-      </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total sesiuni" value={stats.total} />
-        <StatCard label="Luna asta" value={stats.thisMonth} />
-        <StatCard label="Streak" value={stats.streakDays} suffix={stats.streakDays === 1 ? "zi" : "zile"} />
-        <StatCard
-          label="Favorit"
-          value={favSlot?.activity.ro ?? "—"}
-          isText
-        />
-      </div>
+      <section className="dash-welcome">
+        <div className="dash-welcome-eyebrow">Universul tău</div>
+        <h1 className="dash-welcome-title">Bună, {name}</h1>
+        <p className="dash-welcome-sub">
+          {memberSince
+            ? `Membru din ${memberSince}. Continuă ritualul — rezervări, sesiuni, wallet.`
+            : "Continuă ritualul — rezervări, sesiuni, wallet."}
+        </p>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-3">
-          <div className="text-xs uppercase tracking-widest font-bold opacity-60">Plan activ</div>
-          {activeSub ? (
-            <>
-              <div className="text-lg font-black">{activeSub.planName || "Abonament"}</div>
-              <div className="text-xs opacity-60">
-                Status: <span className="uppercase tracking-wider">{activeSub.status}</span>
-                {activeSub.currentPeriodEnd && (
-                  <> · până la {activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")}</>
-                )}
-              </div>
-              <ManageSubscription />
-            </>
-          ) : (
-            <>
-              <div className="text-lg">Fără abonament activ</div>
-              <Link
-                href="/#pricing"
-                className="inline-block text-xs uppercase tracking-widest font-bold text-[var(--sun)] hover:opacity-80"
-              >
-                Vezi prețurile →
-              </Link>
-            </>
-          )}
+      <section className="dash-section">
+        <div className="dash-section-head">
+          <h2 className="dash-section-title">Statistici</h2>
         </div>
+        <div className="dash-grid-4">
+          <StatCard label="Total sesiuni" value={stats.total} />
+          <StatCard label="Luna asta" value={stats.thisMonth} />
+          <StatCard
+            label="Streak"
+            value={stats.streakDays}
+            suffix={stats.streakDays === 1 ? "zi" : "zile"}
+          />
+          <StatCard label="Favorit" value={favSlot?.activity.ro ?? "—"} isText />
+        </div>
+      </section>
 
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-3">
-          <div className="text-xs uppercase tracking-widest font-bold opacity-60">
-            Plăți recente
-          </div>
-          {recentPayments.length === 0 ? (
-            <div className="text-sm opacity-60">Încă nicio plată.</div>
-          ) : (
-            <ul className="text-sm space-y-1">
-              {recentPayments.map((p) => (
-                <li key={p.id} className="flex items-center justify-between">
-                  <span>{p.planName || p.mode}</span>
-                  <span className="opacity-70">
-                    {(p.amount / 100).toFixed(2)} {p.currency.toUpperCase()}
+      <section className="dash-section">
+        <div className="dash-grid-2">
+          <div className="dash-card">
+            <div className="dash-card-label">Plan activ</div>
+            {activeSub ? (
+              <>
+                <div className="dash-card-value">
+                  {activeSub.planName || "Abonament"}
+                </div>
+                <div className="dash-card-meta">
+                  Status:{" "}
+                  <span style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    {activeSub.status}
                   </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-4">
-          <div className="text-xs uppercase tracking-widest font-bold opacity-60">
-            Pe lumi
+                  {activeSub.currentPeriodEnd && (
+                    <> · până la {activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")}</>
+                  )}
+                </div>
+                <ManageSubscription />
+              </>
+            ) : (
+              <>
+                <div className="dash-card-value">Fără abonament activ</div>
+                <Link href="/#pricing" className="dash-link">
+                  Vezi prețurile →
+                </Link>
+              </>
+            )}
           </div>
-          {worldRows.length === 0 ? (
-            <div className="text-sm opacity-60">Fără date încă — marchează prima prezență.</div>
-          ) : (
-            <ul className="space-y-2">
-              {worldRows.map((w) => {
-                const pct = worldTotal > 0 ? Math.round((w.count / worldTotal) * 100) : 0;
-                return (
-                  <li key={w.world} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-bold">{w.world}</span>
-                      <span className="opacity-60 text-xs">
-                        {w.count} · {pct}%
+
+          <div className="dash-card">
+            <div className="dash-card-label">Plăți recente</div>
+            {recentPayments.length === 0 ? (
+              <div className="dash-card-meta">Încă nicio plată.</div>
+            ) : (
+              <ul className="dash-list">
+                {recentPayments.map((p) => (
+                  <li key={p.id} className="dash-list-row">
+                    <div className="dash-list-row-main">
+                      <span className="dash-list-row-title">
+                        {p.planName || p.mode}
                       </span>
                     </div>
-                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[var(--sun)]"
-                        style={{ width: `${pct}%` }}
-                      />
+                    <span className="dash-list-row-side">
+                      {(p.amount / 100).toFixed(2)} {p.currency.toUpperCase()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="dash-section">
+        <div className="dash-grid-2">
+          <div className="dash-card">
+            <div className="dash-card-label">Pe lumi</div>
+            {worldRows.length === 0 ? (
+              <div className="dash-card-meta">
+                Fără date încă — marchează prima prezență.
+              </div>
+            ) : (
+              <ul className="dash-list" style={{ gap: "0.25rem" }}>
+                {worldRows.map((w) => {
+                  const pct =
+                    worldTotal > 0 ? Math.round((w.count / worldTotal) * 100) : 0;
+                  return (
+                    <li key={w.world} className="dash-bar-row">
+                      <div className="dash-bar-head">
+                        <span className="dash-bar-label">{w.world}</span>
+                        <span className="dash-bar-value">
+                          {w.count} · {pct}%
+                        </span>
+                      </div>
+                      <div className="dash-bar-track">
+                        <div
+                          className="dash-bar-fill"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          <div className="dash-card">
+            <div className="dash-card-label">Următoarele sesiuni</div>
+            {upcoming.length === 0 ? (
+              <div className="dash-card-meta">
+                Nicio sesiune în următoarele 7 zile.
+              </div>
+            ) : (
+              <ul className="dash-list">
+                {upcoming.map((u) => (
+                  <li key={`${u.date}-${u.slot.id}`} className="dash-list-row">
+                    <div className="dash-list-row-main">
+                      <span className="dash-list-row-title">
+                        {u.slot.activity.ro}
+                      </span>
+                      <span className="dash-list-row-meta">
+                        {u.dayLabel} · {u.date.slice(5).replace("-", ".")} ·{" "}
+                        {u.slot.time} · {u.slot.world.ro}
+                      </span>
                     </div>
                   </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-3">
-          <div className="text-xs uppercase tracking-widest font-bold opacity-60">
-            Următoarele sesiuni
+                ))}
+              </ul>
+            )}
+            <Link href="/#prog" className="dash-link" style={{ marginTop: "0.3rem" }}>
+              Programul complet →
+            </Link>
           </div>
-          {upcoming.length === 0 ? (
-            <div className="text-sm opacity-60">Nicio sesiune în următoarele 7 zile.</div>
-          ) : (
-            <ul className="text-sm divide-y divide-white/5">
-              {upcoming.map((u) => (
-                <li
-                  key={`${u.date}-${u.slot.id}`}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div>
-                    <div className="font-bold">{u.slot.activity.ro}</div>
-                    <div className="text-xs opacity-60">
-                      {u.dayLabel} · {u.date.slice(5).replace("-", ".")} · {u.slot.time} · {u.slot.world.ro}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          <Link
-            href="/#prog"
-            className="inline-block text-xs uppercase tracking-widest font-bold text-[var(--sun)] hover:opacity-80"
-          >
-            Programul complet →
-          </Link>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }
 
@@ -208,11 +223,11 @@ function StatCard({
   isText?: boolean;
 }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-lg p-5 space-y-2">
-      <div className="text-[10px] uppercase tracking-widest font-bold opacity-50">{label}</div>
-      <div className={isText ? "text-base font-bold" : "text-3xl font-black text-[var(--sun)]"}>
+    <div className="dash-stat">
+      <div className="dash-stat-label">{label}</div>
+      <div className={isText ? "dash-stat-value-text" : "dash-stat-value"}>
         {value}
-        {suffix && <span className="text-xs opacity-60 ml-2 font-bold">{suffix}</span>}
+        {suffix && <span className="dash-stat-suffix">{suffix}</span>}
       </div>
     </div>
   );

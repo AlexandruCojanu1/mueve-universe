@@ -20,18 +20,13 @@ export default function CheckoutBanner({ status }: { status?: string }) {
   const ok = status === "success";
   return (
     <div
-      className={
-        "rounded-lg p-4 flex items-start justify-between gap-4 border " +
-        (ok
-          ? "bg-[var(--sun)]/10 border-[var(--sun)]/40 text-[var(--sun)]"
-          : "bg-red-500/10 border-red-500/40 text-red-300")
-      }
+      className={"dash-banner " + (ok ? "dash-banner-success" : "dash-banner-error")}
     >
       <div>
-        <div className="font-black uppercase tracking-widest text-xs">
+        <div className="dash-banner-title">
           {ok ? "Plată reușită" : "Plată anulată"}
         </div>
-        <div className="text-sm opacity-90 mt-1">
+        <div className="dash-banner-body">
           {ok
             ? "Mulțumim! Planul tău va fi activ în câteva secunde după confirmarea Stripe."
             : "Nu ai finalizat plata. Poți încerca din nou oricând."}
@@ -42,7 +37,7 @@ export default function CheckoutBanner({ status }: { status?: string }) {
           setVisible(false);
           router.replace("/dashboard");
         }}
-        className="text-xs uppercase tracking-widest opacity-70 hover:opacity-100"
+        className="dash-banner-close"
       >
         Închide
       </button>

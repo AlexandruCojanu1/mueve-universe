@@ -21,47 +21,57 @@ export default async function CoachHistory() {
     .limit(100);
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-black uppercase tracking-tight">Istoric prezențe</h1>
-        <p className="opacity-60 mt-2 text-sm">Ultimele 100 validări.</p>
+    <>
+      <header className="dash-page-head">
+        <div className="dash-page-eyebrow">Coach</div>
+        <h1 className="dash-page-title">Istoric prezențe</h1>
+        <p className="dash-page-sub">Ultimele 100 validări.</p>
       </header>
+
       {rows.length === 0 ? (
-        <div className="opacity-60 text-sm border border-dashed border-white/15 rounded-lg p-10 text-center">
-          Niciun utilizator marcat încă.
-        </div>
+        <div className="dash-empty">Niciun utilizator marcat încă.</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left opacity-60 uppercase text-[10px] tracking-widest">
-                <th className="py-2 pr-4">Utilizator</th>
-                <th className="py-2 pr-4">Data</th>
-                <th className="py-2 pr-4">Slot</th>
-                <th className="py-2 pr-4">Metodă</th>
-                <th className="py-2">Validat la</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr
-                  key={`${r.userId}-${r.slotId}-${r.slotDate}`}
-                  className="border-t border-white/5"
-                >
-                  <td className="py-2 pr-4">
-                    <span className="font-bold">{r.name || r.email}</span>
-                    {r.name && <span className="opacity-50 ml-2 text-xs">{r.email}</span>}
-                  </td>
-                  <td className="py-2 pr-4">{r.slotDate}</td>
-                  <td className="py-2 pr-4 opacity-70">{r.slotId}</td>
-                  <td className="py-2 pr-4 text-xs uppercase tracking-widest opacity-60">{r.method}</td>
-                  <td className="py-2 opacity-70">{r.validatedAt.toLocaleString("ro-RO")}</td>
+        <div className="dash-table-wrap">
+          <div className="dash-table-scroll">
+            <table className="dash-table">
+              <thead>
+                <tr>
+                  <th>Utilizator</th>
+                  <th>Data</th>
+                  <th>Slot</th>
+                  <th>Metodă</th>
+                  <th>Validat la</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={`${r.userId}-${r.slotId}-${r.slotDate}`}>
+                    <td>
+                      <span className="dash-table-strong">{r.name || r.email}</span>
+                      {r.name && (
+                        <span
+                          className="dash-table-muted"
+                          style={{ marginLeft: "0.6rem", fontSize: "0.72rem" }}
+                        >
+                          {r.email}
+                        </span>
+                      )}
+                    </td>
+                    <td>{r.slotDate}</td>
+                    <td className="dash-table-muted">{r.slotId}</td>
+                    <td>
+                      <span className="dash-table-pill">{r.method}</span>
+                    </td>
+                    <td className="dash-table-muted">
+                      {r.validatedAt.toLocaleString("ro-RO")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

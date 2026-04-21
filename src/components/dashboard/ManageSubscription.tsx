@@ -28,11 +28,28 @@ export default function ManageSubscription() {
       <button
         onClick={open}
         disabled={busy}
-        className="text-xs uppercase tracking-widest font-bold text-[var(--sun)] hover:opacity-80 disabled:opacity-50"
+        className="dash-link"
+        style={{
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: busy ? "not-allowed" : "pointer",
+          opacity: busy ? 0.5 : 1,
+        }}
       >
         {busy ? "..." : "Gestionează abonamentul →"}
       </button>
-      {err && <div className="text-xs text-red-400 mt-2">{err}</div>}
+      {err && (
+        <div
+          style={{
+            fontSize: "0.72rem",
+            color: "#fca5a5",
+            marginTop: "0.5rem",
+          }}
+        >
+          {err}
+        </div>
+      )}
     </div>
   );
 }

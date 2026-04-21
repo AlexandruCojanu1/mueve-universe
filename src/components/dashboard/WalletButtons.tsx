@@ -54,29 +54,33 @@ export default function WalletButtons() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-3">
-        <div className="text-xs uppercase tracking-widest font-bold opacity-60">Apple Wallet</div>
+    <div className="dash-grid-2">
+      <div className="dash-card">
+        <div className="dash-card-label">Apple Wallet</div>
         <button
           onClick={addToApple}
           disabled={busy === "apple"}
-          className="w-full py-3 rounded-md bg-black text-white font-bold text-sm hover:bg-white/10 border border-white/20 disabled:opacity-50 transition"
+          className="dash-btn dash-btn-dark dash-btn-wide"
         >
           {busy === "apple" ? "..." : "Add to Apple Wallet"}
         </button>
-        {appleErr && <div className="text-xs text-red-400">{appleErr}</div>}
+        {appleErr && (
+          <div style={{ fontSize: "0.72rem", color: "#fca5a5" }}>{appleErr}</div>
+        )}
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-3">
-        <div className="text-xs uppercase tracking-widest font-bold opacity-60">Google Pay</div>
+      <div className="dash-card">
+        <div className="dash-card-label">Google Pay</div>
         <button
           onClick={addToGoogle}
           disabled={busy === "google"}
-          className="w-full py-3 rounded-md bg-white text-black font-bold text-sm hover:opacity-90 disabled:opacity-50 transition"
+          className="dash-btn dash-btn-light dash-btn-wide"
         >
           {busy === "google" ? "..." : "Add to Google Pay"}
         </button>
-        {googleErr && <div className="text-xs text-red-400">{googleErr}</div>}
+        {googleErr && (
+          <div style={{ fontSize: "0.72rem", color: "#fca5a5" }}>{googleErr}</div>
+        )}
       </div>
     </div>
   );

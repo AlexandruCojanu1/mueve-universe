@@ -8,47 +8,55 @@ export default async function CoachHome() {
   const slots = await getSlotsForDate(today);
   const dateStr = isoDate(today);
 
+  const dayLabel = today.toLocaleDateString("ro-RO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-black uppercase tracking-tight">Sesiuni — azi</h1>
-        <p className="opacity-60 mt-2 text-sm capitalize">
-          {today.toLocaleDateString("ro-RO", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })}
+    <>
+      <header className="dash-page-head">
+        <div className="dash-page-eyebrow">Coach</div>
+        <h1 className="dash-page-title">Sesiuni — azi</h1>
+        <p
+          className="dash-page-sub"
+          style={{ textTransform: "capitalize" }}
+        >
+          {dayLabel}
         </p>
       </header>
 
       {slots.length === 0 ? (
-        <div className="opacity-60 text-sm border border-dashed border-white/15 rounded-lg p-10 text-center">
-          Nicio sesiune programată azi.
-        </div>
+        <div className="dash-empty">Nicio sesiune programată azi.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="dash-grid-2">
           {slots.map((s) => (
             <Link
               key={s.id}
               href={`/coach/scan/${encodeURIComponent(s.id)}?date=${dateStr}`}
-              className="bg-white/5 border border-white/10 rounded-lg p-6 hover:border-[var(--sun)] transition block"
+              className="dash-card dash-card-hover"
+              style={{ textDecoration: "none" }}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs uppercase tracking-widest opacity-60">{s.row === "am" ? "Dimineața" : "Seara"}</div>
-                  <div className="text-xl font-black mt-1">{s.activity.ro}</div>
-                  <div className="text-xs opacity-70 mt-1">
-                    {s.time} · {s.world.ro}
-                  </div>
-                </div>
-                <div className="text-xs uppercase tracking-widest font-bold text-[var(--sun)]">
-                  Scanează →
-                </div>
+              <div className="dash-card-label">
+                {s.row === "am" ? "Dimineața" : "Seara"}
+              </div>
+              <div className="dash-card-value" style={{ fontSize: "1.15rem" }}>
+                {s.activity.ro}
+              </div>
+              <div className="dash-card-meta">
+                {s.time} · {s.world.ro}
+              </div>
+              <div
+                className="dash-link"
+                style={{ marginTop: "0.5rem" }}
+              >
+                Scanează →
               </div>
             </Link>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
