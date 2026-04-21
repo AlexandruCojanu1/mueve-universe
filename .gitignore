@@ -47,3 +47,4 @@ next-env.d.ts
 
 # wallet signing certs — never commit
 /certs/
+.env*.local
