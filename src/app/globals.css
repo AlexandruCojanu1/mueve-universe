@@ -78,8 +78,8 @@ body.is-day .lang-sw {
   text-shadow: 0 1px 4px rgba(10, 25, 50, 0.55);
 }
 body.is-day .price-card,
-body.is-day .pt-cell,
-body.is-day .pt-label,
+body.is-day .pt-cell[data-row="pm"],
+body.is-day .pt-label[data-row="pm"],
 body.is-day .m-val {
   background: rgba(10, 25, 50, 0.32);
 }
@@ -834,6 +834,28 @@ body.is-day .nav-merch-soon {
 .pt-cell.pt-today {
   background: rgba(245, 245, 10, 0.04);
   box-shadow: inset 0 0 20px rgba(245, 245, 10, 0.03);
+}
+
+/* Always-on "day zone" for the morning row, regardless of global day/night */
+.prog-table .pt-label[data-row="am"] {
+  background: linear-gradient(180deg, rgba(140, 185, 220, 0.12), rgba(140, 185, 220, 0.04));
+}
+.prog-table .pt-cell[data-row="am"] {
+  background: linear-gradient(180deg, rgba(140, 185, 220, 0.1), rgba(140, 185, 220, 0.03));
+}
+.prog-table .pt-cell[data-row="am"].pt-boss-cell {
+  background: linear-gradient(180deg, rgba(245, 245, 10, 0.07), rgba(140, 185, 220, 0.04));
+}
+.prog-table .pt-cell[data-row="am"].pt-cell-today {
+  background: linear-gradient(180deg, rgba(245, 245, 10, 0.08), rgba(140, 185, 220, 0.06));
+}
+.prog-table .pt-label[data-row="am"] .pt-label-icon {
+  color: var(--sun);
+  opacity: 0.6;
+}
+.prog-table .pt-label[data-row="pm"] .pt-label-icon {
+  color: #9aa6c4;
+  opacity: 0.5;
 }
 
 .day-expand {
@@ -1714,18 +1736,57 @@ body.is-day .nav-merch-soon {
 }
 @media (max-width: 480px) {
   .prog-table {
-    grid-template-columns: auto repeat(7, minmax(75px, 1fr));
+    grid-template-columns: 2.2rem repeat(7, minmax(82px, 1fr));
   }
   .pt-label span:first-child {
     writing-mode: vertical-rl;
     text-orientation: mixed;
     font-size: 0.5rem;
+    letter-spacing: 0.22em;
   }
   .pt-label {
-    padding: 2vh 0.8vw;
+    padding: 1.5vh 0.2rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .pt-label-icon {
+    font-size: 0.85rem;
+  }
+  .pt-cell {
+    padding: 1.2rem 0.4rem;
+    min-height: 7.5rem;
+    gap: 0.35rem;
+  }
+  .pt-cell.pt-empty {
+    min-height: 7.5rem;
   }
   .pt-act {
-    font-size: 0.55rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+  }
+  .pt-time {
+    font-size: 0.6rem;
+    opacity: 0.5;
+  }
+  .pt-world {
+    font-size: 0.48rem;
+    letter-spacing: 0.15em;
+  }
+  .pt-dot {
+    width: 7px;
+    height: 7px;
+  }
+  .pt-head {
+    padding: 1rem 0.3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+  }
+  .pt-next-badge {
+    font-size: 0.42rem;
+    padding: 2px 5px;
+    letter-spacing: 0.1em;
+    top: 0.3rem;
   }
   .world-info {
     padding: 5vh 5vw;

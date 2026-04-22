@@ -149,17 +149,17 @@ function RowBlock({
 }) {
   return (
     <>
-      <div className="pt-label">
+      <div className="pt-label" data-row={rowKey}>
         <span>{label}</span>
         <span className="pt-label-icon">{icon}</span>
       </div>
       {slots.map((s, i) => {
         const isToday = i === todayIdx;
         if (!s) {
-          void rowKey;
           return (
             <div
               key={i}
+              data-row={rowKey}
               className={"pt-cell pt-empty" + (isToday ? " pt-cell-today" : "")}
             />
           );
@@ -176,6 +176,7 @@ function RowBlock({
               (isNext ? " pt-cell-next" : "")
             }
             data-c={s.color}
+            data-row={rowKey}
             onClick={() => onOpen(s)}
           >
             {isNext && <div className="pt-next-badge">URMĂTOAREA</div>}
