@@ -1810,13 +1810,16 @@ body.is-day .nav-merch-soon {
     letter-spacing: 0.1em;
   }
   .pt-next-badge {
-    font-size: 0.36rem;
+    font-size: 0.32rem;
     padding: 1px 3px;
-    letter-spacing: 0.06em;
+    letter-spacing: 0;
     top: 0.2rem;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
+    max-width: calc(100% - 0.4rem);
+    white-space: nowrap;
+    overflow: hidden;
   }
   .pt-badge {
     font-size: 0.32rem;
