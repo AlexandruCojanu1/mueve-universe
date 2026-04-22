@@ -1,6 +1,12 @@
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
+// Vercel Marketplace exposes Upstash with prefixed names; alias to native.
+process.env.UPSTASH_REDIS_REST_URL ??=
+  process.env.UPSTASH_REDIS_REST_KV_REST_API_URL;
+process.env.UPSTASH_REDIS_REST_TOKEN ??=
+  process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN;
+
 type RLResult = { ok: boolean; retryAfter: number };
 
 // In-memory sliding-window limiter for dev / when Upstash isn't configured.
