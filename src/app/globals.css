@@ -1246,8 +1246,56 @@ body.is-day .nav-merch-soon {
   }
 }
 @media (max-width: 520px) {
+  /* Multi-plan grids stay on one row on mobile — shrink the cards instead */
   .price-cards-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(var(--col-count, 3), minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .price-cards-grid .price-card {
+    padding: 0.9rem 0.55rem 0.8rem;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+  .price-cards-grid .price-card-main {
+    gap: 0.3rem;
+  }
+  .price-cards-grid .price-name {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+  }
+  .price-cards-grid .price-amount {
+    gap: 0.15rem;
+  }
+  .price-cards-grid .price-value {
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+    line-height: 1;
+  }
+  .price-cards-grid .price-currency {
+    font-size: 0.6rem;
+  }
+  .price-cards-grid .price-original {
+    font-size: 0.7rem;
+  }
+  .price-cards-grid .price-period {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+  }
+  .price-cards-grid .price-tagline,
+  .price-cards-grid .price-card-feat {
+    display: none;
+  }
+  .price-cards-grid .price-cta {
+    padding: 0.6rem 0.3rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    min-height: 0;
+  }
+  .price-cards-grid .price-badge {
+    right: 0.5rem;
+    top: -0.45rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
   }
 }
 
