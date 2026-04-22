@@ -836,18 +836,34 @@ body.is-day .nav-merch-soon {
   box-shadow: inset 0 0 20px rgba(245, 245, 10, 0.03);
 }
 
-/* Always-on "day zone" for the morning row, regardless of global day/night */
-.prog-table .pt-label[data-row="am"] {
-  background: linear-gradient(180deg, rgba(140, 185, 220, 0.12), rgba(140, 185, 220, 0.04));
-}
+/* Always-on "sunrise zone" for the morning row, regardless of global day/night */
+.prog-table .pt-label[data-row="am"],
 .prog-table .pt-cell[data-row="am"] {
-  background: linear-gradient(180deg, rgba(140, 185, 220, 0.1), rgba(140, 185, 220, 0.03));
+  background: linear-gradient(
+    180deg,
+    rgba(35, 45, 95, 0.55) 0%,
+    rgba(120, 75, 140, 0.4) 40%,
+    rgba(230, 125, 90, 0.35) 75%,
+    rgba(255, 200, 115, 0.4) 100%
+  );
 }
 .prog-table .pt-cell[data-row="am"].pt-boss-cell {
-  background: linear-gradient(180deg, rgba(245, 245, 10, 0.07), rgba(140, 185, 220, 0.04));
+  background: linear-gradient(
+    180deg,
+    rgba(35, 45, 95, 0.55) 0%,
+    rgba(140, 90, 150, 0.45) 35%,
+    rgba(245, 160, 90, 0.45) 70%,
+    rgba(255, 220, 120, 0.55) 100%
+  );
 }
 .prog-table .pt-cell[data-row="am"].pt-cell-today {
-  background: linear-gradient(180deg, rgba(245, 245, 10, 0.08), rgba(140, 185, 220, 0.06));
+  background: linear-gradient(
+    180deg,
+    rgba(245, 245, 10, 0.1) 0%,
+    rgba(140, 90, 150, 0.4) 35%,
+    rgba(245, 160, 90, 0.4) 70%,
+    rgba(255, 220, 120, 0.45) 100%
+  );
 }
 .prog-table .pt-label[data-row="am"] .pt-label-icon {
   color: var(--sun);
@@ -1703,6 +1719,10 @@ body.is-day .nav-merch-soon {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+  .prog {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 @media (max-width: 768px) {
   .nav-r {
@@ -1735,58 +1755,77 @@ body.is-day .nav-merch-soon {
   }
 }
 @media (max-width: 480px) {
+  /* Compact mobile grid: all 7 days visible at once — tap a cell for full details */
   .prog-table {
-    grid-template-columns: 2.2rem repeat(7, minmax(82px, 1fr));
+    overflow-x: visible;
+    grid-template-columns: 1.4rem repeat(7, minmax(0, 1fr));
   }
   .pt-label span:first-child {
     writing-mode: vertical-rl;
     text-orientation: mixed;
-    font-size: 0.5rem;
-    letter-spacing: 0.22em;
+    font-size: 0.42rem;
+    letter-spacing: 0.2em;
   }
   .pt-label {
-    padding: 1.5vh 0.2rem;
+    padding: 1rem 0;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
   }
   .pt-label-icon {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
   }
   .pt-cell {
-    padding: 1.2rem 0.4rem;
-    min-height: 7.5rem;
-    gap: 0.35rem;
+    padding: 0.65rem 0.15rem;
+    min-height: 5.5rem;
+    gap: 0.22rem;
   }
   .pt-cell.pt-empty {
-    min-height: 7.5rem;
+    min-height: 5.5rem;
   }
   .pt-act {
-    font-size: 0.58rem;
-    letter-spacing: 0.02em;
-    line-height: 1.25;
+    font-size: 0.46rem;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .pt-time {
-    font-size: 0.6rem;
-    opacity: 0.5;
+    font-size: 0.52rem;
+    opacity: 0.55;
+    letter-spacing: 0;
   }
   .pt-world {
-    font-size: 0.48rem;
-    letter-spacing: 0.15em;
+    display: none;
   }
   .pt-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
   }
   .pt-head {
-    padding: 1rem 0.3rem;
-    font-size: 0.6rem;
-    letter-spacing: 0.14em;
+    padding: 0.6rem 0.1rem;
+    font-size: 0.48rem;
+    letter-spacing: 0.1em;
   }
   .pt-next-badge {
-    font-size: 0.42rem;
-    padding: 2px 5px;
-    letter-spacing: 0.1em;
-    top: 0.3rem;
+    font-size: 0.36rem;
+    padding: 1px 3px;
+    letter-spacing: 0.06em;
+    top: 0.2rem;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  .pt-badge {
+    font-size: 0.32rem;
+    padding: 1px 3px;
+    top: 0.2rem;
+    right: 0.2rem;
+  }
+  .pt-empty::after {
+    font-size: 0.55rem;
   }
   .world-info {
     padding: 5vh 5vw;
