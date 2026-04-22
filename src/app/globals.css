@@ -1314,11 +1314,14 @@ body.is-day .nav-merch-soon {
   }
   .price-cards-grid .price-cta {
     margin-top: 0.9rem;
-    padding: 0.55rem 0.25rem;
+    padding: 0.45rem 0.25rem;
     font-size: 0.5rem;
     letter-spacing: 0.08em;
     line-height: 1.15;
-    min-height: 0;
+    min-height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
   }
   .price-cards-grid .price-badge {
