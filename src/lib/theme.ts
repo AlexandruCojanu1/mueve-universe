@@ -4,12 +4,16 @@ import { eq } from "drizzle-orm";
 import { DEFAULT_COLORS, DEFAULT_FONTS } from "./content-types";
 
 export async function getTheme() {
-  const rows = await db.select().from(themeTable).where(eq(themeTable.id, "default")).limit(1);
-  const row = rows[0];
-  return {
-    colors: (row?.colors as Record<string, string>) || DEFAULT_COLORS,
-    fonts: (row?.fonts as { heading: string; body: string }) || DEFAULT_FONTS,
-  };
+  try {
+    const rows = await db.select().from(themeTable).where(eq(themeTable.id, "default")).limit(1);
+    const row = rows[0];
+    return {
+      colors: (row?.colors as Record<string, string>) || DEFAULT_COLORS,
+      fonts: (row?.fonts as { heading: string; body: string }) || DEFAULT_FONTS,
+    };
+  } catch {
+    return { colors: DEFAULT_COLORS, fonts: DEFAULT_FONTS };
+  }
 }
 
 export function themeToCssVars(colors: Record<string, string>): string {
