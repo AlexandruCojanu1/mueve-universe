@@ -5,7 +5,7 @@ export type Mode = "day" | "night";
 
 export function computeMode(d = new Date()): Mode {
   const h = d.getHours();
-  return h >= 8 && h < 18 ? "day" : "night";
+  return h >= 8 && h < 20 ? "day" : "night";
 }
 
 export function useDayNight(): Mode | null {

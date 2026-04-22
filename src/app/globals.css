@@ -360,6 +360,11 @@ body.is-day .nav-merch-soon {
   height: 100%;
   animation: celestial-float 6s ease-in-out infinite;
 }
+#sunCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 
 /* ─── CSS Sun ────────────────────────── */
 .cs-sun {
