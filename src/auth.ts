@@ -41,7 +41,7 @@ const providers: NextAuthConfig["providers"] = [
 ];
 
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-  providers.push(Google);
+  providers.push(Google({ allowDangerousEmailAccountLinking: true }));
 }
 if (process.env.AUTH_APPLE_ID && process.env.AUTH_APPLE_SECRET) {
   providers.push(Apple);
