@@ -36,7 +36,7 @@ function LoginForm() {
   const [magicBusy, setMagicBusy] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
 
-  const hasGoogle = process.env.NEXT_PUBLIC_AUTH_GOOGLE === "1";
+  const hasGoogle = true;
   const hasApple = process.env.NEXT_PUBLIC_AUTH_APPLE === "1";
   const hasMagic = process.env.NEXT_PUBLIC_AUTH_EMAIL === "1";
 
