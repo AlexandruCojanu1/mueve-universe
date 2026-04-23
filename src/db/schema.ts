@@ -8,6 +8,7 @@ import {
   jsonb,
   timestamp,
   primaryKey,
+  index,
 } from "drizzle-orm/pg-core";
 
 // ── Content ──
@@ -31,18 +32,22 @@ export const sections = pgTable("sections", {
 // ── Auth + users ──
 export const userRole = pgEnum("user_role", ["user", "coach", "admin", "partner"]);
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
-  emailVerified: timestamp("email_verified", { mode: "date" }),
-  name: text("name"),
-  image: text("image"),
-  passwordHash: text("password_hash"),
-  role: userRole("role").notNull().default("user"),
-  stripeCustomerId: text("stripe_customer_id"),
-  qrToken: text("qr_token").unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull().unique(),
+    emailVerified: timestamp("email_verified", { mode: "date" }),
+    name: text("name"),
+    image: text("image"),
+    passwordHash: text("password_hash"),
+    role: userRole("role").notNull().default("user"),
+    stripeCustomerId: text("stripe_customer_id"),
+    qrToken: text("qr_token").unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("users_stripe_customer_id_idx").on(t.stripeCustomerId)],
+);
 
 export const accounts = pgTable(
   "accounts",
@@ -94,23 +99,27 @@ export const subscriptionStatus = pgEnum("subscription_status", [
   "paused",
 ]);
 
-export const subscriptions = pgTable("subscriptions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  stripeSubscriptionId: text("stripe_subscription_id").unique(),
-  stripePriceId: text("stripe_price_id"),
-  stripeProductId: text("stripe_product_id"),
-  planId: text("plan_id"),
-  planName: text("plan_name"),
-  status: subscriptionStatus("status").notNull(),
-  currentPeriodStart: timestamp("current_period_start", { mode: "date" }),
-  currentPeriodEnd: timestamp("current_period_end", { mode: "date" }),
-  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stripeSubscriptionId: text("stripe_subscription_id").unique(),
+    stripePriceId: text("stripe_price_id"),
+    stripeProductId: text("stripe_product_id"),
+    planId: text("plan_id"),
+    planName: text("plan_name"),
+    status: subscriptionStatus("status").notNull(),
+    currentPeriodStart: timestamp("current_period_start", { mode: "date" }),
+    currentPeriodEnd: timestamp("current_period_end", { mode: "date" }),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [index("subscriptions_user_status_idx").on(t.userId, t.status)],
+);
 
 // ── Attendance ──
 export const attendanceMethod = pgEnum("attendance_method", ["qr", "manual"]);
@@ -131,22 +140,26 @@ export const attendances = pgTable(
   (a) => [primaryKey({ columns: [a.userId, a.slotId, a.slotDate] })],
 );
 
-export const payments = pgTable("payments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  stripePaymentIntentId: text("stripe_payment_intent_id").unique(),
-  stripeInvoiceId: text("stripe_invoice_id"),
-  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
-  amount: integer("amount").notNull(),
-  currency: text("currency").notNull().default("ron"),
-  status: text("status").notNull(),
-  planId: text("plan_id"),
-  planName: text("plan_name"),
-  mode: text("mode"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stripePaymentIntentId: text("stripe_payment_intent_id").unique(),
+    stripeInvoiceId: text("stripe_invoice_id"),
+    stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+    amount: integer("amount").notNull(),
+    currency: text("currency").notNull().default("ron"),
+    status: text("status").notNull(),
+    planId: text("plan_id"),
+    planName: text("plan_name"),
+    mode: text("mode"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("payments_user_created_idx").on(t.userId, t.createdAt)],
+);
 
 // ── Webhook idempotency (Stripe event replay protection) ──
 export const processedWebhookEvents = pgTable("processed_webhook_events", {
@@ -158,22 +171,32 @@ export const processedWebhookEvents = pgTable("processed_webhook_events", {
 // ── Class credits (pass-gated access) ──
 export const creditSource = pgEnum("credit_source", ["purchase", "pass_included"]);
 
-export const classCredits = pgTable("class_credits", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  sourceType: creditSource("source_type").notNull().default("purchase"),
-  stripePaymentIntentId: text("stripe_payment_intent_id"),
-  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
-  planId: text("plan_id"),
-  planName: text("plan_name"),
-  purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  consumedAt: timestamp("consumed_at"),
-  consumedSlotId: text("consumed_slot_id"),
-  consumedSlotDate: text("consumed_slot_date"),
-});
+export const classCredits = pgTable(
+  "class_credits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sourceType: creditSource("source_type").notNull().default("purchase"),
+    stripePaymentIntentId: text("stripe_payment_intent_id"),
+    stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+    planId: text("plan_id"),
+    planName: text("plan_name"),
+    purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    consumedAt: timestamp("consumed_at"),
+    consumedSlotId: text("consumed_slot_id"),
+    consumedSlotDate: text("consumed_slot_date"),
+  },
+  (t) => [
+    index("class_credits_user_consumed_expires_idx").on(
+      t.userId,
+      t.consumedAt,
+      t.expiresAt,
+    ),
+  ],
+);
 
 // ── Partners (reduceri) ──
 export const partners = pgTable("partners", {
@@ -191,20 +214,48 @@ export const partners = pgTable("partners", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const partnerVisits = pgTable("partner_visits", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  partnerId: uuid("partner_id")
-    .notNull()
-    .references(() => partners.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  memberEmail: text("member_email").notNull(),
-  memberName: text("member_name"),
-  valid: boolean("valid").notNull(),
-  reason: text("reason"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const partnerVisits = pgTable(
+  "partner_visits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    partnerId: uuid("partner_id")
+      .notNull()
+      .references(() => partners.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    memberEmail: text("member_email").notNull(),
+    memberName: text("member_name"),
+    valid: boolean("valid").notNull(),
+    reason: text("reason"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("partner_visits_partner_created_idx").on(t.partnerId, t.createdAt),
+    index("partner_visits_created_idx").on(t.createdAt),
+  ],
+);
+
+// ── Audit log for admin actions ──
+export const adminActions = pgTable(
+  "admin_actions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorUserId: uuid("actor_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    actorEmail: text("actor_email").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("admin_actions_actor_created_idx").on(t.actorUserId, t.createdAt),
+    index("admin_actions_target_idx").on(t.targetType, t.targetId),
+  ],
+);
 
 // ── Reservations ──
 export const reservationStatus = pgEnum("reservation_status", [
@@ -226,7 +277,11 @@ export const reservations = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     cancelledAt: timestamp("cancelled_at"),
   },
-  (r) => [primaryKey({ columns: [r.userId, r.slotId, r.slotDate] })],
+  (r) => [
+    primaryKey({ columns: [r.userId, r.slotId, r.slotDate] }),
+    index("reservations_slot_date_status_idx").on(r.slotId, r.slotDate, r.status),
+    index("reservations_user_status_date_idx").on(r.userId, r.status, r.slotDate),
+  ],
 );
 
 // ── Class slots (coach-level schedule) ──

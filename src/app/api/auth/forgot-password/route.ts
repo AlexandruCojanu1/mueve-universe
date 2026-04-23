@@ -10,6 +10,7 @@ import { sendEmail, emailEnabled, wrapBrandHtml } from "@/lib/mailer";
 const schema = z.object({ email: z.string().email().max(200) });
 
 export async function POST(req: Request) {
+  const start = Date.now();
   const rl = await rateLimitAsync(clientKey(req, "forgot"), 3, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
@@ -32,8 +33,19 @@ export async function POST(req: Request) {
     .where(eq(users.email, email))
     .limit(1);
 
+  // Pad response to constant ~600ms so email-exists vs email-missing
+  // cannot be distinguished via timing.
+  const padToConstantTime = async () => {
+    const elapsed = Date.now() - start;
+    const target = 600;
+    if (elapsed < target) {
+      await new Promise((r) => setTimeout(r, target - elapsed));
+    }
+  };
+
   // Always respond ok=true to avoid leaking which emails have accounts.
   if (!rows[0]) {
+    await padToConstantTime();
     return NextResponse.json({ ok: true });
   }
 
@@ -64,5 +76,6 @@ export async function POST(req: Request) {
     console.log(`[forgot-password] email not configured; reset URL: ${resetUrl}`);
   }
 
+  await padToConstantTime();
   return NextResponse.json({ ok: true });
 }

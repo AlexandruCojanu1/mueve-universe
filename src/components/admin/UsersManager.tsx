@@ -29,13 +29,26 @@ export default function UsersManager() {
 
   async function load() {
     setLoading(true);
+    setErr(null);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (filterRole) params.set("role", filterRole);
     try {
       const res = await fetch(`/api/admin/users?${params.toString()}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(
+          res.status === 403
+            ? "Nu ai permisiuni de admin — contul tău nu are rolul necesar."
+            : data.error || `Eroare (${res.status})`,
+        );
+        setRows([]);
+        return;
+      }
       setRows(data.users || []);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Eroare de rețea.");
+      setRows([]);
     } finally {
       setLoading(false);
     }

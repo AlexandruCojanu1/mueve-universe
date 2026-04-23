@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { classSlots, reservations } from "@/db/schema";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
 
 function isoDate(d: Date): string {
   const y = d.getFullYear();
@@ -33,16 +33,28 @@ export async function GET() {
     .where(eq(classSlots.active, true))
     .orderBy(asc(classSlots.dayOfWeek), asc(classSlots.startTime));
 
+  const firstDate = days[0].date;
+  const lastDate = days[days.length - 1].date;
+
   const myResvs = await db
-    .select()
+    .select({
+      slotId: reservations.slotId,
+      slotDate: reservations.slotDate,
+      status: reservations.status,
+    })
     .from(reservations)
-    .where(eq(reservations.userId, session.user.id));
+    .where(
+      and(
+        eq(reservations.userId, session.user.id),
+        eq(reservations.status, "active"),
+        gte(reservations.slotDate, firstDate),
+        lte(reservations.slotDate, lastDate),
+      ),
+    );
 
   const bookedSet = new Set<string>();
   for (const r of myResvs) {
-    if (r.status === "active") {
-      bookedSet.add(`${r.slotId}|${r.slotDate}`);
-    }
+    bookedSet.add(`${r.slotId}|${r.slotDate}`);
   }
 
   const counts = await db
@@ -52,7 +64,13 @@ export async function GET() {
       c: sql<number>`count(*)::int`,
     })
     .from(reservations)
-    .where(eq(reservations.status, "active"))
+    .where(
+      and(
+        eq(reservations.status, "active"),
+        gte(reservations.slotDate, firstDate),
+        lte(reservations.slotDate, lastDate),
+      ),
+    )
     .groupBy(reservations.slotId, reservations.slotDate);
   const countMap = new Map<string, number>();
   for (const c of counts) {

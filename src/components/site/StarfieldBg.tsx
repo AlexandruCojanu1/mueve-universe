@@ -12,7 +12,7 @@ export default function StarfieldBg() {
     type Shoot = { x: number; y: number; l: number; sp: number; ang: number; life: number };
     const stars: Star[] = [];
     const shoots: Shoot[] = [];
-    const NB = 400;
+    const NB = 180;
     const sz = () => {
       bg.width = window.innerWidth;
       bg.height = window.innerHeight;
@@ -33,6 +33,10 @@ export default function StarfieldBg() {
     let sTime = 0;
     let raf = 0;
     const draw = () => {
+      if (document.hidden) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       bx.clearRect(0, 0, bg.width, bg.height);
       sTime += 0.016;
       const g = bx.createLinearGradient(0, 0, 0, bg.height);

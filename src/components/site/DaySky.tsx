@@ -97,6 +97,10 @@ export default function DaySky() {
 
     let raf = 0;
     const draw = () => {
+      if (document.hidden) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       // Slightly darker, more atmospheric daytime gradient
       const g = bx.createLinearGradient(0, 0, 0, bg.height);
       g.addColorStop(0, "#2E5E87");
@@ -116,26 +120,12 @@ export default function DaySky() {
       bx.fillRect(0, 0, bg.width, bg.height);
 
       // ── Clouds ───────────────────────────────
-      // Two-pass render: soft shadow base, then lit body on top.
+      // Single-pass radial-gradient puffs. Gradients already have soft edges,
+      // so we skip ctx.filter blur (extremely expensive per frame).
       for (const c of clouds) {
         c.x += c.sp;
         if (c.x - c.w * 1.1 > bg.width) c.x = -c.w;
 
-        // Pass 1: soft underbelly shadow
-        bx.save();
-        bx.filter = "blur(14px)";
-        bx.fillStyle = `rgba(60,85,115,${c.op * 0.35})`;
-        bx.beginPath();
-        for (const p of c.puffs) {
-          bx.moveTo(c.x + p.dx + p.r, c.y + p.dy + p.r * 0.35);
-          bx.arc(c.x + p.dx, c.y + p.dy + p.r * 0.25, p.r * 0.95, 0, 6.28);
-        }
-        bx.fill();
-        bx.restore();
-
-        // Pass 2: lit body — per-puff shade gradient (top lighter, bottom warmer)
-        bx.save();
-        bx.filter = "blur(6px)";
         for (const p of c.puffs) {
           const cx = c.x + p.dx;
           const cy = c.y + p.dy;
@@ -145,44 +135,19 @@ export default function DaySky() {
             p.r * 0.1,
             cx,
             cy,
-            p.r,
+            p.r * 1.15,
           );
           const top = Math.min(1, p.shade + 0.12);
           const mid = p.shade;
           const bot = Math.max(0.4, p.shade - 0.25);
           grad.addColorStop(0, `rgba(255,255,255,${c.op * top})`);
-          grad.addColorStop(0.55, `rgba(245,248,252,${c.op * mid})`);
-          grad.addColorStop(1, `rgba(190,205,220,${c.op * bot * 0.5})`);
+          grad.addColorStop(0.5, `rgba(245,248,252,${c.op * mid * 0.85})`);
+          grad.addColorStop(1, "rgba(190,205,220,0)");
           bx.fillStyle = grad;
           bx.beginPath();
-          bx.arc(cx, cy, p.r, 0, 6.28);
+          bx.arc(cx, cy, p.r * 1.15, 0, 6.28);
           bx.fill();
         }
-        bx.restore();
-
-        // Pass 3: sharp highlight on sun-facing top (subtle, no blur)
-        bx.save();
-        bx.globalCompositeOperation = "lighter";
-        for (const p of c.puffs) {
-          if (p.shade < 0.85) continue;
-          const cx = c.x + p.dx;
-          const cy = c.y + p.dy;
-          const hl = bx.createRadialGradient(
-            cx - p.r * 0.25,
-            cy - p.r * 0.45,
-            0,
-            cx - p.r * 0.25,
-            cy - p.r * 0.45,
-            p.r * 0.7,
-          );
-          hl.addColorStop(0, `rgba(255,250,230,${c.op * 0.22})`);
-          hl.addColorStop(1, "rgba(255,250,230,0)");
-          bx.fillStyle = hl;
-          bx.beginPath();
-          bx.arc(cx, cy, p.r, 0, 6.28);
-          bx.fill();
-        }
-        bx.restore();
       }
 
       // ── Gulls ────────────────────────────────

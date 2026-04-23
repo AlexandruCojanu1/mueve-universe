@@ -18,6 +18,24 @@ import {
 const bi = (ro: string, en: string) => ({ ro, en });
 
 async function main() {
+  if (process.env.NODE_ENV === "production" && process.env.FORCE_SEED !== "1") {
+    console.error(
+      "seed refused: NODE_ENV=production and FORCE_SEED!=1. This script WIPES users/sections/theme.",
+    );
+    process.exit(1);
+  }
+
+  const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const pw = process.env.ADMIN_PASSWORD || "";
+  if (!email || !pw) {
+    console.error("seed refused: ADMIN_EMAIL and ADMIN_PASSWORD must be set.");
+    process.exit(1);
+  }
+  if (pw.length < 12) {
+    console.error("seed refused: ADMIN_PASSWORD must be at least 12 characters.");
+    process.exit(1);
+  }
+
   console.log("seeding...");
 
   // Wipe
@@ -33,8 +51,6 @@ async function main() {
   });
 
   // Admin user
-  const email = process.env.ADMIN_EMAIL || "admin@example.com";
-  const pw = process.env.ADMIN_PASSWORD || "changeme";
   const hash = await hashPassword(pw);
   await db.insert(users).values({
     email,

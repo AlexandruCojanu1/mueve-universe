@@ -36,6 +36,20 @@
       "when": 1776809832272,
       "tag": "0004_lazy_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776942205317,
+      "tag": "0005_admin_actions",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776942327333,
+      "tag": "0006_indexes",
+      "breakpoints": true
     }
   ]
 }

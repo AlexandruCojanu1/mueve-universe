@@ -10,7 +10,7 @@ async function requirePartner() {
   if (!session?.user?.id) {
     return { err: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
-  if (session.user.role !== "partner" && session.user.role !== "admin") {
+  if (session.user.role !== "partner") {
     return { err: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
   return { userId: session.user.id };

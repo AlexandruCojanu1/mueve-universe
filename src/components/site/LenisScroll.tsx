@@ -5,7 +5,7 @@ import Lenis from "lenis";
 export default function LenisScroll() {
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.4,
+      duration: 0.9,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
     let raf = 0;

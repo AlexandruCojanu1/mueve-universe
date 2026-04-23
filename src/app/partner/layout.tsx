@@ -15,9 +15,8 @@ export default async function PartnerLayout({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?from=/partner");
-  if (session.user.role !== "partner" && session.user.role !== "admin") {
-    redirect("/dashboard");
-  }
+  if (session.user.role === "admin") redirect("/admin");
+  if (session.user.role !== "partner") redirect("/dashboard");
 
   const rows = await db
     .select()

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users, partners } from "@/db/schema";
+import { users, partners, adminActions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { generateQrToken } from "@/lib/qr-token";
 import { randomBytes } from "crypto";
@@ -15,15 +15,20 @@ function generateTempPassword(): string {
 
 async function requireAdmin() {
   const session = await auth();
-  if (session?.user?.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (session?.user?.role !== "admin" || !session.user.id || !session.user.email) {
+    return {
+      err: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
   }
-  return null;
+  return { actorUserId: session.user.id, actorEmail: session.user.email };
 }
 
-export async function GET() {
-  const err = await requireAdmin();
-  if (err) return err;
+export async function GET(req: Request) {
+  const a = await requireAdmin();
+  if ("err" in a) return a.err;
+  const { searchParams } = new URL(req.url);
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 50)));
+  const offset = Math.max(0, Number(searchParams.get("offset") || 0));
   const rows = await db
     .select({
       partnerId: partners.id,
@@ -39,13 +44,20 @@ export async function GET() {
     })
     .from(partners)
     .innerJoin(users, eq(users.id, partners.userId))
-    .orderBy(partners.createdAt);
-  return NextResponse.json({ partners: rows });
+    .orderBy(partners.createdAt)
+    .limit(limit + 1)
+    .offset(offset);
+  const hasMore = rows.length > limit;
+  const items = hasMore ? rows.slice(0, limit) : rows;
+  return NextResponse.json({
+    partners: items,
+    pagination: { limit, offset, hasMore },
+  });
 }
 
 export async function POST(req: Request) {
-  const err = await requireAdmin();
-  if (err) return err;
+  const a = await requireAdmin();
+  if ("err" in a) return a.err;
 
   const raw = await req.json().catch(() => ({}));
   const parsed = partnerCreateSchema.safeParse(raw);
@@ -126,6 +138,15 @@ export async function POST(req: Request) {
     })
     .returning();
 
+  await db.insert(adminActions).values({
+    actorUserId: a.actorUserId,
+    actorEmail: a.actorEmail,
+    action: "partner.create",
+    targetType: "partner",
+    targetId: created.id,
+    metadata: { companyName, email, discountPercent },
+  });
+
   const origin =
     process.env.NEXTAUTH_URL ||
     new URL(req.url).origin;
@@ -170,8 +191,8 @@ Mișcă-te · Trăiește · Evoluează`,
 }
 
 export async function PATCH(req: Request) {
-  const err = await requireAdmin();
-  if (err) return err;
+  const a = await requireAdmin();
+  if ("err" in a) return a.err;
   const parsed = partnerPatchSchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json(
@@ -193,15 +214,47 @@ export async function PATCH(req: Request) {
     .set(set)
     .where(eq(partners.id, body.id))
     .returning();
+
+  await db.insert(adminActions).values({
+    actorUserId: a.actorUserId,
+    actorEmail: a.actorEmail,
+    action: "partner.update",
+    targetType: "partner",
+    targetId: body.id,
+    metadata: Object.fromEntries(
+      Object.entries(set).filter(([k]) => k !== "updatedAt"),
+    ),
+  });
+
   return NextResponse.json({ ok: true, partner: updated });
 }
 
 export async function DELETE(req: Request) {
-  const err = await requireAdmin();
-  if (err) return err;
+  const a = await requireAdmin();
+  if ("err" in a) return a.err;
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id lipsă" }, { status: 400 });
-  await db.delete(partners).where(eq(partners.id, id));
+
+  // Soft-delete: deactivate instead of hard-deleting so visit history is preserved.
+  const [updated] = await db
+    .update(partners)
+    .set({ active: false, updatedAt: new Date() })
+    .where(eq(partners.id, id))
+    .returning({ id: partners.id, companyName: partners.companyName });
+
+  if (!updated) {
+    return NextResponse.json({ error: "Partener inexistent" }, { status: 404 });
+  }
+
+  await db.insert(adminActions).values({
+    actorUserId: a.actorUserId,
+    actorEmail: a.actorEmail,
+    action: "partner.deactivate",
+    targetType: "partner",
+    targetId: id,
+    metadata: { companyName: updated.companyName },
+  });
+
   return NextResponse.json({ ok: true });
 }

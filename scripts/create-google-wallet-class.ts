@@ -25,7 +25,7 @@ const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID;
 const CLASS_ID = process.env.GOOGLE_WALLET_CLASS_ID || "mueve_universe_membership";
 const SERVICE_ACCOUNT_JSON = process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON;
 const LOGO_URL =
-  process.env.GOOGLE_WALLET_LOGO_URL || "https://mueveclub.ro/mueve-logo.png";
+  process.env.GOOGLE_WALLET_LOGO_URL || "https://mueve.ro/mueve-logo.png";
 
 if (!ISSUER_ID) {
   console.error("✗ GOOGLE_WALLET_ISSUER_ID missing in env");

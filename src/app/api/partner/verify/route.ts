@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const session = await auth();
   const role = session?.user?.role;
   const partnerUserId = session?.user?.id;
-  if (!partnerUserId || (role !== "partner" && role !== "admin")) {
+  if (!partnerUserId || role !== "partner") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

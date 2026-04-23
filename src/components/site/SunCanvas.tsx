@@ -11,6 +11,10 @@ export default function SunCanvas() {
     let sunT = 0;
     let raf = 0;
     const draw = () => {
+      if (document.hidden) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       sunT += 0.01;
       sx.clearRect(0, 0, 360, 360);
       const g1 = sx.createRadialGradient(180, 180, 60, 180, 180, 180);
@@ -33,16 +37,6 @@ export default function SunCanvas() {
       sx.arc(180, 180, 65 + Math.sin(sunT * 3) * 3, 0, 6.28);
       sx.fillStyle = g2;
       sx.fill();
-      sx.save();
-      sx.font = "900 italic 26px Outfit,sans-serif";
-      sx.textAlign = "center";
-      sx.textBaseline = "middle";
-      sx.fillStyle = "#050816";
-      sx.fillText("MUEVE", 180, 176);
-      sx.font = '700 10px "Space Grotesk",sans-serif';
-      sx.fillStyle = "rgba(5,8,22,.6)";
-      sx.fillText("RUN CLUB", 180, 196);
-      sx.restore();
       for (let i = 0; i < 12; i++) {
         const a = sunT * 0.3 + i * (6.28 / 12);
         const len = 85 + Math.sin(sunT * 2 + i) * 15;

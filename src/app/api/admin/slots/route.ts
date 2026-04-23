@@ -31,13 +31,15 @@ export async function GET() {
     })
     .from(classSlots)
     .innerJoin(users, eq(users.id, classSlots.coachId))
-    .orderBy(asc(classSlots.dayOfWeek), asc(classSlots.startTime));
+    .orderBy(asc(classSlots.dayOfWeek), asc(classSlots.startTime))
+    .limit(500);
 
   const coaches = await db
     .select({ id: users.id, name: users.name, email: users.email, role: users.role })
     .from(users)
     .where(or(eq(users.role, "coach"), eq(users.role, "admin")))
-    .orderBy(asc(users.name));
+    .orderBy(asc(users.name))
+    .limit(200);
 
   return NextResponse.json({ slots: rows, coaches });
 }

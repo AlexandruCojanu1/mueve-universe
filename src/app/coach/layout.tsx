@@ -13,7 +13,8 @@ export default async function CoachLayout({
   const session = await auth();
   const role = session?.user?.role;
   if (!session?.user) redirect("/login?from=/coach");
-  if (role !== "coach" && role !== "admin") redirect("/dashboard");
+  if (role === "admin") redirect("/admin");
+  if (role !== "coach") redirect("/dashboard");
   return (
     <DashboardShell
       variant="narrow"

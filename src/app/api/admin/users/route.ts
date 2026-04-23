@@ -25,7 +25,8 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
   const role = searchParams.get("role") || "";
-  const limit = Math.min(200, Number(searchParams.get("limit") || 100));
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 50)));
+  const offset = Math.max(0, Number(searchParams.get("offset") || 0));
 
   const conds: SQL[] = [];
   if (q) {
@@ -53,9 +54,16 @@ export async function GET(req: Request) {
     .leftJoin(partners, eq(partners.userId, users.id))
     .where(where)
     .orderBy(desc(users.createdAt), asc(users.email))
-    .limit(limit);
+    .limit(limit + 1)
+    .offset(offset);
 
-  return NextResponse.json({ users: rows });
+  const hasMore = rows.length > limit;
+  const items = hasMore ? rows.slice(0, limit) : rows;
+
+  return NextResponse.json({
+    users: items,
+    pagination: { limit, offset, hasMore },
+  });
 }
 
 export async function PATCH(req: Request) {

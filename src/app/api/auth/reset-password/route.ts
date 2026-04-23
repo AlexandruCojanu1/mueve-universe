@@ -33,18 +33,19 @@ export async function POST(req: Request) {
   const email = parsed.data.email.trim().toLowerCase();
   const identifier = `reset:${email}`;
 
-  const tokenRows = await db
-    .select()
-    .from(verificationTokens)
+  // Atomically consume the token: DELETE ... RETURNING ensures a second
+  // concurrent request with the same token sees no row and fails.
+  const consumed = await db
+    .delete(verificationTokens)
     .where(
       and(
         eq(verificationTokens.identifier, identifier),
         eq(verificationTokens.token, parsed.data.token),
       ),
     )
-    .limit(1);
+    .returning();
 
-  const row = tokenRows[0];
+  const row = consumed[0];
   if (!row || row.expires.getTime() < Date.now()) {
     return NextResponse.json(
       { error: "Link invalid sau expirat. Cere altul." },
@@ -54,15 +55,6 @@ export async function POST(req: Request) {
 
   const passwordHash = await hashPassword(parsed.data.password);
   await db.update(users).set({ passwordHash }).where(eq(users.email, email));
-
-  await db
-    .delete(verificationTokens)
-    .where(
-      and(
-        eq(verificationTokens.identifier, identifier),
-        eq(verificationTokens.token, parsed.data.token),
-      ),
-    );
 
   return NextResponse.json({ ok: true });
 }
