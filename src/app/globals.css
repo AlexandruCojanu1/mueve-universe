@@ -3422,6 +3422,9 @@ body.is-day .nav-merch-soon {
   z-index: 3;
   box-shadow: 0 4px 16px rgba(245, 245, 10, 0.4);
 }
+.pt-cell-next .pt-badge {
+  display: none;
+}
 @keyframes pt-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.8); }
