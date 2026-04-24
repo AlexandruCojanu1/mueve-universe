@@ -42,8 +42,6 @@ type Member = {
   isGliding: boolean;
   glideUntil: number;
   nextGlideAt: number;
-  bobPhase: number;
-  bobAmp: number;
 };
 
 export default function Birds() {
@@ -129,8 +127,6 @@ export default function Birds() {
           isGliding: false,
           glideUntil: 0,
           nextGlideAt: now + rand(2500, 6000),
-          bobPhase: Math.random() * Math.PI * 2,
-          bobAmp: rand(2, 5),
         });
       }
 
@@ -229,8 +225,6 @@ export default function Birds() {
           const clampedTilt = Math.max(-0.35, Math.min(0.35, targetTilt));
           m.tilt += (clampedTilt - m.tilt) * 0.08 * dt;
 
-          m.bobPhase += 0.0025 * dtMs;
-
           // Glide cycle
           if (!m.isGliding && now > m.nextGlideAt) {
             m.isGliding = true;
@@ -257,21 +251,28 @@ export default function Birds() {
       for (const f of flocks) for (const m of f.members) all.push(m);
       all.sort((a, b) => a.scale - b.scale);
 
+      // Sprite frames share a 823x699 canvas with beak anchored at (394, 416).
+      // Drawing relative to that anchor keeps the body fixed across frames.
+      const ANCHOR_X = 394;
+      const ANCHOR_Y = 416;
+      const SPRITE_W = 823;
+      const SPRITE_H = 699;
+
       for (const m of all) {
         const img = imgs[m.frame];
         if (!img.complete || img.naturalWidth === 0) continue;
-        const bob = Math.sin(m.bobPhase) * m.bobAmp;
-        const w = img.naturalWidth * m.scale;
-        const h = img.naturalHeight * m.scale;
-        // Sprites are normalized LEFT-facing. Mirror only when bird flies right.
-        // Tilt is signed in world space; mirroring flips its visual sign correctly
-        // because we apply scale BEFORE rotate.
+        const w = SPRITE_W * m.scale;
+        const h = SPRITE_H * m.scale;
+        const ax = ANCHOR_X * m.scale;
+        const ay = ANCHOR_Y * m.scale;
+
         ctx.save();
-        ctx.translate(m.x, m.y + bob);
+        ctx.translate(m.x, m.y);
         if (m.facing === 1) ctx.scale(-1, 1);
         ctx.rotate(m.facing * m.tilt);
         ctx.globalAlpha = 0.93;
-        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        // Draw the sprite so its anchor (beak/body center) sits at (0,0)
+        ctx.drawImage(img, -ax, -ay, w, h);
         ctx.restore();
       }
 
