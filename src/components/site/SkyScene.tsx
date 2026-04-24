@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useDayNight } from "@/lib/day-night";
 import StarfieldBg from "./StarfieldBg";
 import DaySky from "./DaySky";
+import Birds from "./Birds";
 
 export default function SkyScene() {
   const mode = useDayNight();
@@ -14,5 +15,13 @@ export default function SkyScene() {
     cl.toggle("is-night", mode !== "day");
   }, [mode]);
 
-  return mode === "day" ? <DaySky /> : <StarfieldBg />;
+  if (mode === "day") {
+    return (
+      <>
+        <DaySky />
+        <Birds />
+      </>
+    );
+  }
+  return <StarfieldBg />;
 }
