@@ -4,6 +4,7 @@ import { useDayNight } from "@/lib/day-night";
 import StarfieldBg from "./StarfieldBg";
 import DaySky from "./DaySky";
 import Birds from "./Birds";
+import Plane from "./Plane";
 
 export default function SkyScene() {
   const mode = useDayNight();
@@ -20,6 +21,7 @@ export default function SkyScene() {
       <>
         <DaySky />
         <Birds />
+        <Plane />
       </>
     );
   }
