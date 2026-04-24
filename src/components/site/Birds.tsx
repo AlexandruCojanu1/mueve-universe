@@ -263,13 +263,13 @@ export default function Birds() {
         const bob = Math.sin(m.bobPhase) * m.bobAmp;
         const w = img.naturalWidth * m.scale;
         const h = img.naturalHeight * m.scale;
-        // Tilt is already in world-space (positive = nose up relative to travel).
-        // When facing left, nose-up still means negative canvas-Y on left side,
-        // which is what we get naturally since we mirror-scale AFTER rotate.
+        // Sprites are normalized LEFT-facing. Mirror only when bird flies right.
+        // Tilt is signed in world space; mirroring flips its visual sign correctly
+        // because we apply scale BEFORE rotate.
         ctx.save();
         ctx.translate(m.x, m.y + bob);
-        ctx.scale(m.facing, 1);
-        ctx.rotate(m.tilt);
+        if (m.facing === 1) ctx.scale(-1, 1);
+        ctx.rotate(m.facing * m.tilt);
         ctx.globalAlpha = 0.93;
         ctx.drawImage(img, -w / 2, -h / 2, w, h);
         ctx.restore();
