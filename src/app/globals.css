@@ -351,8 +351,8 @@ body.is-day .nav-merch-soon {
 .hero-sun-wrap {
   position: relative;
   margin-bottom: 3rem;
-  width: clamp(220px, 26vw, 340px);
-  height: clamp(220px, 26vw, 340px);
+  width: clamp(300px, 38vw, 520px);
+  height: clamp(300px, 38vw, 520px);
 }
 .celestial {
   position: relative;
@@ -473,7 +473,7 @@ body.is-day .nav-merch-soon {
   text-align: center;
   max-width: 520px;
   line-height: 1.7;
-  margin-top: 3rem;
+  margin-top: 6rem;
   font-weight: 400;
 }
 

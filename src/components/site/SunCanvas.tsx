@@ -8,6 +8,8 @@ export default function SunCanvas() {
     if (!sc) return;
     const sx = sc.getContext("2d");
     if (!sx) return;
+    const SIZE = 540;
+    const C = SIZE / 2;
     let sunT = 0;
     let raf = 0;
     const draw = () => {
@@ -16,35 +18,35 @@ export default function SunCanvas() {
         return;
       }
       sunT += 0.01;
-      sx.clearRect(0, 0, 360, 360);
-      const g1 = sx.createRadialGradient(180, 180, 60, 180, 180, 180);
+      sx.clearRect(0, 0, SIZE, SIZE);
+      const g1 = sx.createRadialGradient(C, C, 90, C, C, 270);
       g1.addColorStop(0, "rgba(245,245,10,.3)");
       g1.addColorStop(0.4, "rgba(245,245,10,.08)");
       g1.addColorStop(1, "transparent");
       sx.fillStyle = g1;
-      sx.fillRect(0, 0, 360, 360);
+      sx.fillRect(0, 0, SIZE, SIZE);
       const ps = Math.sin(sunT * 2) * 0.15 + 0.85;
       sx.beginPath();
-      sx.arc(180, 180, 80 * ps + 40, 0, 6.28);
+      sx.arc(C, C, 120 * ps + 60, 0, 6.28);
       sx.strokeStyle = `rgba(245,245,10,${0.06 * ps})`;
-      sx.lineWidth = 1;
+      sx.lineWidth = 1.5;
       sx.stroke();
-      const g2 = sx.createRadialGradient(165, 165, 10, 180, 180, 70);
+      const g2 = sx.createRadialGradient(C - 22, C - 22, 15, C, C, 105);
       g2.addColorStop(0, "#FFF9C4");
       g2.addColorStop(0.4, "#F5F50A");
       g2.addColorStop(1, "#C6B800");
       sx.beginPath();
-      sx.arc(180, 180, 65 + Math.sin(sunT * 3) * 3, 0, 6.28);
+      sx.arc(C, C, 98 + Math.sin(sunT * 3) * 4, 0, 6.28);
       sx.fillStyle = g2;
       sx.fill();
       for (let i = 0; i < 12; i++) {
         const a = sunT * 0.3 + i * (6.28 / 12);
-        const len = 85 + Math.sin(sunT * 2 + i) * 15;
+        const len = 128 + Math.sin(sunT * 2 + i) * 22;
         sx.beginPath();
-        sx.moveTo(180 + Math.cos(a) * 72, 180 + Math.sin(a) * 72);
-        sx.lineTo(180 + Math.cos(a) * len, 180 + Math.sin(a) * len);
+        sx.moveTo(C + Math.cos(a) * 108, C + Math.sin(a) * 108);
+        sx.lineTo(C + Math.cos(a) * len, C + Math.sin(a) * len);
         sx.strokeStyle = `rgba(245,245,10,${0.12 + Math.sin(sunT + i) * 0.06})`;
-        sx.lineWidth = 1.5;
+        sx.lineWidth = 2;
         sx.stroke();
       }
       raf = requestAnimationFrame(draw);
@@ -52,5 +54,5 @@ export default function SunCanvas() {
     draw();
     return () => cancelAnimationFrame(raf);
   }, []);
-  return <canvas id="sunCanvas" ref={ref} width={360} height={360} />;
+  return <canvas id="sunCanvas" ref={ref} width={540} height={540} />;
 }
