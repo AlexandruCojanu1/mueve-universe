@@ -40,7 +40,12 @@ export default async function CardPage() {
         <div className="dash-qr-head">
           <div>
             <div className="dash-qr-eyebrow">Member Card</div>
-            <div className="dash-qr-brand">MUEVE UNIVERSE</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/mueve-logo.png"
+              alt="MUEVE"
+              className="dash-qr-logo"
+            />
           </div>
           <div
             style={{
