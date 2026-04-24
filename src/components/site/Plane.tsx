@@ -59,7 +59,7 @@ export default function Plane() {
       f.active = true;
       f.x = window.innerWidth + spriteW;
       f.y = rand(window.innerHeight * 0.18, window.innerHeight * 0.38);
-      f.vx = -(40 + Math.random() * 25); // px/sec, right → left
+      f.vx = -(130 + Math.random() * 60); // px/sec, right → left
       f.scale = scale;
       f.wobblePhase = Math.random() * Math.PI * 2;
       f.startedAt = now;
