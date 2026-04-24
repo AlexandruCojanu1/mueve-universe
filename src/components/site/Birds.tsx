@@ -14,19 +14,24 @@ const GLIDE_FRAME = 1;
 type Flock = {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   heading: number;
   targetHeading: number;
   baseSpeed: number;
   altitude: number;
   members: Member[];
   nextHeadingChangeAt: number;
+  facing: 1 | -1;
 };
 
 type Member = {
   x: number;
   y: number;
+  prevX: number;
+  prevY: number;
+  vx: number;
+  vy: number;
+  facing: 1 | -1;
+  tilt: number;
   dx: number;
   dy: number;
   lag: number;
@@ -72,46 +77,51 @@ export default function Birds() {
     const H = () => window.innerHeight;
     const altBand = () => ({
       top: 60,
-      mid: Math.max(200, H() * 0.3),
       bot: Math.max(260, H() * 0.42),
     });
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-    // ── Flock construction ─────────────────────────────────────────
     const makeFlock = (offscreen: boolean, now: number): Flock => {
       const goingRight = Math.random() > 0.5;
       const band = altBand();
       const altitude = rand(band.top, band.bot);
-      const baseSpeed = rand(0.65, 1.05);
-      const heading = goingRight ? 0 : Math.PI;
+      const baseSpeed = rand(0.7, 1.1);
+      // Heading is signed: near 0 for right, near 0 inside a "facing-left" frame too.
+      // We keep heading in a small range (±0.3) and use `facing` for mirror.
+      const heading = rand(-0.1, 0.1);
+      const facing: 1 | -1 = goingRight ? 1 : -1;
 
       const startX = offscreen
         ? goingRight
-          ? -220
-          : W() + 220
+          ? -240
+          : W() + 240
         : rand(W() * 0.2, W() * 0.8);
 
-      // Flock size — small flocks feel more natural
       const n = 3 + Math.floor(Math.random() * 4);
 
-      // V-formation offsets: leader at front, others trail behind with lateral spread
       const members: Member[] = [];
       for (let i = 0; i < n; i++) {
-        // Leader (i=0) at (0,0); others behind & sideways
         const row = i === 0 ? 0 : 1 + Math.floor((i - 1) / 2);
-        const side = i === 0 ? 0 : ((i - 1) % 2 === 0 ? -1 : 1);
-        // Backward offset (opposite to heading) + lateral
+        const side = i === 0 ? 0 : (i - 1) % 2 === 0 ? -1 : 1;
         const dxBack = row * rand(28, 40);
         const dxLat = side * row * rand(18, 28);
         const dyLat = side * row * rand(6, 12) + rand(-4, 4);
         const scale = rand(0.04, 0.07) * (i === 0 ? 1.1 : 1);
+        const mx = startX - facing * dxBack;
+        const my = altitude + dyLat;
         members.push({
-          x: startX - dxBack * Math.cos(heading) - dxLat * Math.sin(heading),
-          y: altitude + dyLat,
+          x: mx,
+          y: my,
+          prevX: mx,
+          prevY: my,
+          vx: facing * baseSpeed,
+          vy: 0,
+          facing,
+          tilt: 0,
           dx: dxBack,
           dy: dxLat,
-          lag: 0.045 + Math.random() * 0.04,
+          lag: 0.05 + Math.random() * 0.04,
           scale,
           frame: Math.floor(Math.random() * FLAP_CYCLE),
           frameT: Math.random() * 300,
@@ -127,14 +137,13 @@ export default function Birds() {
       return {
         x: startX,
         y: altitude,
-        vx: baseSpeed * Math.cos(heading),
-        vy: 0,
         heading,
         targetHeading: heading,
         baseSpeed,
         altitude,
         members,
-        nextHeadingChangeAt: now + rand(3000, 7000),
+        nextHeadingChangeAt: now + rand(3500, 7000),
+        facing,
       };
     };
 
@@ -146,7 +155,6 @@ export default function Birds() {
     let raf = 0;
     let last = performance.now();
 
-    // ── Main loop ─────────────────────────────────────────────────
     const tick = (now: number) => {
       if (document.hidden) {
         last = now;
@@ -162,25 +170,21 @@ export default function Birds() {
       for (let fi = flocks.length - 1; fi >= 0; fi--) {
         const f = flocks[fi];
 
-        // Occasional gentle heading change (lazy curves)
+        // Gentle heading drift (small angle, always within "facing" side)
         if (now > f.nextHeadingChangeAt) {
-          const goingRight = Math.cos(f.heading) > 0;
-          const baseDir = goingRight ? 0 : Math.PI;
-          f.targetHeading = baseDir + rand(-0.18, 0.18);
-          f.nextHeadingChangeAt = now + rand(4000, 9000);
+          f.targetHeading = rand(-0.22, 0.22);
+          f.nextHeadingChangeAt = now + rand(4500, 9000);
         }
-        // Smoothly steer heading toward target
-        const dh = ((f.targetHeading - f.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        f.heading += dh * 0.012 * dt;
+        f.heading += (f.targetHeading - f.heading) * 0.012 * dt;
 
-        // Slow vertical thermal drift
-        const drift = Math.sin(now * 0.0004 + f.altitude) * 0.025;
-        f.vy += (drift - f.vy) * 0.02 * dt;
-        f.vx = f.baseSpeed * Math.cos(f.heading);
-        f.vy += 0; // placeholder; keep structure
+        // Velocity derived from facing + small heading offset — never flips sign
+        const fvx = f.facing * f.baseSpeed * Math.cos(f.heading);
+        const fvy =
+          f.baseSpeed * Math.sin(f.heading) +
+          Math.sin(now * 0.00035 + f.altitude * 0.01) * 0.18;
 
-        f.x += f.vx * dt;
-        f.y += (f.vy + Math.sin(now * 0.0003 + f.altitude * 0.01) * 0.12) * dt;
+        f.x += fvx * dt;
+        f.y += fvy * dt;
 
         // Keep altitude within soft band
         const band = altBand();
@@ -188,40 +192,56 @@ export default function Birds() {
         if (f.y > band.bot) f.y -= (f.y - band.bot) * 0.02 * dt;
 
         // Offscreen recycle
-        const goingRight = Math.cos(f.heading) > 0;
         if (
-          (goingRight && f.x > W() + 260) ||
-          (!goingRight && f.x < -260)
+          (f.facing === 1 && f.x > W() + 280) ||
+          (f.facing === -1 && f.x < -280)
         ) {
           flocks[fi] = makeFlock(true, now);
           continue;
         }
 
-        // Update each member with lag-follow + bobbing
-        const hx = Math.cos(f.heading);
-        const hy = Math.sin(f.heading);
-        const px = -hy; // perpendicular
-        const py = hx;
-
+        // Formation anchors: local frame is aligned with facing, never mirrored by heading
+        // Offset "back" means behind the bird in its travel direction
         for (const m of f.members) {
-          const tx = f.x - m.dx * hx + m.dy * px;
-          const ty = f.y - m.dx * hy + m.dy * py;
+          const backX = -f.facing * m.dx;
+          const latX = 0;
+          const latY = m.dy;
+          const tx = f.x + backX + latX;
+          const ty = f.y + latY;
+
+          m.prevX = m.x;
+          m.prevY = m.y;
           m.x += (tx - m.x) * m.lag * dt;
           m.y += (ty - m.y) * m.lag * dt;
+
+          // Member velocity this frame
+          const rawVx = (m.x - m.prevX) / Math.max(0.016, dtMs / 1000);
+          const rawVy = (m.y - m.prevY) / Math.max(0.016, dtMs / 1000);
+          m.vx += (rawVx - m.vx) * 0.15;
+          m.vy += (rawVy - m.vy) * 0.15;
+
+          // Facing hysteresis — only flip if strongly moving opposite direction
+          if (m.facing === 1 && m.vx < -12) m.facing = -1;
+          else if (m.facing === -1 && m.vx > 12) m.facing = 1;
+
+          // Tilt = bank angle ≈ vertical velocity component / horizontal
+          const targetTilt = Math.atan2(m.vy, Math.abs(m.vx) + 0.01) * 0.45;
+          const clampedTilt = Math.max(-0.35, Math.min(0.35, targetTilt));
+          m.tilt += (clampedTilt - m.tilt) * 0.08 * dt;
+
           m.bobPhase += 0.0025 * dtMs;
 
-          // Glide logic: occasionally hold wings mid-spread
+          // Glide cycle
           if (!m.isGliding && now > m.nextGlideAt) {
             m.isGliding = true;
             m.frame = GLIDE_FRAME;
-            m.glideUntil = now + rand(700, 1600);
+            m.glideUntil = now + rand(800, 1700);
           }
           if (m.isGliding && now > m.glideUntil) {
             m.isGliding = false;
             m.frameT = 0;
             m.nextGlideAt = now + rand(3500, 8000);
           }
-
           if (!m.isGliding) {
             m.frameT += dtMs;
             if (m.frameT >= m.frameDur) {
@@ -232,26 +252,24 @@ export default function Birds() {
         }
       }
 
-      // ── Render (draw farther/back birds first via scale sort) ───
-      const allMembers: Array<{ m: Member; heading: number }> = [];
-      for (const f of flocks) {
-        for (const m of f.members) allMembers.push({ m, heading: f.heading });
-      }
-      allMembers.sort((a, b) => a.m.scale - b.m.scale);
+      // Depth sort — larger (closer) on top
+      const all: Member[] = [];
+      for (const f of flocks) for (const m of f.members) all.push(m);
+      all.sort((a, b) => a.scale - b.scale);
 
-      for (const { m, heading } of allMembers) {
+      for (const m of all) {
         const img = imgs[m.frame];
         if (!img.complete || img.naturalWidth === 0) continue;
         const bob = Math.sin(m.bobPhase) * m.bobAmp;
         const w = img.naturalWidth * m.scale;
         const h = img.naturalHeight * m.scale;
-        const goingRight = Math.cos(heading) > 0;
-        const rot = Math.sin(heading) * 0.35;
-
+        // Tilt is already in world-space (positive = nose up relative to travel).
+        // When facing left, nose-up still means negative canvas-Y on left side,
+        // which is what we get naturally since we mirror-scale AFTER rotate.
         ctx.save();
         ctx.translate(m.x, m.y + bob);
-        ctx.rotate(rot);
-        ctx.scale(goingRight ? 1 : -1, 1);
+        ctx.scale(m.facing, 1);
+        ctx.rotate(m.tilt);
         ctx.globalAlpha = 0.93;
         ctx.drawImage(img, -w / 2, -h / 2, w, h);
         ctx.restore();
