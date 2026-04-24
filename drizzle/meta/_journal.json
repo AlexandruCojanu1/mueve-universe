@@ -50,6 +50,13 @@
       "when": 1776942327333,
       "tag": "0006_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777015145622,
+      "tag": "0007_class_slots_coach_idx",
+      "breakpoints": true
     }
   ]
 }

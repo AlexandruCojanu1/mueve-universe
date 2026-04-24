@@ -285,20 +285,24 @@ export const reservations = pgTable(
 );
 
 // ── Class slots (coach-level schedule) ──
-export const classSlots = pgTable("class_slots", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  coachId: uuid("coach_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  dayOfWeek: integer("day_of_week").notNull(),
-  startTime: text("start_time").notNull(),
-  durationMin: integer("duration_min").notNull().default(60),
-  classType: text("class_type").notNull().default(""),
-  capacity: integer("capacity").notNull().default(20),
-  active: boolean("active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const classSlots = pgTable(
+  "class_slots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    dayOfWeek: integer("day_of_week").notNull(),
+    startTime: text("start_time").notNull(),
+    durationMin: integer("duration_min").notNull().default(60),
+    classType: text("class_type").notNull().default(""),
+    capacity: integer("capacity").notNull().default(20),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [index("class_slots_coach_active_idx").on(t.coachId, t.active)],
+);
 
 // ── Types ──
 export type Theme = typeof theme.$inferSelect;

@@ -6,7 +6,11 @@ type UserLike = { role?: UserRole; id?: string };
 export const authConfig = {
   pages: { signIn: "/login" },
   trustHost: true,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
+  },
   providers: [],
   callbacks: {
     authorized: ({ auth, request }) => {

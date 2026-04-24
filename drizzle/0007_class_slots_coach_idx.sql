@@ -1,0 +1,1 @@
+CREATE INDEX "class_slots_coach_active_idx" ON "class_slots" USING btree ("coach_id","active");

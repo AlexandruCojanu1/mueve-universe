@@ -66,20 +66,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         const u = user as UserLike;
         token.role = u.role ?? "user";
         token.id = u.id ?? token.sub;
-      } else if (token.email && !token.role) {
-        const rows = await db
-          .select({ role: users.role, id: users.id })
-          .from(users)
-          .where(eq(users.email, String(token.email)))
-          .limit(1);
-        if (rows[0]) {
-          token.role = rows[0].role;
-          token.id = rows[0].id;
+        token.roleCheckedAt = Date.now();
+      } else if (token.email) {
+        const checkedAt = typeof token.roleCheckedAt === "number" ? token.roleCheckedAt : 0;
+        const stale = Date.now() - checkedAt > 60 * 60 * 1000;
+        if (!token.role || trigger === "update" || stale) {
+          const rows = await db
+            .select({ role: users.role, id: users.id })
+            .from(users)
+            .where(eq(users.email, String(token.email)))
+            .limit(1);
+          if (rows[0]) {
+            token.role = rows[0].role;
+            token.id = rows[0].id;
+            token.roleCheckedAt = Date.now();
+          }
         }
       }
       return token;

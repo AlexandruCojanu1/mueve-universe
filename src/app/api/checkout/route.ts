@@ -55,6 +55,18 @@ export async function POST(req: Request) {
         { status: 403 },
       );
     }
+  } else {
+    const alreadyActive = await hasActivePass(session.user.id);
+    if (alreadyActive) {
+      return NextResponse.json(
+        {
+          error:
+            "Ai deja un abonament activ. Gestionează-l din dashboard (anulează sau schimbă planul) înainte să iei altul.",
+          alreadySubscribed: true,
+        },
+        { status: 409 },
+      );
+    }
   }
 
   const classCount =

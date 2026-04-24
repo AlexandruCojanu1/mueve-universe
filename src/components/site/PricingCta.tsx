@@ -55,6 +55,7 @@ export default function PricingCta({
         redirect?: string;
         error?: string;
         needsPass?: boolean;
+        alreadySubscribed?: boolean;
       };
       if (res.status === 401 || data.redirect) {
         window.location.href = "/login?from=/dashboard";
@@ -65,6 +66,13 @@ export default function PricingCta({
           sessionStorage.removeItem(PENDING_KEY);
         } catch {}
         window.location.href = data.url;
+        return;
+      }
+      if (data.alreadySubscribed) {
+        try {
+          sessionStorage.removeItem(PENDING_KEY);
+        } catch {}
+        window.location.href = "/dashboard?already=1";
         return;
       }
       if (data.needsPass) {
