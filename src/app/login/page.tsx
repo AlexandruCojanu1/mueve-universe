@@ -37,7 +37,7 @@ function LoginForm() {
   const [magicSent, setMagicSent] = useState(false);
 
   const hasGoogle = true;
-  const hasApple = process.env.NEXT_PUBLIC_AUTH_APPLE === "1";
+  const hasApple = true;
   const hasMagic = process.env.NEXT_PUBLIC_AUTH_EMAIL === "1";
 
   async function submit(e: React.FormEvent) {

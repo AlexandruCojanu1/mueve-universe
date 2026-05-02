@@ -22,7 +22,7 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
 
   const hasGoogle = true;
-  const hasApple = process.env.NEXT_PUBLIC_AUTH_APPLE === "1";
+  const hasApple = true;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
