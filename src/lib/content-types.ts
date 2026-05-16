@@ -21,7 +21,7 @@ export type HeroData = {
 
 export type WorldCard = {
   id: string;
-  key: "forge" | "temple" | "path" | "sanctuary";
+  key: "forge" | "temple" | "path" | "sanctuary" | "walk";
   label: Bilingual;
   title: Bilingual;
   body: Bilingual;

@@ -39,6 +39,14 @@ function Symbol({ k }: { k: WorldCard["key"] }) {
           <path d="M12 7v5l3 3" />
         </svg>
       );
+    case "walk":
+      return (
+        <svg {...common}>
+          <circle cx="13" cy="4" r="2" />
+          <path d="M13 22l-3-7 3-2-1-5-4 2-1 3" />
+          <path d="M17 13l-2-2 3-4" />
+        </svg>
+      );
   }
 }
 
