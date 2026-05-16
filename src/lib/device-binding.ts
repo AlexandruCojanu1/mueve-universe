@@ -24,12 +24,33 @@ function newDeviceId(): string {
 }
 
 /**
- * Reads or sets the device cookie, then enforces the binding against the
- * user row. Returns `ok: false` only when the cookie is present but doesn't
- * match what's stored on the user.
+ * READ-ONLY device check, safe for Server Components (pages).
  *
- * Call this on every server action that issues a dynamic QR token (and on
- * the dashboard render).
+ * Does NOT write cookies — Server Components in Next.js cannot mutate
+ * cookies. Returns ok:true with firstBind=false if the user has no cookie
+ * yet (the bind will happen on their first /api/qr/dynamic call, which is
+ * a Route Handler and can write).
+ */
+export async function readDeviceBinding(userId: string): Promise<CheckResult> {
+  const jar = await cookies();
+  const did = jar.get(COOKIE)?.value;
+  const [user] = await db
+    .select({ deviceId: users.deviceId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) return { ok: true, firstBind: false };
+  // Bind hasn't happened yet (no cookie OR no DB record). API will set it.
+  if (!user.deviceId) return { ok: true, firstBind: false };
+  // We have a stored binding but the browser cookie doesn't match.
+  if (!did || user.deviceId !== did) return { ok: false, reason: "device_mismatch" };
+  return { ok: true, firstBind: false };
+}
+
+/**
+ * Mutating version — only call from a Route Handler or Server Action.
+ * Mints the cookie if missing, binds it to the user on first call.
  */
 export async function checkAndBindDevice(userId: string): Promise<CheckResult> {
   const jar = await cookies();
@@ -63,10 +84,7 @@ export async function checkAndBindDevice(userId: string): Promise<CheckResult> {
   }
 
   if (user.deviceId !== did) {
-    // If the caller had no cookie at all, we still wrote a fresh one above.
-    // Don't auto-overwrite the stored binding — that would defeat the point.
     if (newCookieValue) {
-      // Roll the cookie back so we don't sit on a phantom did the user can't use.
       jar.delete(COOKIE);
     }
     return { ok: false, reason: "device_mismatch" };

@@ -18,7 +18,7 @@ import {
 } from "@/lib/user-stats";
 import { getCreditBalance, getActivePassRow } from "@/lib/credits";
 import { issueDynamicToken } from "@/lib/qr-dynamic";
-import { checkAndBindDevice } from "@/lib/device-binding";
+import { readDeviceBinding } from "@/lib/device-binding";
 import {
   getActivity,
   getChallenges,
@@ -51,7 +51,7 @@ export default async function DashboardHome({
   const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
   const proto = hdrs.get("x-forwarded-proto") || "https";
   const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
-  const deviceCheck = await checkAndBindDevice(userId);
+  const deviceCheck = await readDeviceBinding(userId);
   const initialQr = deviceCheck.ok
     ? issueDynamicToken(userId)
     : { token: "", expiresAt: Date.now() };
@@ -127,11 +127,7 @@ export default async function DashboardHome({
       <section className="dash-section" id="card">
         <div className="dash-section-head">
           <h2 className="dash-section-title">Cardul meu</h2>
-          <span className="dash-section-meta">
-            {deviceCheck.ok && deviceCheck.firstBind
-              ? "Dispozitiv legat · cardul tău e blocat pe acest telefon"
-              : "Cod rotativ · anti-screenshot"}
-          </span>
+          <span className="dash-section-meta">Cod rotativ · anti-screenshot</span>
         </div>
         {!deviceCheck.ok && (
           <div
