@@ -6,6 +6,7 @@ import { and, desc, eq, gte } from "drizzle-orm";
 import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { getActivePassRow } from "@/lib/credits";
 import { verifyTokenSchema } from "@/lib/validators";
+import { verifyDynamicToken } from "@/lib/qr-dynamic";
 
 function extractToken(raw: string): string {
   const s = raw.trim();
@@ -45,7 +46,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Cont partener inactiv" }, { status: 403 });
   }
 
-  const userRows = await db.select().from(users).where(eq(users.qrToken, token)).limit(1);
+  // Accept both rotating dynamic tokens (preferred, screenshot-resistant) and
+  // the persistent qrToken used by Apple/Google wallet passes.
+  const dyn = verifyDynamicToken(token);
+  const userRows = dyn
+    ? await db.select().from(users).where(eq(users.id, dyn.userId)).limit(1)
+    : await db.select().from(users).where(eq(users.qrToken, token)).limit(1);
   const member = userRows[0];
   if (!member) {
     await db.insert(partnerVisits).values({
