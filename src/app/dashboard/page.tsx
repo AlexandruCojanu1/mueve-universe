@@ -1,20 +1,37 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { headers } from "next/headers";
 import { db } from "@/db";
 import { subscriptions, payments, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import CheckoutBanner from "@/components/dashboard/CheckoutBanner";
 import AutoCheckout from "@/components/dashboard/AutoCheckout";
+import WalletButtons from "@/components/dashboard/WalletButtons";
+import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
 import { getProgramData } from "@/lib/coach-schedule";
 import {
   computeUserStats,
   computeWorldBreakdown,
   upcomingSessions,
 } from "@/lib/user-stats";
-import { getCreditBalance } from "@/lib/credits";
+import { getCreditBalance, getActivePassRow } from "@/lib/credits";
+import { issueDynamicToken } from "@/lib/qr-dynamic";
+import {
+  getActivity,
+  getChallenges,
+  getLeaderboard,
+  getUserStats,
+} from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
+
+const NICE_TIME = new Intl.DateTimeFormat("ro-RO", {
+  day: "2-digit",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 export default async function DashboardHome({
   searchParams,
@@ -28,10 +45,27 @@ export default async function DashboardHome({
 
   if (!userId) return null;
 
+  const hdrs = await headers();
+  const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
+  const proto = hdrs.get("x-forwarded-proto") || "https";
+  const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
+  const initialQr = issueDynamicToken(userId);
+
   const [userRow] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   const program = await getProgramData();
 
-  const [stats, worldRows, recentPayments, activeSubRows, credits] = await Promise.all([
+  const [
+    stats,
+    worldRows,
+    recentPayments,
+    activeSubRows,
+    credits,
+    pass,
+    xpStats,
+    board,
+    challenges,
+    activity,
+  ] = await Promise.all([
     computeUserStats(userId),
     computeWorldBreakdown(userId, program),
     db
@@ -47,6 +81,11 @@ export default async function DashboardHome({
       .orderBy(desc(subscriptions.updatedAt))
       .limit(1),
     getCreditBalance(userId),
+    getActivePassRow(userId),
+    getUserStats(userId),
+    getLeaderboard(userId, 10),
+    getChallenges(userId),
+    getActivity(userId, 8),
   ]);
 
   const activeSub = activeSubRows[0];
@@ -71,15 +110,196 @@ export default async function DashboardHome({
         <h1 className="dash-welcome-title">Bună, {name}</h1>
         <p className="dash-welcome-sub">
           {memberSince
-            ? `Membru din ${memberSince}. Continuă ritualul — rezervări, sesiuni, wallet.`
-            : "Continuă ritualul — rezervări, sesiuni, wallet."}
+            ? `Membru din ${memberSince}. Continuă ritualul — atingi NFC-ul, te înregistrezi, primești XP.`
+            : "Continuă ritualul — atingi NFC-ul, te înregistrezi, primești XP."}
         </p>
       </section>
 
-      <section className="dash-section">
+      {/* ── Card cu QR rotativ ─────────────────────────────────────────── */}
+      <section className="dash-section" id="card">
         <div className="dash-section-head">
-          <h2 className="dash-section-title">Statistici</h2>
+          <h2 className="dash-section-title">Cardul meu</h2>
+          <span className="dash-section-meta">Cod rotativ · anti-screenshot</span>
         </div>
+        <div className="dash-qr-card">
+          <div className="dash-qr-head">
+            <div>
+              <div className="dash-qr-eyebrow">Member Card</div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/mueve-logo.png" alt="MUEVE" className="dash-qr-logo" />
+            </div>
+            <div
+              style={{
+                textAlign: "right",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.2rem",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.55rem",
+                  fontWeight: 900,
+                  letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                  opacity: 0.7,
+                }}
+              >
+                Clase rămase
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  fontWeight: 900,
+                  fontSize: "1.75rem",
+                  lineHeight: 1,
+                }}
+              >
+                {credits.total}
+              </div>
+            </div>
+          </div>
+          <AutoRotateQr
+            origin={origin}
+            initialToken={initialQr.token}
+            initialExpiresAt={initialQr.expiresAt}
+          />
+          <div className="dash-qr-foot">
+            <div className="dash-qr-foot-name">{session?.user?.name || "Membru"}</div>
+            <div className="dash-qr-foot-email">{session?.user?.email}</div>
+            <div
+              style={{
+                fontSize: "0.58rem",
+                fontWeight: 800,
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+                opacity: 0.65,
+                marginTop: "0.35rem",
+              }}
+            >
+              {pass
+                ? `Pass activ${
+                    pass.currentPeriodEnd
+                      ? ` · până la ${pass.currentPeriodEnd.toLocaleDateString("ro-RO")}`
+                      : ""
+                  }`
+                : "Fără Pass activ"}
+              {credits.nextExpiry && credits.total > 0 && (
+                <>
+                  {" · "}
+                  următ. expirare {credits.nextExpiry.toLocaleDateString("ro-RO")}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── XP & Tier ─────────────────────────────────────────────────── */}
+      <section className="dash-section" id="xp">
+        <div className="dash-section-head">
+          <h2 className="dash-section-title">XP &amp; nivel</h2>
+        </div>
+        <div className="lb-card lb-me">
+          <div className="lb-me-row">
+            <div>
+              <div className="lb-me-tier">{xpStats.tier.name}</div>
+              <div className="lb-me-name">{session?.user?.name || "Tu"}</div>
+            </div>
+            <div className="lb-me-level">LVL {xpStats.tier.level}</div>
+          </div>
+          <div className="lb-xp-bar">
+            <div
+              className="lb-xp-bar-fill"
+              style={{ width: `${Math.round(xpStats.progressToNext * 100)}%` }}
+            />
+          </div>
+          <div className="lb-xp-meta">
+            <span>{xpStats.xp} XP</span>
+            <span>
+              {xpStats.nextTier
+                ? `${xpStats.nextTier.minXp - xpStats.xp} XP până la ${xpStats.nextTier.name}`
+                : "Nivel maxim — Legend"}
+            </span>
+          </div>
+          <div className="lb-stats-row">
+            <div className="lb-stat">
+              <div className="lb-stat-value">{xpStats.runs}</div>
+              <div className="lb-stat-label">Sesiuni</div>
+            </div>
+            <div className="lb-stat">
+              <div className="lb-stat-value">{xpStats.currentStreak}sapt</div>
+              <div className="lb-stat-label">Streak curent</div>
+            </div>
+            <div className="lb-stat">
+              <div className="lb-stat-value">{xpStats.longestStreak}sapt</div>
+              <div className="lb-stat-label">Cel mai lung</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Leaderboard + Challenges ──────────────────────────────────── */}
+      <section className="dash-section" id="leaderboard">
+        <div className="dash-section-head">
+          <h2 className="dash-section-title">Clasament &amp; challenges</h2>
+        </div>
+        <div className="lb-grid">
+          <div className="lb-card lb-board">
+            <div className="lb-card-head">
+              <span>Top runners</span>
+              <span className="lb-card-meta">Top {board.length}</span>
+            </div>
+            <ol className="lb-list">
+              {board.map((e) => (
+                <li
+                  key={e.userId}
+                  className={"lb-row" + (e.isMe ? " lb-row-me" : "")}
+                >
+                  <span className="lb-rank">#{e.rank}</span>
+                  <span className="lb-name">{e.name}</span>
+                  <span className="lb-row-meta">
+                    <span className="lb-row-runs">{e.runs} ses</span>
+                    <span className="lb-row-streak">{e.streak}sapt</span>
+                    <span className="lb-row-xp">{e.xp} XP</span>
+                  </span>
+                </li>
+              ))}
+              {board.length === 0 && (
+                <li className="lb-empty">Niciun runner încă. Fii primul.</li>
+              )}
+            </ol>
+          </div>
+          <div className="lb-card lb-challenges">
+            <div className="lb-card-head">
+              <span>Săptămâna asta</span>
+              <span className="lb-card-meta">+50 XP fiecare</span>
+            </div>
+            <ul className="lb-ch-list">
+              {challenges.map((c) => (
+                <li key={c.id} className={"lb-ch" + (c.done ? " lb-ch-done" : "")}>
+                  <div className="lb-ch-head">
+                    <span className="lb-ch-title">{c.title}</span>
+                    <span className="lb-ch-reward">
+                      {c.done ? `✓ +${c.reward} XP` : `+${c.reward} XP`}
+                    </span>
+                  </div>
+                  <div className="lb-ch-body">{c.description}</div>
+                  <div className="lb-ch-bar">
+                    <div
+                      className="lb-ch-bar-fill"
+                      style={{ width: `${Math.round(c.progress * 100)}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats originale ───────────────────────────────────────────── */}
+      <section className="dash-section">
         <div className="dash-grid-4">
           <StatCard
             label="Clase rămase"
@@ -88,7 +308,7 @@ export default async function DashboardHome({
           />
           <StatCard label="Luna asta" value={stats.thisMonth} />
           <StatCard
-            label="Streak"
+            label="Streak zile"
             value={stats.streakDays}
             suffix={stats.streakDays === 1 ? "zi" : "zile"}
           />
@@ -96,6 +316,7 @@ export default async function DashboardHome({
         </div>
       </section>
 
+      {/* ── Pass + Plăți ──────────────────────────────────────────────── */}
       <section className="dash-section">
         <div className="dash-grid-2">
           <div className="dash-card">
@@ -165,7 +386,8 @@ export default async function DashboardHome({
         </div>
       </section>
 
-      <section className="dash-section">
+      {/* ── Pe lumi + Sesiuni viitoare ───────────────────────────────── */}
+      <section className="dash-section" id="sessions">
         <div className="dash-grid-2">
           <div className="dash-card">
             <div className="dash-card-label">Pe lumi</div>
@@ -227,6 +449,50 @@ export default async function DashboardHome({
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* ── Activity feed ────────────────────────────────────────────── */}
+      <section className="dash-section">
+        <div className="dash-section-head">
+          <h2 className="dash-section-title">Activitate recentă</h2>
+        </div>
+        <div className="lb-card">
+          <ul className="lb-act-list">
+            {activity.length === 0 && (
+              <li className="lb-empty">Niciun XP încă. Vino la o sesiune.</li>
+            )}
+            {activity.map((a) => (
+              <li key={a.id} className="lb-act">
+                <span className="lb-act-label">{a.label}</span>
+                <span className="lb-act-when">{NICE_TIME.format(a.at)}</span>
+                <span className="lb-act-xp">+{a.xp}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── Wallet ───────────────────────────────────────────────────── */}
+      <section className="dash-section" id="wallet">
+        <div className="dash-section-head">
+          <h2 className="dash-section-title">Portofel digital</h2>
+          <span className="dash-section-meta">Apple Wallet · Google Pay</span>
+        </div>
+        <WalletButtons />
+      </section>
+
+      {/* ── NFC how-it-works ─────────────────────────────────────────── */}
+      <section className="lb-nfc">
+        <h2 className="lb-nfc-title">Cum funcționează NFC check-in</h2>
+        <ol className="lb-nfc-steps">
+          <li>Punem un sticker NFC Mueve la locul de meetup.</li>
+          <li>Atingi telefonul de sticker la sosire.</li>
+          <li>Se deschide automat Mueve, te-am autentificat deja.</li>
+          <li>Prezența + XP se înregistrează instant.</li>
+        </ol>
+        <p className="lb-nfc-hint">
+          Coach-ul poate scana QR-ul tău rotativ din cardul de mai sus. Funcționează în ambele direcții.
+        </p>
       </section>
     </>
   );
