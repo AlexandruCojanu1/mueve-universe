@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { subscriptions, payments, users } from "@/db/schema";
+import { subscriptions, payments, users, attendances } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import CheckoutBanner from "@/components/dashboard/CheckoutBanner";
 import AutoCheckout from "@/components/dashboard/AutoCheckout";
@@ -10,6 +10,7 @@ import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
 import StravaCard from "@/components/dashboard/StravaCard";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AvatarMenu from "@/components/dashboard/AvatarMenu";
+import ReserveBoard from "@/components/dashboard/ReserveBoard";
 import { appleWalletEnabled } from "@/lib/wallet/apple";
 import { googleWalletEnabled } from "@/lib/wallet/google";
 import { getProgramData } from "@/lib/coach-schedule";
@@ -124,6 +125,17 @@ export default async function DashboardHome({
     { total: 0, nextExpiry: null } as Awaited<ReturnType<typeof getCreditBalance>>,
   );
   const pass = await safe("getActivePassRow", () => getActivePassRow(userId), null);
+  const attendanceHistory = await safe(
+    "attendance history",
+    () =>
+      db
+        .select()
+        .from(attendances)
+        .where(eq(attendances.userId, userId))
+        .orderBy(desc(attendances.validatedAt))
+        .limit(20),
+    [],
+  );
   const xpStats = await safe("getUserStats", () => getUserStats(userId), null);
   const board = await safe("getLeaderboard", () => getLeaderboard(userId, 10), []);
   const challenges = await safe("getChallenges", () => getChallenges(userId), []);
@@ -428,12 +440,19 @@ export default async function DashboardHome({
         </div>
       </section>
 
-      {/* ── Sesiuni viitoare ─────────────────────────────────────────── */}
+      {/* ── Rezervă sesiuni ──────────────────────────────────────────── */}
       <section className="m-card-section" id="sessions">
-        <div className="m-section-eyebrow">URMĂTOARELE SESIUNI</div>
-        {upcoming.length === 0 ? (
-          <div className="m-mini-meta">Nicio sesiune în următoarele 7 zile.</div>
-        ) : (
+        <div className="m-section-eyebrow">REZERVĂ SESIUNI</div>
+        <p className="m-section-sub">
+          Rezervă-ți loc la sesiuni — se consumă o clasă. Dacă anulezi cu peste
+          2h înainte, clasa se întoarce.
+        </p>
+        <ReserveBoard />
+      </section>
+
+      {upcoming.length > 0 && (
+        <section className="m-card-section">
+          <div className="m-section-eyebrow">PROGRAM SĂPTĂMÂNAL</div>
           <ul className="m-upcoming-list">
             {upcoming.map((u) => (
               <li key={`${u.date}-${u.slot.id}`} className="m-upcoming-row">
@@ -447,10 +466,38 @@ export default async function DashboardHome({
               </li>
             ))}
           </ul>
+          <a className="m-mini-link" href="/#prog">
+            Programul complet →
+          </a>
+        </section>
+      )}
+
+      {/* ── Istoric prezențe ─────────────────────────────────────────── */}
+      <section className="m-card-section" id="history">
+        <div className="m-section-eyebrow">ISTORIC PREZENȚE</div>
+        {attendanceHistory.length === 0 ? (
+          <div className="m-mini-meta">
+            Încă nu ai fost marcat la nicio sesiune. Arată cardul tău QR
+            coach-ului la intrarea în sesiune.
+          </div>
+        ) : (
+          <ul className="m-upcoming-list">
+            {attendanceHistory.slice(0, 10).map((r) => (
+              <li
+                key={`${r.slotId}-${r.slotDate}`}
+                className="m-upcoming-row"
+              >
+                <div className="m-upcoming-main">
+                  <div className="m-upcoming-title">{r.slotDate}</div>
+                  <div className="m-upcoming-meta">
+                    {r.validatedAt.toLocaleString("ro-RO")}
+                  </div>
+                </div>
+                <span className="m-upcoming-world">{r.method}</span>
+              </li>
+            ))}
+          </ul>
         )}
-        <a className="m-mini-link" href="/#prog">
-          Programul complet →
-        </a>
       </section>
 
       {/* ── Tab bar ──────────────────────────────────────────────────── */}

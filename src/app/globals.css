@@ -4363,6 +4363,12 @@ body.is-day .ham span {
   color: var(--m-text-dim);
   margin-bottom: 0.9rem;
 }
+.m-section-sub {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--m-text-dim);
+  margin: -0.3rem 0 1rem;
+}
 
 /* ── Crew activity ─────────────────────────────────────────────────── */
 .m-crew { margin-bottom: 2rem; }
