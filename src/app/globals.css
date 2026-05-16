@@ -351,8 +351,8 @@ body.is-day .ham span {
   flex-direction: column;
   z-index: 1;
   overflow: hidden;
-  padding: 4vh 4vw;
-  gap: 0;
+  padding: 3vh 4vw;
+  gap: clamp(0.75rem, 2vh, 1.5rem);
 }
 .hero-sun-wrap {
   position: relative;
@@ -360,8 +360,9 @@ body.is-day .ham span {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(260px, 58vmin, 620px);
-  height: clamp(260px, 58vmin, 620px);
+  width: clamp(220px, 42vmin, 460px);
+  height: clamp(220px, 42vmin, 460px);
+  flex-shrink: 0;
 }
 .celestial {
   position: relative;
@@ -459,18 +460,13 @@ body.is-day .ham span {
   50% { translate: 0 -10px; }
 }
 .hero h1 {
-  font-size: clamp(2.2rem, 5.4vmin, 4.6rem);
+  font-size: clamp(2rem, 5.2vmin, 4.6rem);
   text-align: center;
-  line-height: 0.95;
+  line-height: 0.98;
   text-transform: uppercase;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   z-index: 2;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55), 0 0 40px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
-  width: min(92vw, 760px);
+  margin: 0;
 }
 .hero h1 em {
   font-style: italic;
@@ -488,7 +484,7 @@ body.is-day .ham span {
   text-align: center;
   max-width: 560px;
   line-height: 1.6;
-  margin-top: clamp(1.25rem, 3vh, 2.5rem);
+  margin-top: clamp(0.4rem, 1vh, 0.9rem);
   font-weight: 400;
   position: relative;
   z-index: 2;
