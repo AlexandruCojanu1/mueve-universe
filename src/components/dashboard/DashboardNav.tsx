@@ -15,9 +15,11 @@ export default function DashboardNav({
 }) {
   const p = usePathname();
   const links: { href: string; label: string }[] = [
+    { href: "/dashboard#card", label: "Cardul meu" },
     { href: "/dashboard#xp", label: "XP" },
     { href: "/dashboard#leaderboard", label: "Clasament" },
     { href: "/dashboard#sessions", label: "Sesiuni" },
+    { href: "/dashboard#wallet", label: "Portofel" },
     { href: "/dashboard#strava", label: "Strava" },
   ];
   if (role === "admin" || role === "coach") {
