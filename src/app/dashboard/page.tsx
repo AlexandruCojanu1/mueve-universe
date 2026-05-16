@@ -17,6 +17,7 @@ import {
 } from "@/lib/user-stats";
 import { getCreditBalance, getActivePassRow } from "@/lib/credits";
 import { issueDynamicToken } from "@/lib/qr-dynamic";
+import { checkAndBindDevice } from "@/lib/device-binding";
 import {
   getActivity,
   getChallenges,
@@ -49,7 +50,12 @@ export default async function DashboardHome({
   const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
   const proto = hdrs.get("x-forwarded-proto") || "https";
   const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
-  const initialQr = issueDynamicToken(userId);
+  const deviceCheck = await checkAndBindDevice(userId);
+  // Only issue a real token if the device matches; otherwise the card renders
+  // a locked state.
+  const initialQr = deviceCheck.ok
+    ? issueDynamicToken(userId)
+    : { token: "", expiresAt: Date.now() };
 
   const [userRow] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   const program = await getProgramData();
@@ -119,8 +125,27 @@ export default async function DashboardHome({
       <section className="dash-section" id="card">
         <div className="dash-section-head">
           <h2 className="dash-section-title">Cardul meu</h2>
-          <span className="dash-section-meta">Cod rotativ · anti-screenshot</span>
+          <span className="dash-section-meta">
+            {deviceCheck.ok && deviceCheck.firstBind
+              ? "Dispozitiv legat · cardul tău e blocat pe acest telefon"
+              : "Cod rotativ · anti-screenshot"}
+          </span>
         </div>
+        {!deviceCheck.ok && (
+          <div
+            className="dash-banner dash-banner-error"
+            style={{ marginBottom: "1rem" }}
+          >
+            <div>
+              <div className="dash-banner-title">Dispozitiv neautorizat</div>
+              <div className="dash-banner-body">
+                Acest cont a fost legat de alt dispozitiv. Loghează-te pe
+                dispozitivul original sau scrie-i unui admin să-ți reseteze
+                legătura.
+              </div>
+            </div>
+          </div>
+        )}
         <div className="dash-qr-card">
           <div className="dash-qr-head">
             <div>

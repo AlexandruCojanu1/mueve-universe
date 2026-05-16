@@ -15,6 +15,7 @@ export default function AutoRotateQr({ origin, initialToken, initialExpiresAt }:
   const [secondsLeft, setSecondsLeft] = useState<number>(
     Math.max(0, Math.floor((initialExpiresAt - Date.now()) / 1000)),
   );
+  const [locked, setLocked] = useState<boolean>(!initialToken);
   const tokenRef = useRef(initialToken);
   const expiryRef = useRef(initialExpiresAt);
   const aliveRef = useRef(true);
@@ -47,9 +48,17 @@ export default function AutoRotateQr({ origin, initialToken, initialExpiresAt }:
     const refresh = async () => {
       try {
         const res = await fetch("/api/qr/dynamic", { cache: "no-store" });
+        if (res.status === 423) {
+          if (aliveRef.current) {
+            setLocked(true);
+            setDataUrl("");
+          }
+          return;
+        }
         if (!res.ok) return;
         const json = (await res.json()) as { token: string; expiresAt: number };
         if (!aliveRef.current) return;
+        setLocked(false);
         tokenRef.current = json.token;
         expiryRef.current = json.expiresAt;
         const url = `${origin}/q/${json.token}`;
@@ -94,7 +103,38 @@ export default function AutoRotateQr({ origin, initialToken, initialExpiresAt }:
   return (
     <>
       <div className="dash-qr-img-wrap">
-        {dataUrl ? (
+        {locked ? (
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: "1 / 1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.6rem",
+              padding: "1rem",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "2.4rem" }}>🔒</div>
+            <div
+              style={{
+                fontSize: "0.6rem",
+                fontWeight: 900,
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+                color: "var(--sun)",
+              }}
+            >
+              Card blocat
+            </div>
+            <div style={{ fontSize: "0.75rem", lineHeight: 1.4, opacity: 0.85 }}>
+              Acest card e legat de alt dispozitiv. Loghează-te de pe telefonul
+              original sau cere admin reset.
+            </div>
+          </div>
+        ) : dataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={dataUrl} alt="QR code" />
         ) : (
@@ -112,7 +152,7 @@ export default function AutoRotateQr({ origin, initialToken, initialExpiresAt }:
           marginTop: "0.6rem",
         }}
       >
-        Cod activ · expiră în {secondsLeft}s
+        {locked ? "Dispozitiv neautorizat" : `Cod activ · expiră în ${secondsLeft}s`}
       </div>
     </>
   );

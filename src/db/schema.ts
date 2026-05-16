@@ -45,6 +45,8 @@ export const users = pgTable(
     stripeCustomerId: text("stripe_customer_id"),
     qrToken: text("qr_token").unique(),
     lastScanAt: timestamp("last_scan_at"),
+    deviceId: text("device_id"),
+    deviceBoundAt: timestamp("device_bound_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("users_stripe_customer_id_idx").on(t.stripeCustomerId)],

@@ -60,6 +60,23 @@ export default function UsersManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, filterRole]);
 
+  async function resetDevice(u: Row) {
+    if (!confirm(`Resetezi binding-ul device pentru ${u.email}?\nUserul va putea apoi rebind pe orice telefon.`)) return;
+    setErr(null);
+    setNote(null);
+    const res = await fetch("/api/admin/users/reset-device", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: u.id }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setErr(data.error || "Eroare la reset device.");
+      return;
+    }
+    setNote(`Device legat resetat pentru ${u.email}.`);
+  }
+
   async function changeRole(u: Row, newRole: Row["role"]) {
     if (newRole === u.role) return;
     setErr(null);
@@ -160,6 +177,7 @@ export default function UsersManager() {
                   <th>Verificat</th>
                   <th>Creat</th>
                   <th>Notă</th>
+                  <th>Device</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,6 +220,16 @@ export default function UsersManager() {
                           are profil partener
                         </span>
                       )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="dash-btn dash-btn-light"
+                        style={{ fontSize: 11, padding: "0.3rem 0.6rem" }}
+                        onClick={() => resetDevice(u)}
+                      >
+                        Reset device
+                      </button>
                     </td>
                   </tr>
                 ))}
