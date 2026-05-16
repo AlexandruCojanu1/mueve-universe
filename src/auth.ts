@@ -66,6 +66,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   callbacks: {
     ...authConfig.callbacks,
+    async redirect({ url, baseUrl }) {
+      // After OAuth (Google / Apple) NextAuth's default sends users back to
+      // baseUrl. We want them on /dashboard unless an explicit callbackUrl
+      // already targets a specific in-app page.
+      const cleanBase = baseUrl.replace(/\/$/, "");
+      if (!url || url === cleanBase || url === `${cleanBase}/` || url === `${cleanBase}/login`) {
+        return `${cleanBase}/dashboard`;
+      }
+      if (url.startsWith("/")) {
+        return `${cleanBase}${url}`;
+      }
+      try {
+        const parsed = new URL(url);
+        if (parsed.origin === cleanBase) return url;
+      } catch {}
+      return `${cleanBase}/dashboard`;
+    },
     async jwt({ token, user, trigger }) {
       if (user) {
         const u = user as UserLike;

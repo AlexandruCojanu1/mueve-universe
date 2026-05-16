@@ -4657,3 +4657,139 @@ body.is-day .ham span {
   border-radius: 50%;
   background: var(--m-yellow);
 }
+
+/* ── Mueve dashboard — mobile fits ──────────────────────────────────── */
+@media (max-width: 600px) {
+  .m-hello {
+    margin: 1rem 0 1.1rem;
+  }
+  .m-hello-name {
+    font-size: 1.6rem;
+  }
+  .m-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 0.85rem;
+  }
+  .m-hero-xp {
+    padding: 1.25rem 1.1rem 1.1rem;
+    border-radius: 16px;
+  }
+  .m-hero-xp-amount {
+    font-size: clamp(2.6rem, 14vw, 3.4rem);
+  }
+  .m-streak-badge {
+    min-width: 72px;
+    padding: 0.45rem 0.6rem;
+  }
+  .m-streak-num {
+    font-size: 1.25rem;
+  }
+  .m-streak-unit {
+    font-size: 0.5rem;
+  }
+  .m-action {
+    min-height: 96px;
+    padding: 1rem 0.9rem 0.85rem;
+  }
+  .m-action-label {
+    font-size: 0.92rem;
+  }
+  .m-action-meta {
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+  }
+  .m-stats {
+    gap: 0.5rem;
+  }
+  .m-stat-tile {
+    padding: 0.85rem 0.4rem 0.7rem;
+  }
+  .m-stat-value {
+    font-size: 1.25rem;
+  }
+  .m-stat-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+  }
+  .m-section-eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.24em;
+  }
+  /* Leaderboard: drop the meta column on phones, keep rank + avatar + name + xp */
+  .m-board-row {
+    grid-template-columns: 1.8rem 30px 1fr auto;
+    gap: 0.5rem;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.85rem;
+  }
+  .m-board-meta {
+    display: none;
+  }
+  .m-board-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.6rem;
+  }
+  .m-board-name {
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Crew activity: tighter avatar + smaller text, no horizontal overflow */
+  .m-crew-row {
+    grid-template-columns: 36px 1fr auto;
+    gap: 0.6rem;
+    padding: 0.7rem 0;
+  }
+  .m-crew-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.65rem;
+  }
+  .m-crew-line {
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .m-crew-meta {
+    font-size: 0.6rem;
+  }
+  .m-crew-xp {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  /* QR card — already responsive but keep room */
+  .dash-qr-card {
+    padding: 1.4rem 1.2rem;
+  }
+  /* Tab bar — taller tap target on phone, more visible labels */
+  .m-tab-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+  }
+  /* Hide overflow from any nested grid */
+  .dash-main {
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 380px) {
+  .m-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .m-stats > :nth-child(3) {
+    grid-column: span 2;
+  }
+  .m-actions {
+    grid-template-columns: 1fr;
+  }
+  .m-board-row {
+    grid-template-columns: 1.5rem 1fr auto;
+  }
+  .m-board-avatar {
+    display: none;
+  }
+}
