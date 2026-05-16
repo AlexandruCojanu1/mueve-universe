@@ -39,7 +39,7 @@ export default function DaySky() {
         y: 50 + Math.random() * cloudBandMax(),
         w,
         h,
-        sp: 0.04 + Math.random() * 0.14,
+        sp: 0.02 + Math.random() * 0.06,
         op: 0.72 + Math.random() * 0.2,
         puffs: [],
       };
@@ -79,11 +79,11 @@ export default function DaySky() {
         raf = requestAnimationFrame(draw);
         return;
       }
-      // Slightly darker, more atmospheric daytime gradient
+      // Richer daytime sky — deeper top, mid blue, soft horizon
       const g = bx.createLinearGradient(0, 0, 0, bg.height);
-      g.addColorStop(0, "#2E5E87");
-      g.addColorStop(0.5, "#508AB0");
-      g.addColorStop(1, "#8AB2CC");
+      g.addColorStop(0, "#1F4E78");
+      g.addColorStop(0.55, "#3D7BA6");
+      g.addColorStop(1, "#7CA8C6");
       bx.fillStyle = g;
       bx.fillRect(0, 0, bg.width, bg.height);
 
@@ -98,10 +98,11 @@ export default function DaySky() {
       bx.fillRect(0, 0, bg.width, bg.height);
 
       // ── Clouds ───────────────────────────────
-      // Single-pass radial-gradient puffs. Gradients already have soft edges,
-      // so we skip ctx.filter blur (extremely expensive per frame).
+      // Pause cloud drift once user scrolls past hero, so background stays calm
+      // and section text remains comfortable to read.
+      const pastHero = window.scrollY > window.innerHeight * 0.6;
       for (const c of clouds) {
-        c.x += c.sp;
+        if (!pastHero) c.x += c.sp;
         if (c.x - c.w * 1.1 > bg.width) c.x = -c.w;
 
         for (const p of c.puffs) {

@@ -122,8 +122,8 @@ async function main() {
       { id: "am-3", day: 3, row: "am", activity: bi("Sunrise Calisthenics", "Sunrise Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
       // FRI — COMING SOON
       { id: "am-4", day: 4, row: "am", activity: bi("Coming Soon", "Coming Soon"), time: "TBA", world: bi("", ""), color: "orange" },
-      // SAT — COMING SOON
-      { id: "am-5", day: 5, row: "am", activity: bi("Coming Soon", "Coming Soon"), time: "TBA", world: bi("", ""), color: "orange" },
+      // SAT — MERS PE JOS (coming soon)
+      { id: "am-5", day: 5, row: "am", activity: bi("Mers pe jos (în curând)", "Walking (coming soon)"), time: "10:00", world: bi("Drumul", "Path"), color: "orange" },
       // SUN — THE BIG SOCIAL RUN (main event)
       { id: "am-6", day: 6, row: "am", activity: bi("THE BIG Social Run", "THE BIG Social Run"), time: "09:00", world: bi("Toate Lumile", "All Worlds"), color: "yellow", boss: true },
     ],
@@ -251,7 +251,7 @@ async function main() {
       "In-person payment: 10% discount for cash payment.",
     ),
   };
-  await add("pricing", pricing);
+  // (pricing is added later, AFTER worlds/mission/stats — see below)
 
   // WORLDS
   const worlds: WorldsData = {
@@ -266,8 +266,8 @@ async function main() {
         label: bi("Calisthenics", "Calisthenics"),
         title: bi("FORJA", "THE FORGE"),
         body: bi(
-          "Unde forța brută întâlnește arta. Construiește-ți corpul doar cu gravitația și voința. Supraîncărcare progresivă, stând pe mâini, muscle-ups — testul suprem al stăpânirii de sine.",
-          "Where raw strength meets artistry. Build your body with nothing but gravity and will. Progressive overload, handstands, muscle-ups — the ultimate test of self-mastery.",
+          "Handstands. Muscle-ups. Strength flow. Mișcare construită prin repetiție, precizie și voință. Putere funcțională. Control total.",
+          "Handstands. Muscle-ups. Strength flow. Movement built through repetition, precision and will. Functional power. Total control.",
         ),
         tags: [bi("Forță", "Strength"), bi("Control", "Control"), bi("Măiestrie", "Mastery")],
       },
@@ -276,30 +276,30 @@ async function main() {
         label: bi("Yoga", "Yoga"),
         title: bi("TEMPLUL", "THE TEMPLE"),
         body: bi(
-          "Spațiul dintre respirații. Sesiuni la răsărit care reconectează corpul și mintea. Flexibilitate, echilibru și acel tip de forță care vine din liniște.",
-          "The space between breaths. Sunrise flows that reconnect body and mind. Flexibility, balance, and the kind of strength that comes from stillness.",
+          "Respirația conduce mișcarea. Corpul încetinește. Mintea se aliniază. Mobilitate, echilibru și prezență — construite prin practică. Putere calmă, din interior spre exterior.",
+          "Breath leads movement. The body slows. The mind aligns. Mobility, balance and presence — built through practice. Calm power, from inside out.",
         ),
         tags: [bi("Echilibru", "Balance"), bi("Respirație", "Breath"), bi("Flow", "Flow")],
       },
       {
         id: "path", key: "path", bigIcon: "PATH",
-        label: bi("Alergare", "Running"),
+        label: bi("Alergare & Mers pe jos", "Running & Walking"),
         title: bi("DRUMUL", "THE PATH"),
         body: bi(
-          "Fiecare pas e o conversație cu orașul. Alergări de seară care limpezesc mintea, rute lungi de sâmbătă care testează voința, alergări sociale de duminică care construiesc tribul.",
-          "Every step is a conversation with the city. Evening runs that clear the mind, long Saturday routes that test the will, Sunday social runs that build the tribe.",
+          "Alergare: Mișcarea devine mai ușoară când o faci împreună. Energie, conexiune și progres real. Îți crești condiția fizică, mobilitatea și anduranța, în timp ce cunoști oameni care sunt pe același drum.\n\nMers pe jos: Fundația oricărei călătorii. Pas cu pas, mintea se eliberează, iar corpul își regăsește ritmul natural. Cea mai simplă și accesibilă formă de a merge înainte, zi de zi.",
+          "Running: Movement gets easier when you do it together. Energy, connection and real progress. You build fitness, mobility and endurance while meeting people on the same path.\n\nWalking: The foundation of every journey. Step by step, the mind clears and the body finds its natural rhythm. The simplest, most accessible way forward — day by day.",
         ),
         tags: [bi("Rezistență", "Endurance"), bi("Libertate", "Freedom"), bi("Trib", "Tribe")],
       },
       {
-        id: "sanctuary", key: "sanctuary", bigIcon: "SANCTUARY",
-        label: bi("Relaxare & Conexiune", "Relax & Connect"),
-        title: bi("SANCTUARUL", "THE SANCTUARY"),
+        id: "punctul-zero", key: "sanctuary", bigIcon: "POINT 0",
+        label: bi("Mișcare — Punctul 0", "Movement — Point 0"),
+        title: bi("PUNCTUL 0", "POINT ZERO"),
         body: bi(
-          "Unde competiția devine conexiune. Sporturi de echipă, evenimente sociale și energia care vine doar din mișcarea împreună. Aici necunoscuții devin echipă.",
-          "Where competition becomes connection. Team sports, social events, and the energy that only comes from moving together. This is where strangers become crew.",
+          "Mișcare simplă, ghidată, fără presiune. Construiești rezistență, mobilitate și încredere în propriul ritm. Aici începi când nu știi unde să începi.",
+          "Simple, guided movement — no pressure. You build endurance, mobility and confidence at your own pace. This is where you start when you don't know where to start.",
         ),
-        tags: [bi("Comunitate", "Community"), bi("Bucurie", "Joy"), bi("Conexiune", "Connection")],
+        tags: [bi("Început", "Start"), bi("Ritm propriu", "Own pace"), bi("Fundație", "Foundation")],
       },
     ],
   };
@@ -332,6 +332,10 @@ async function main() {
     ],
   };
   await add("stats", stats);
+
+  // PRICING — placed after story (worlds/mission/stats) so users feel the
+  // experience before they see the price tags.
+  await add("pricing", pricing);
 
   // JOIN
   const join: JoinData = {

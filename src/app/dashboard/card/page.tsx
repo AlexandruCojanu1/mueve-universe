@@ -22,7 +22,7 @@ export default async function CardPage() {
   const qrUrl = `${origin}/q/${token}`;
   const dataUrl = await QRCode.toDataURL(qrUrl, {
     margin: 1,
-    color: { dark: "#050816", light: "#F5F50A" },
+    color: { dark: "#F5F50A", light: "#0B1A2E" },
     width: 512,
   });
 

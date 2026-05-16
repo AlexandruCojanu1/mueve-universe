@@ -114,6 +114,19 @@ export default function Plane() {
           ctx.translate(flight.x, flight.y + bob);
           ctx.rotate(tilt);
           ctx.drawImage(img, 0, -spriteH / 2, spriteW, spriteH);
+          // Overlay "MUEVE" ad text on the banner (right portion of sprite)
+          const bannerX = spriteW * 0.28;
+          const bannerW = spriteW * 0.68;
+          const fontPx = Math.max(14, spriteH * 0.55);
+          ctx.font = `900 ${fontPx}px ${"'Space Grotesk', system-ui, sans-serif"}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#0B1A2E";
+          ctx.strokeStyle = "rgba(245,245,10,0.85)";
+          ctx.lineWidth = Math.max(1, fontPx * 0.05);
+          const cx = bannerX + bannerW / 2;
+          ctx.strokeText("MUEVE", cx, 0);
+          ctx.fillText("MUEVE", cx, 0);
           ctx.restore();
         }
       }

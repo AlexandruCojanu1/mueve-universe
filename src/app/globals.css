@@ -281,12 +281,17 @@ body.is-day .nav-merch-soon {
 }
 .ham span {
   display: block;
-  width: 26px;
-  height: 2px;
+  width: 30px;
+  height: 3px;
   background: var(--w);
-  margin: 5px 0;
+  margin: 6px 0;
   transition: all 0.3s;
-  border-radius: 2px;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.45);
+}
+body.is-day .ham span {
+  background: #0b1a2e;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.55);
 }
 .ham.on span:nth-child(1) {
   transform: rotate(45deg) translate(5px, 5px);
@@ -350,9 +355,9 @@ body.is-day .nav-merch-soon {
 }
 .hero-sun-wrap {
   position: relative;
-  margin-bottom: 3rem;
-  width: clamp(300px, 38vw, 520px);
-  height: clamp(300px, 38vw, 520px);
+  margin-bottom: 2rem;
+  width: clamp(380px, 52vw, 720px);
+  height: clamp(380px, 52vw, 720px);
 }
 .celestial {
   position: relative;
@@ -450,12 +455,14 @@ body.is-day .nav-merch-soon {
   50% { translate: 0 -10px; }
 }
 .hero h1 {
-  font-size: clamp(3.5rem, 9vw, 8rem);
+  font-size: clamp(2.6rem, 6.4vw, 5.6rem);
   text-align: center;
-  line-height: 1.02;
+  line-height: 0.95;
   text-transform: uppercase;
   position: relative;
   z-index: 2;
+  margin-top: -3.5rem;
+  mix-blend-mode: normal;
 }
 .hero h1 em {
   font-style: italic;
@@ -1757,10 +1764,18 @@ body.is-day .nav-merch-soon {
   }
 }
 @media (max-width: 480px) {
-  /* Compact mobile grid: all 7 days visible at once — tap a cell for full details */
+  /* Mobile: first 4 days fit on screen, weekend (Fri/Sat/Sun) swipes into view.
+     Horizontal scroll with snap so the boundary feels intentional. */
   .prog-table {
-    overflow-x: visible;
-    grid-template-columns: 1.4rem repeat(7, minmax(0, 1fr));
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    grid-template-columns: 1.4rem repeat(7, calc((100vw - 1.4rem - 2rem) / 4));
+    scrollbar-width: none;
+  }
+  .prog-table::-webkit-scrollbar { display: none; }
+  .pt-cell, .pt-empty {
+    scroll-snap-align: start;
   }
   .pt-label span:first-child {
     writing-mode: vertical-rl;
@@ -3038,13 +3053,22 @@ body.is-day .nav-merch-soon {
 .dash-qr-card {
   max-width: 460px;
   margin: 0 auto;
-  background: linear-gradient(135deg, #1c3a6b, #0d1f42 60%, #050816);
-  color: var(--sun);
+  background: linear-gradient(135deg, #FFF38A, #F5F50A 55%, #D4D000);
+  color: #0B1A2E;
   border-radius: 24px;
   padding: clamp(1.75rem, 4vw, 2.25rem);
   box-shadow:
-    0 30px 80px -20px rgba(10, 25, 70, 0.55),
-    0 0 0 1px rgba(245, 245, 10, 0.15) inset;
+    0 30px 80px -20px rgba(180, 175, 0, 0.45),
+    0 0 0 1px rgba(11, 26, 46, 0.18) inset;
+}
+.dash-qr-card .dash-qr-eyebrow,
+.dash-qr-card .dash-qr-foot-name,
+.dash-qr-card .dash-qr-foot-email {
+  color: #0B1A2E;
+}
+.dash-qr-card .dash-qr-img-wrap {
+  background: #0B1A2E;
+  box-shadow: 0 0 28px rgba(11, 26, 46, 0.25);
 }
 .dash-qr-head {
   display: flex;
