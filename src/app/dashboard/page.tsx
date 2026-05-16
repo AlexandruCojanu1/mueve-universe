@@ -1,21 +1,16 @@
-import Link from "next/link";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { subscriptions, payments, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import CheckoutBanner from "@/components/dashboard/CheckoutBanner";
 import AutoCheckout from "@/components/dashboard/AutoCheckout";
 import WalletButtons from "@/components/dashboard/WalletButtons";
 import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
 import StravaCard from "@/components/dashboard/StravaCard";
+import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import { getProgramData } from "@/lib/coach-schedule";
-import {
-  computeUserStats,
-  computeWorldBreakdown,
-  upcomingSessions,
-} from "@/lib/user-stats";
+import { upcomingSessions } from "@/lib/user-stats";
 import { getCreditBalance, getActivePassRow } from "@/lib/credits";
 import { issueDynamicToken } from "@/lib/qr-dynamic";
 import { readDeviceBinding } from "@/lib/device-binding";
@@ -28,21 +23,40 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const NICE_TIME = new Intl.DateTimeFormat("ro-RO", {
-  day: "2-digit",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+const NICE_AGO = (d: Date): string => {
+  const diff = Date.now() - d.getTime();
+  const h = Math.floor(diff / 3_600_000);
+  if (h < 1) {
+    const m = Math.max(1, Math.floor(diff / 60_000));
+    return `${m}m`;
+  }
+  if (h < 24) return `${h}h`;
+  const days = Math.floor(h / 24);
+  if (days < 7) return `${days}z`;
+  const wk = Math.floor(days / 7);
+  return `${wk}sapt`;
+};
+
+const DAYS_RO = ["DUMINICA", "LUNI", "MARTI", "MIERCURI", "JOI", "VINERI", "SAMBATA"];
+
+function initials(name: string | null | undefined, email: string | null | undefined): string {
+  const src = (name || email || "").trim();
+  if (!src) return "M";
+  const parts = src.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return src.slice(0, 2).toUpperCase();
+}
 
 export default async function DashboardHome({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string }>;
+  searchParams: Promise<{ checkout?: string; strava?: string }>;
 }) {
   const sp = await searchParams;
   const session = await auth();
-  const name = session?.user?.name || session?.user?.email;
+  const name = session?.user?.name || session?.user?.email || "";
   const userId = session?.user?.id;
 
   if (!userId) return null;
@@ -52,8 +66,6 @@ export default async function DashboardHome({
   const proto = hdrs.get("x-forwarded-proto") || "https";
   const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
 
-  // Each step is wrapped in safe() so one broken dependency doesn't take down
-  // the whole dashboard. Failures are logged so we can see them in Vercel logs.
   const safe = async <T,>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
     try {
       return await fn();
@@ -81,22 +93,6 @@ export default async function DashboardHome({
 
   const program = await safe("getProgramData", () => getProgramData(), null);
 
-  const stats = await safe(
-    "computeUserStats",
-    () => computeUserStats(userId),
-    {
-      total: 0,
-      thisMonth: 0,
-      streakDays: 0,
-      favoriteSlot: null,
-      worldBreakdown: [],
-    },
-  );
-  const worldRows = await safe(
-    "computeWorldBreakdown",
-    () => computeWorldBreakdown(userId, program),
-    [],
-  );
   const recentPayments = await safe(
     "payments select",
     () =>
@@ -131,54 +127,205 @@ export default async function DashboardHome({
   const activity = await safe("getActivity", () => getActivity(userId, 8), []);
 
   const activeSub = activeSubRows[0];
-  const upcoming = upcomingSessions(program, 7).slice(0, 4);
-  const favSlot = program?.slots.find((s) => s.id === stats.favoriteSlot?.slotId);
+  const upcoming = program ? upcomingSessions(program, 7).slice(0, 4) : [];
 
-  const worldTotal = worldRows.reduce((a, b) => a + b.count, 0);
-  const memberSince = userRow?.createdAt
-    ? userRow.createdAt.toLocaleDateString("ro-RO", {
-        month: "long",
-        year: "numeric",
-      })
-    : null;
   const stravaConnected = !!userRow?.stravaAthleteId;
   const stravaAthleteName = userRow?.stravaAthleteName ?? null;
   const stravaLastSync = userRow?.stravaLastSyncAt ?? null;
+
+  const me = board.find((b) => b.isMe);
+  const myRank = me?.rank ?? null;
+
+  const today = DAYS_RO[new Date().getDay()];
+  const firstName = (session?.user?.name || "").split(" ")[0] || "Runner";
+  const initialsStr = initials(session?.user?.name, session?.user?.email);
 
   return (
     <>
       <AutoCheckout />
       <CheckoutBanner status={sp.checkout} />
 
-      <section className="dash-welcome">
-        <div className="dash-welcome-eyebrow">Universul tău</div>
-        <h1 className="dash-welcome-title">Bună, {name}</h1>
-        <p className="dash-welcome-sub">
-          {memberSince
-            ? `Membru din ${memberSince}. Continuă ritualul — atingi NFC-ul, te înregistrezi, primești XP.`
-            : "Continuă ritualul — atingi NFC-ul, te înregistrezi, primești XP."}
-        </p>
+      {/* ── Hello ─────────────────────────────────────────────────────── */}
+      <header className="m-hello">
+        <div>
+          <div className="m-hello-eyebrow">{today} CREW</div>
+          <h1 className="m-hello-name">Hey, {firstName} 👋</h1>
+        </div>
+        <div className="m-avatar">{initialsStr}</div>
+      </header>
+
+      {/* ── Hero XP card ─────────────────────────────────────────────── */}
+      {xpStats && (
+        <section className="m-hero-xp" id="xp">
+          <div className="m-hero-xp-row">
+            <div className="m-hero-xp-tier">
+              LVL {xpStats.tier.level} · {xpStats.tier.name.toUpperCase()}
+            </div>
+            <div className="m-streak-badge">
+              <span className="m-streak-icon">🔥</span>
+              <span>{xpStats.currentStreak} WKS</span>
+            </div>
+          </div>
+          <div className="m-hero-xp-amount">
+            {xpStats.xp}
+            <span className="m-hero-xp-unit">XP</span>
+          </div>
+          <div className="m-hero-xp-foot">
+            <span>
+              {xpStats.nextTier
+                ? `→ ${xpStats.nextTier.name}`
+                : "→ Nivel maxim"}
+            </span>
+            <span>
+              {xpStats.nextTier
+                ? `${xpStats.nextTier.minXp - xpStats.xp} XP to go`
+                : "Legend"}
+            </span>
+          </div>
+          <div className="m-hero-xp-bar">
+            <div
+              className="m-hero-xp-bar-fill"
+              style={{ width: `${Math.round(xpStats.progressToNext * 100)}%` }}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ── Action tiles ─────────────────────────────────────────────── */}
+      <section className="m-actions" id="actions">
+        <a href="#card" className="m-action m-action-yellow">
+          <div className="m-action-icon">📡</div>
+          <div className="m-action-label">NFC / QR Check-In</div>
+          <div className="m-action-meta">+80 XP · arată cardul</div>
+        </a>
+        <a
+          href={stravaConnected ? "#strava" : "/api/strava/connect"}
+          className="m-action m-action-orange"
+        >
+          <div className="m-action-icon">🔥</div>
+          <div className="m-action-label">
+            {stravaConnected ? "Log Strava Run" : "Connect Strava"}
+          </div>
+          <div className="m-action-meta">
+            {stravaConnected ? "+10 XP / km · sync" : "+10 XP / km · auto"}
+          </div>
+        </a>
       </section>
 
-      {/* ── Card cu QR rotativ ─────────────────────────────────────────── */}
-      <section className="dash-section" id="card">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title">Cardul meu</h2>
-          <span className="dash-section-meta">Cod rotativ · anti-screenshot</span>
-        </div>
+      {/* ── Stat tiles ───────────────────────────────────────────────── */}
+      {xpStats && (
+        <section className="m-stats">
+          <div className="m-stat-tile">
+            <div className="m-stat-emoji">🏃</div>
+            <div className="m-stat-value">{xpStats.runs}</div>
+            <div className="m-stat-label">Runs</div>
+          </div>
+          <div className="m-stat-tile">
+            <div className="m-stat-emoji">🔥</div>
+            <div className="m-stat-value">{xpStats.currentStreak}wk</div>
+            <div className="m-stat-label">Streak</div>
+          </div>
+          <div className="m-stat-tile">
+            <div className="m-stat-emoji">📊</div>
+            <div className="m-stat-value">{myRank ? `#${myRank}` : "—"}</div>
+            <div className="m-stat-label">Rank</div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Crew activity ────────────────────────────────────────────── */}
+      <section className="m-crew" id="leaderboard">
+        <div className="m-section-eyebrow">CREW ACTIVITY</div>
+        <ul className="m-crew-list">
+          {activity.length === 0 && (
+            <li className="m-crew-empty">Niciun XP încă. Vino la o sesiune.</li>
+          )}
+          {activity.slice(0, 6).map((a) => {
+            const who = a.label.startsWith("Strava")
+              ? "Tu"
+              : (session?.user?.name || "Tu").split(" ")[0];
+            const kind = a.label.startsWith("Strava")
+              ? "logged a run"
+              : `checked in · ${a.label.toLowerCase()}`;
+            return (
+              <li key={a.id} className="m-crew-row">
+                <div className="m-crew-avatar">{initials(who, "")}</div>
+                <div className="m-crew-main">
+                  <div className="m-crew-line">
+                    <strong>{who}</strong>{" "}
+                    <span className="m-crew-action">{kind}</span>
+                  </div>
+                  <div className="m-crew-meta">{NICE_AGO(a.at)} ago</div>
+                </div>
+                <div className="m-crew-xp">+{a.xp}</div>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* ── Leaderboard top ──────────────────────────────────────────── */}
+      <section className="m-board" id="board">
+        <div className="m-section-eyebrow">LEADERBOARD</div>
+        <ul className="m-board-list">
+          {board.length === 0 && (
+            <li className="m-crew-empty">Niciun runner încă.</li>
+          )}
+          {board.slice(0, 10).map((e) => (
+            <li
+              key={e.userId}
+              className={"m-board-row" + (e.isMe ? " m-board-row-me" : "")}
+            >
+              <span className="m-board-rank">#{e.rank}</span>
+              <span className="m-board-avatar">
+                {initials(e.name, e.email)}
+              </span>
+              <span className="m-board-name">{e.name}</span>
+              <span className="m-board-meta">
+                {e.runs} runs · {e.streak}wk
+              </span>
+              <span className="m-board-xp">{e.xp}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* ── Quests ───────────────────────────────────────────────────── */}
+      {challenges.length > 0 && (
+        <section className="m-quests" id="quests">
+          <div className="m-section-eyebrow">QUESTS · SĂPTĂMÂNA ASTA</div>
+          <ul className="m-quests-list">
+            {challenges.map((c) => (
+              <li
+                key={c.id}
+                className={"m-quest" + (c.done ? " m-quest-done" : "")}
+              >
+                <div className="m-quest-head">
+                  <span className="m-quest-title">{c.title}</span>
+                  <span className="m-quest-reward">
+                    {c.done ? `✓ +${c.reward}` : `+${c.reward}`} XP
+                  </span>
+                </div>
+                <div className="m-quest-body">{c.description}</div>
+                <div className="m-quest-bar">
+                  <div
+                    className="m-quest-bar-fill"
+                    style={{ width: `${Math.round(c.progress * 100)}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* ── Card cu QR rotativ ───────────────────────────────────────── */}
+      <section className="m-card-section" id="card">
+        <div className="m-section-eyebrow">CARDUL MEU · COD ROTATIV</div>
         {!deviceCheck.ok && (
-          <div
-            className="dash-banner dash-banner-error"
-            style={{ marginBottom: "1rem" }}
-          >
-            <div>
-              <div className="dash-banner-title">Dispozitiv neautorizat</div>
-              <div className="dash-banner-body">
-                Acest cont a fost legat de alt dispozitiv. Loghează-te pe
-                dispozitivul original sau scrie-i unui admin să-ți reseteze
-                legătura.
-              </div>
-            </div>
+          <div className="m-banner-err">
+            Acest cont a fost legat de alt dispozitiv. Loghează-te pe
+            telefonul original sau cere admin reset.
           </div>
         )}
         <div className="dash-qr-card">
@@ -188,35 +335,8 @@ export default async function DashboardHome({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/mueve-logo.png" alt="MUEVE" className="dash-qr-logo" />
             </div>
-            <div
-              style={{
-                textAlign: "right",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.2rem",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "0.55rem",
-                  fontWeight: 900,
-                  letterSpacing: "0.3em",
-                  textTransform: "uppercase",
-                  opacity: 0.7,
-                }}
-              >
-                Clase rămase
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontWeight: 900,
-                  fontSize: "1.75rem",
-                  lineHeight: 1,
-                }}
-              >
-                {credits.total}
-              </div>
+            <div style={{ textAlign: "right" }}>
+              <div className="m-card-pill">{credits.total} clase</div>
             </div>
           </div>
           <AutoRotateQr
@@ -227,217 +347,74 @@ export default async function DashboardHome({
           <div className="dash-qr-foot">
             <div className="dash-qr-foot-name">{session?.user?.name || "Membru"}</div>
             <div className="dash-qr-foot-email">{session?.user?.email}</div>
-            <div
-              style={{
-                fontSize: "0.58rem",
-                fontWeight: 800,
-                letterSpacing: "0.25em",
-                textTransform: "uppercase",
-                opacity: 0.65,
-                marginTop: "0.35rem",
-              }}
-            >
+            <div className="m-card-pass">
               {pass
-                ? `Pass activ${
-                    pass.currentPeriodEnd
-                      ? ` · până la ${pass.currentPeriodEnd.toLocaleDateString("ro-RO")}`
-                      : ""
-                  }`
+                ? `Pass activ${pass.currentPeriodEnd ? ` · până la ${pass.currentPeriodEnd.toLocaleDateString("ro-RO")}` : ""}`
                 : "Fără Pass activ"}
-              {credits.nextExpiry && credits.total > 0 && (
-                <>
-                  {" · "}
-                  următ. expirare {credits.nextExpiry.toLocaleDateString("ro-RO")}
-                </>
-              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── XP & Tier ─────────────────────────────────────────────────── */}
-      {xpStats && (
-        <section className="dash-section" id="xp">
-          <div className="dash-section-head">
-            <h2 className="dash-section-title">XP &amp; nivel</h2>
-          </div>
-          <div className="lb-card lb-me">
-            <div className="lb-me-row">
-              <div>
-                <div className="lb-me-tier">{xpStats.tier.name}</div>
-                <div className="lb-me-name">{session?.user?.name || "Tu"}</div>
-              </div>
-              <div className="lb-me-level">LVL {xpStats.tier.level}</div>
-            </div>
-            <div className="lb-xp-bar">
-              <div
-                className="lb-xp-bar-fill"
-                style={{ width: `${Math.round(xpStats.progressToNext * 100)}%` }}
-              />
-            </div>
-            <div className="lb-xp-meta">
-              <span>{xpStats.xp} XP</span>
-              <span>
-                {xpStats.nextTier
-                  ? `${xpStats.nextTier.minXp - xpStats.xp} XP până la ${xpStats.nextTier.name}`
-                  : "Nivel maxim — Legend"}
-              </span>
-            </div>
-            <div className="lb-stats-row">
-              <div className="lb-stat">
-                <div className="lb-stat-value">{xpStats.runs}</div>
-                <div className="lb-stat-label">Sesiuni</div>
-              </div>
-              <div className="lb-stat">
-                <div className="lb-stat-value">{xpStats.currentStreak}sapt</div>
-                <div className="lb-stat-label">Streak curent</div>
-              </div>
-              <div className="lb-stat">
-                <div className="lb-stat-value">{xpStats.longestStreak}sapt</div>
-                <div className="lb-stat-label">Cel mai lung</div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Leaderboard + Challenges ──────────────────────────────────── */}
-      <section className="dash-section" id="leaderboard">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title">Clasament &amp; challenges</h2>
-        </div>
-        <div className="lb-grid">
-          <div className="lb-card lb-board">
-            <div className="lb-card-head">
-              <span>Top runners</span>
-              <span className="lb-card-meta">Top {board.length}</span>
-            </div>
-            <ol className="lb-list">
-              {board.map((e) => (
-                <li
-                  key={e.userId}
-                  className={"lb-row" + (e.isMe ? " lb-row-me" : "")}
-                >
-                  <span className="lb-rank">#{e.rank}</span>
-                  <span className="lb-name">{e.name}</span>
-                  <span className="lb-row-meta">
-                    <span className="lb-row-runs">{e.runs} ses</span>
-                    <span className="lb-row-streak">{e.streak}sapt</span>
-                    <span className="lb-row-xp">{e.xp} XP</span>
-                  </span>
-                </li>
-              ))}
-              {board.length === 0 && (
-                <li className="lb-empty">Niciun runner încă. Fii primul.</li>
-              )}
-            </ol>
-          </div>
-          <div className="lb-card lb-challenges">
-            <div className="lb-card-head">
-              <span>Săptămâna asta</span>
-              <span className="lb-card-meta">+50 XP fiecare</span>
-            </div>
-            <ul className="lb-ch-list">
-              {challenges.map((c) => (
-                <li key={c.id} className={"lb-ch" + (c.done ? " lb-ch-done" : "")}>
-                  <div className="lb-ch-head">
-                    <span className="lb-ch-title">{c.title}</span>
-                    <span className="lb-ch-reward">
-                      {c.done ? `✓ +${c.reward} XP` : `+${c.reward} XP`}
-                    </span>
-                  </div>
-                  <div className="lb-ch-body">{c.description}</div>
-                  <div className="lb-ch-bar">
-                    <div
-                      className="lb-ch-bar-fill"
-                      style={{ width: `${Math.round(c.progress * 100)}%` }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+      {/* ── Wallet ───────────────────────────────────────────────────── */}
+      <section className="m-card-section" id="wallet">
+        <div className="m-section-eyebrow">WALLET DIGITAL · APPLE · GOOGLE</div>
+        <WalletButtons />
       </section>
 
-      {/* ── Stats originale ───────────────────────────────────────────── */}
-      <section className="dash-section">
-        <div className="dash-grid-4">
-          <StatCard
-            label="Clase rămase"
-            value={credits.total}
-            suffix={credits.total === 1 ? "clasă" : "clase"}
-          />
-          <StatCard label="Luna asta" value={stats.thisMonth} />
-          <StatCard
-            label="Streak zile"
-            value={stats.streakDays}
-            suffix={stats.streakDays === 1 ? "zi" : "zile"}
-          />
-          <StatCard label="Favorit" value={favSlot?.activity.ro ?? "—"} isText />
-        </div>
+      {/* ── Strava ───────────────────────────────────────────────────── */}
+      <section className="m-card-section" id="strava">
+        <div className="m-section-eyebrow">STRAVA · ALERGĂRILE TALE</div>
+        <StravaCard
+          connected={stravaConnected}
+          athleteName={stravaAthleteName}
+          lastSync={stravaLastSync ? stravaLastSync.toISOString() : null}
+        />
       </section>
 
-      {/* ── Pass + Plăți ──────────────────────────────────────────────── */}
-      <section className="dash-section">
-        <div className="dash-grid-2">
-          <div className="dash-card">
-            <div className="dash-card-label">Pass</div>
+      {/* ── Pass + payments ──────────────────────────────────────────── */}
+      <section className="m-card-section" id="pass">
+        <div className="m-section-eyebrow">PASS · PLĂȚI</div>
+        <div className="m-grid-2">
+          <div className="m-mini-card">
+            <div className="m-mini-label">PASS</div>
             {activeSub ? (
               <>
-                <div className="dash-card-value">
+                <div className="m-mini-value">
                   {activeSub.planName || "Pass activ"}
                 </div>
-                <div className="dash-card-meta">
-                  Status:{" "}
-                  <span style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                    {activeSub.status}
-                  </span>
-                  {activeSub.currentPeriodEnd && (
-                    <> · până la {activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")}</>
-                  )}
+                <div className="m-mini-meta">
+                  {activeSub.status.toUpperCase()}
+                  {activeSub.currentPeriodEnd &&
+                    ` · până la ${activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")}`}
                 </div>
-                <div className="dash-card-meta">
+                <div className="m-mini-meta">
                   {credits.total > 0
-                    ? `${credits.total} ${credits.total === 1 ? "clasă rămasă" : "clase rămase"}${
-                        credits.nextExpiry
-                          ? ` · expiră ${credits.nextExpiry.toLocaleDateString("ro-RO")}`
-                          : ""
-                      }`
-                    : "Nicio clasă cumpărată încă."}
+                    ? `${credits.total} ${credits.total === 1 ? "clasă rămasă" : "clase rămase"}`
+                    : "Nicio clasă cumpărată."}
                 </div>
-                <Link href="/#pricing" className="dash-link">
-                  Cumpără clase →
-                </Link>
                 <ManageSubscription />
               </>
             ) : (
               <>
-                <div className="dash-card-value">Fără Pass activ</div>
-                <div className="dash-card-meta">
-                  Ai nevoie de Pass ca să cumperi clase și să intri la sesiuni.
-                </div>
-                <Link href="/#pricing" className="dash-link">
+                <div className="m-mini-value">Fără Pass activ</div>
+                <a className="m-mini-link" href="/#pricing">
                   Vezi Pass-ul →
-                </Link>
+                </a>
               </>
             )}
           </div>
 
-          <div className="dash-card">
-            <div className="dash-card-label">Plăți recente</div>
+          <div className="m-mini-card">
+            <div className="m-mini-label">Plăți recente</div>
             {recentPayments.length === 0 ? (
-              <div className="dash-card-meta">Încă nicio plată.</div>
+              <div className="m-mini-meta">Încă nicio plată.</div>
             ) : (
-              <ul className="dash-list">
+              <ul className="m-mini-list">
                 {recentPayments.map((p) => (
-                  <li key={p.id} className="dash-list-row">
-                    <div className="dash-list-row-main">
-                      <span className="dash-list-row-title">
-                        {p.planName || p.mode}
-                      </span>
-                    </div>
-                    <span className="dash-list-row-side">
+                  <li key={p.id} className="m-mini-row">
+                    <span>{p.planName || p.mode}</span>
+                    <span className="m-mini-amount">
                       {(p.amount / 100).toFixed(2)} {p.currency.toUpperCase()}
                     </span>
                   </li>
@@ -448,150 +425,50 @@ export default async function DashboardHome({
         </div>
       </section>
 
-      {/* ── Pe lumi + Sesiuni viitoare ───────────────────────────────── */}
-      <section className="dash-section" id="sessions">
-        <div className="dash-grid-2">
-          <div className="dash-card">
-            <div className="dash-card-label">Pe lumi</div>
-            {worldRows.length === 0 ? (
-              <div className="dash-card-meta">
-                Fără date încă — marchează prima prezență.
-              </div>
-            ) : (
-              <ul className="dash-list" style={{ gap: "0.25rem" }}>
-                {worldRows.map((w) => {
-                  const pct =
-                    worldTotal > 0 ? Math.round((w.count / worldTotal) * 100) : 0;
-                  return (
-                    <li key={w.world} className="dash-bar-row">
-                      <div className="dash-bar-head">
-                        <span className="dash-bar-label">{w.world}</span>
-                        <span className="dash-bar-value">
-                          {w.count} · {pct}%
-                        </span>
-                      </div>
-                      <div className="dash-bar-track">
-                        <div
-                          className="dash-bar-fill"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-
-          <div className="dash-card">
-            <div className="dash-card-label">Următoarele sesiuni</div>
-            {upcoming.length === 0 ? (
-              <div className="dash-card-meta">
-                Nicio sesiune în următoarele 7 zile.
-              </div>
-            ) : (
-              <ul className="dash-list">
-                {upcoming.map((u) => (
-                  <li key={`${u.date}-${u.slot.id}`} className="dash-list-row">
-                    <div className="dash-list-row-main">
-                      <span className="dash-list-row-title">
-                        {u.slot.activity.ro}
-                      </span>
-                      <span className="dash-list-row-meta">
-                        {u.dayLabel} · {u.date.slice(5).replace("-", ".")} ·{" "}
-                        {u.slot.time} · {u.slot.world.ro}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link href="/#prog" className="dash-link" style={{ marginTop: "0.3rem" }}>
-              Programul complet →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Activity feed ────────────────────────────────────────────── */}
-      <section className="dash-section">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title">Activitate recentă</h2>
-        </div>
-        <div className="lb-card">
-          <ul className="lb-act-list">
-            {activity.length === 0 && (
-              <li className="lb-empty">Niciun XP încă. Vino la o sesiune.</li>
-            )}
-            {activity.map((a) => (
-              <li key={a.id} className="lb-act">
-                <span className="lb-act-label">{a.label}</span>
-                <span className="lb-act-when">{NICE_TIME.format(a.at)}</span>
-                <span className="lb-act-xp">+{a.xp}</span>
+      {/* ── Sesiuni viitoare ─────────────────────────────────────────── */}
+      <section className="m-card-section" id="sessions">
+        <div className="m-section-eyebrow">URMĂTOARELE SESIUNI</div>
+        {upcoming.length === 0 ? (
+          <div className="m-mini-meta">Nicio sesiune în următoarele 7 zile.</div>
+        ) : (
+          <ul className="m-upcoming-list">
+            {upcoming.map((u) => (
+              <li key={`${u.date}-${u.slot.id}`} className="m-upcoming-row">
+                <div className="m-upcoming-main">
+                  <div className="m-upcoming-title">{u.slot.activity.ro}</div>
+                  <div className="m-upcoming-meta">
+                    {u.dayLabel} · {u.date.slice(5).replace("-", ".")} · {u.slot.time}
+                  </div>
+                </div>
+                <span className="m-upcoming-world">{u.slot.world.ro}</span>
               </li>
             ))}
           </ul>
-        </div>
+        )}
+        <a className="m-mini-link" href="/#prog">
+          Programul complet →
+        </a>
       </section>
 
-      {/* ── Wallet ───────────────────────────────────────────────────── */}
-      <section className="dash-section" id="wallet">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title">Portofel digital</h2>
-          <span className="dash-section-meta">Apple Wallet · Google Pay</span>
-        </div>
-        <WalletButtons />
-      </section>
-
-      {/* ── Strava ───────────────────────────────────────────────────── */}
-      <section className="dash-section" id="strava">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title">Strava</h2>
-          <span className="dash-section-meta">+10 XP / km la alergările sincronizate</span>
-        </div>
-        <StravaCard
-          connected={stravaConnected}
-          athleteName={stravaAthleteName}
-          lastSync={stravaLastSync ? stravaLastSync.toISOString() : null}
-        />
-      </section>
-
-      {/* ── Cum se face check-in ─────────────────────────────────────── */}
-      <section className="lb-nfc">
-        <h2 className="lb-nfc-title">Cum se face check-in</h2>
-        <ol className="lb-nfc-steps">
-          <li>Deschizi cardul de mai sus — codul rotativ e gata.</li>
-          <li>Coach-ul sau partenerul îl scanează cu camera telefonului.</li>
-          <li>Pentru sesiuni recurente îl poți adăuga în Apple Wallet / Google Pay.</li>
-          <li>Prezența + XP se înregistrează instant.</li>
-        </ol>
-        <p className="lb-nfc-hint">
-          Conectează-ți și Strava ca să primești XP automat pentru alergările
-          tale, oricând și oriunde.
-        </p>
-      </section>
+      {/* ── Tab bar ──────────────────────────────────────────────────── */}
+      <nav className="m-tabbar">
+        <a href="#xp" className="m-tab m-tab-active">
+          <span className="m-tab-icon">⚡</span>
+          <span className="m-tab-label">HOME</span>
+        </a>
+        <a href="#board" className="m-tab">
+          <span className="m-tab-icon">🏆</span>
+          <span className="m-tab-label">BOARD</span>
+        </a>
+        <a href="#quests" className="m-tab">
+          <span className="m-tab-icon">🎯</span>
+          <span className="m-tab-label">QUESTS</span>
+        </a>
+        <a href="#card" className="m-tab">
+          <span className="m-tab-icon">📡</span>
+          <span className="m-tab-label">CHECK IN</span>
+        </a>
+      </nav>
     </>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  suffix,
-  isText,
-}: {
-  label: string;
-  value: string | number;
-  suffix?: string;
-  isText?: boolean;
-}) {
-  return (
-    <div className="dash-stat">
-      <div className="dash-stat-label">{label}</div>
-      <div className={isText ? "dash-stat-value-text" : "dash-stat-value"}>
-        {value}
-        {suffix && <span className="dash-stat-suffix">{suffix}</span>}
-      </div>
-    </div>
   );
 }
