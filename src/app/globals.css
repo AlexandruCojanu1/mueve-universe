@@ -343,21 +343,25 @@ body.is-day .ham span {
 
 .hero {
   position: relative;
-  min-height: 100vh;
+  min-height: 100svh;
+  height: 100svh;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   z-index: 1;
   overflow: hidden;
-  padding: 10vh 4vw 16vh;
-  gap: 1rem;
+  padding: 4vh 4vw;
+  gap: 0;
 }
 .hero-sun-wrap {
   position: relative;
-  margin-bottom: 2rem;
-  width: clamp(380px, 52vw, 720px);
-  height: clamp(380px, 52vw, 720px);
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(260px, 58vmin, 620px);
+  height: clamp(260px, 58vmin, 620px);
 }
 .celestial {
   position: relative;
@@ -455,14 +459,18 @@ body.is-day .ham span {
   50% { translate: 0 -10px; }
 }
 .hero h1 {
-  font-size: clamp(2.6rem, 6.4vw, 5.6rem);
+  font-size: clamp(2.2rem, 5.4vmin, 4.6rem);
   text-align: center;
   line-height: 0.95;
   text-transform: uppercase;
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 2;
-  margin-top: -3.5rem;
-  mix-blend-mode: normal;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55), 0 0 40px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  width: min(92vw, 760px);
 }
 .hero h1 em {
   font-style: italic;
@@ -475,13 +483,16 @@ body.is-day .ham span {
   text-shadow: 0 0 60px var(--sun-g), 0 0 120px rgba(245, 245, 10, 0.15);
 }
 .hero-sub {
-  font-size: clamp(0.9rem, 1.6vw, 1.15rem);
-  opacity: 0.75;
+  font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+  opacity: 0.8;
   text-align: center;
-  max-width: 520px;
-  line-height: 1.7;
-  margin-top: 6rem;
+  max-width: 560px;
+  line-height: 1.6;
+  margin-top: clamp(1.25rem, 3vh, 2.5rem);
   font-weight: 400;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
 .worlds-intro {
@@ -1741,7 +1752,8 @@ body.is-day .ham span {
     display: block;
   }
   .hero h1 {
-    font-size: clamp(2.8rem, 12vw, 5rem);
+    font-size: clamp(1.8rem, 6.2vmin, 3.4rem);
+    width: 92vw;
   }
   .prog-table {
     grid-template-columns: auto repeat(7, minmax(90px, 1fr));
