@@ -64,22 +64,22 @@ async function main() {
   add("hero", hero);
 
   const program: ProgramData = {
-    heading: { lead: bi("HARTA", "WEEKLY"), accent: bi("RITUALULUI", "RITUAL MAP") },
+    heading: { lead: bi("TRAINING", "TRAINING"), accent: bi("SESSIONS", "SESSIONS") },
     intro: bi(
-      "7 zile. 7 misiuni. Un ciclu care te transformă. Click pe o zi pentru detalii.",
-      "7 days. 7 missions. One cycle that transforms you. Click a day to see the mission.",
+      "Click pe oricare din sesiuni pentru detalii.",
+      "Click any session for details.",
     ),
     dayLabels: [
       bi("LUN", "MON"), bi("MAR", "TUE"), bi("MIE", "WED"), bi("JOI", "THU"),
       bi("VIN", "FRI"), bi("SÂM", "SAT"), bi("DUM", "SUN"),
     ],
-    rowLabels: { am: bi("DIMINEAȚĂ", "MORNING"), pm: bi("SEARA", "EVENING") },
+    rowLabels: { am: bi("SUNRISE", "SUNRISE"), pm: bi("SUNSET", "SUNSET") },
     joinLabel: bi("INTRĂ ÎN MISIUNE", "JOIN MISSION"),
     slots: [
-      { id: "am-0", day: 0, row: "am", activity: bi("Sunrise Movement for All", "Sunrise Movement for All"), time: "06:30", world: bi("Toate Lumile", "All Worlds"), color: "yellow" },
-      { id: "pm-1", day: 1, row: "pm", activity: bi("Sunset Social Run", "Sunset Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
-      { id: "am-2", day: 2, row: "am", activity: bi("Sunrise Yoga", "Sunrise Yoga"), time: "06:30", world: bi("Templul", "Temple"), color: "purple" },
-      { id: "am-3", day: 3, row: "am", activity: bi("Sunrise Calisthenics", "Sunrise Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
+      { id: "am-0", day: 0, row: "am", activity: bi("Movement for All", "Movement for All"), time: "06:30", world: bi("Toate Lumile", "All Worlds"), color: "yellow" },
+      { id: "pm-1", day: 1, row: "pm", activity: bi("Social Run", "Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
+      { id: "am-2", day: 2, row: "am", activity: bi("Yoga", "Yoga"), time: "06:30", world: bi("Templul", "Temple"), color: "purple" },
+      { id: "am-3", day: 3, row: "am", activity: bi("Calisthenics", "Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
       { id: "am-4", day: 4, row: "am", activity: bi("Coming Soon", "Coming Soon"), time: "TBA", world: bi("", ""), color: "orange" },
       { id: "am-5", day: 5, row: "am", activity: bi("Mers pe jos (în curând)", "Walking (coming soon)"), time: "10:00", world: bi("Drumul", "Path"), color: "orange" },
       { id: "am-6", day: 6, row: "am", activity: bi("THE BIG Social Run", "THE BIG Social Run"), time: "09:00", world: bi("Toate Lumile", "All Worlds"), color: "yellow", boss: true },

@@ -92,10 +92,10 @@ async function main() {
 
   // PROGRAM
   const program: ProgramData = {
-    heading: { lead: bi("HARTA", "WEEKLY"), accent: bi("RITUALULUI", "RITUAL MAP") },
+    heading: { lead: bi("TRAINING", "TRAINING"), accent: bi("SESSIONS", "SESSIONS") },
     intro: bi(
-      "7 zile. 7 misiuni. Un ciclu care te transformă. Click pe o zi pentru detalii.",
-      "7 days. 7 missions. One cycle that transforms you. Click a day to see the mission.",
+      "Click pe oricare din sesiuni pentru detalii.",
+      "Click any session for details.",
     ),
     dayLabels: [
       bi("LUN", "MON"),
@@ -107,19 +107,19 @@ async function main() {
       bi("DUM", "SUN"),
     ],
     rowLabels: {
-      am: bi("DIMINEAȚĂ", "MORNING"),
-      pm: bi("SEARA", "EVENING"),
+      am: bi("SUNRISE", "SUNRISE"),
+      pm: bi("SUNSET", "SUNSET"),
     },
     joinLabel: bi("INTRĂ ÎN MISIUNE", "JOIN MISSION"),
     slots: [
-      // MON — SUNRISE MOVEMENT FOR ALL
-      { id: "am-0", day: 0, row: "am", activity: bi("Sunrise Movement for All", "Sunrise Movement for All"), time: "06:30", world: bi("Toate Lumile", "All Worlds"), color: "yellow" },
-      // TUE — SUNSET SOCIAL RUN
-      { id: "pm-1", day: 1, row: "pm", activity: bi("Sunset Social Run", "Sunset Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
-      // WED — SUNRISE YOGA
-      { id: "am-2", day: 2, row: "am", activity: bi("Sunrise Yoga", "Sunrise Yoga"), time: "06:30", world: bi("Templul", "Temple"), color: "purple" },
-      // THU — SUNRISE CALISTHENICS
-      { id: "am-3", day: 3, row: "am", activity: bi("Sunrise Calisthenics", "Sunrise Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
+      // MON — MOVEMENT FOR ALL (sunrise)
+      { id: "am-0", day: 0, row: "am", activity: bi("Movement for All", "Movement for All"), time: "06:30", world: bi("Toate Lumile", "All Worlds"), color: "yellow" },
+      // TUE — SOCIAL RUN (sunset)
+      { id: "pm-1", day: 1, row: "pm", activity: bi("Social Run", "Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
+      // WED — YOGA (sunrise)
+      { id: "am-2", day: 2, row: "am", activity: bi("Yoga", "Yoga"), time: "06:30", world: bi("Templul", "Temple"), color: "purple" },
+      // THU — CALISTHENICS (sunrise)
+      { id: "am-3", day: 3, row: "am", activity: bi("Calisthenics", "Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
       // FRI — COMING SOON
       { id: "am-4", day: 4, row: "am", activity: bi("Coming Soon", "Coming Soon"), time: "TBA", world: bi("", ""), color: "orange" },
       // SAT — MERS PE JOS (coming soon)
