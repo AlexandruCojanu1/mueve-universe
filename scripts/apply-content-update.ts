@@ -165,10 +165,10 @@ async function main() {
   add("stats", stats);
 
   const pricing: PricingData = {
-    heading: { lead: bi("ALEGE-ȚI", "CHOOSE YOUR"), accent: bi("ORBITA", "ORBIT") },
+    heading: { lead: bi("MUEVE UNIVERSE", "MUEVE UNIVERSE"), accent: bi("PASS", "PASS") },
     intro: bi(
-      "Trei moduri de a intra în MUEVE UNIVERSE. Același acces, ritm diferit.",
-      "Three ways to enter MUEVE UNIVERSE. Same access, different rhythm.",
+      "Acces premium la toate beneficiile. Cu acest card îți poți rezerva orice clasă.",
+      "Premium access to every perk. With this card you can book any class.",
     ),
     tiers: [
       {
@@ -262,15 +262,15 @@ async function main() {
           {
             id: "plan-universe",
             name: bi("UNIVERSE", "UNIVERSE"),
-            checkoutMode: "payment" as const,
+            checkoutMode: "subscription" as const,
             price: "599",
-            originalPrice: "769",
             currency: bi("lei", "RON"),
-            period: bi("/ 3 luni", "/ 3 months"),
-            tagline: bi("8 clase / 3 luni", "8 classes / 3 months"),
+            period: bi("/ lună", "/ month"),
+            tagline: bi("Nelimitat — până la 10 clase/lună*", "Unlimited — up to 10 classes/month*"),
             features: [
-              bi("Flexibilitate 3 luni", "3-month flexibility"),
+              bi("*Până la 10 clase incluse pe lună", "*Up to 10 classes included per month"),
               bi("Acces la toate lumile", "Access to all worlds"),
+              bi("Rezervare prioritară", "Priority booking"),
               bi("Invitații la evenimente", "Event invites"),
             ],
             ctaLabel: bi("CUCEREȘTE UNIVERSUL", "CONQUER UNIVERSE"),
@@ -279,10 +279,7 @@ async function main() {
         ],
       },
     ],
-    note: bi(
-      "Plata personal: 10% reducere pentru plata cash.",
-      "In-person payment: 10% discount for cash payment.",
-    ),
+    note: bi("", ""),
   };
   add("pricing", pricing);
 

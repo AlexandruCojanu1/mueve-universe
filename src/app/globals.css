@@ -1069,6 +1069,210 @@ body.is-day .ham span {
   flex-direction: column;
   gap: 0.7rem;
 }
+
+/* Compact button-style cards (click opens benefits modal) */
+.price-card-compact {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.price-card-compact:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 4px;
+}
+.price-card-hint {
+  margin-top: 0.4rem;
+  font-family: var(--ff);
+  font-weight: 800;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+.price-card-hl .price-card-hint {
+  color: var(--sun);
+  opacity: 0.95;
+}
+.pricing-cta-hint {
+  text-align: center;
+  margin-top: 1.6rem;
+  font-family: var(--ff);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* Modal */
+.pricing-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 18, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 4vh 5vw;
+  animation: pm-fade 0.18s ease-out;
+}
+@keyframes pm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.pricing-modal {
+  position: relative;
+  width: min(480px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(20, 28, 55, 0.95), rgba(8, 14, 32, 0.95));
+  border: 1px solid rgba(245, 245, 10, 0.25);
+  border-radius: 6px;
+  padding: 2.2rem 1.8rem 1.8rem;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6), 0 0 80px rgba(245, 245, 10, 0.08) inset;
+  animation: pm-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes pm-pop {
+  from { transform: scale(0.94); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.pricing-modal-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.6rem;
+  transition: color 0.2s;
+}
+.pricing-modal-close:hover {
+  color: var(--sun);
+}
+.pricing-modal-badge {
+  display: inline-block;
+  background: var(--sun);
+  color: var(--deep);
+  font-family: var(--ff);
+  font-weight: 900;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  padding: 0.35rem 0.75rem;
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+.pricing-modal-name {
+  font-family: var(--ff);
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 0.4rem;
+}
+.pricing-modal-price {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  line-height: 1;
+}
+.pricing-modal-amount {
+  font-size: clamp(2.6rem, 7vw, 3.4rem);
+  color: var(--sun);
+}
+.pricing-modal-currency {
+  font-size: 1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.pricing-modal-original {
+  margin-top: 0.3rem;
+  font-size: 0.95rem;
+  text-decoration: line-through;
+  opacity: 0.45;
+}
+.pricing-modal-period {
+  margin-top: 0.25rem;
+  font-family: var(--ff);
+  font-weight: 800;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.pricing-modal-tagline {
+  margin-top: 0.7rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+.pricing-modal-feat {
+  margin-top: 1.4rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.pricing-modal-feat-title {
+  font-family: var(--ff);
+  font-weight: 900;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 0.9rem;
+}
+.pricing-modal-feat ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.pricing-modal-feat li {
+  position: relative;
+  padding-left: 1.2rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+.pricing-modal-feat li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--sun);
+  font-weight: 900;
+}
+.pricing-modal-cta {
+  display: block;
+  width: 100%;
+  margin-top: 1.6rem;
+  background: var(--sun);
+  color: var(--deep);
+  font-family: var(--ff);
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 1rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.pricing-modal-cta:hover {
+  filter: brightness(1.08);
+}
 .price-card:hover {
   transform: translateY(-4px);
   border-color: rgba(255, 255, 255, 0.22);

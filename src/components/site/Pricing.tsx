@@ -1,12 +1,15 @@
 "use client";
+import { useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { pick } from "@/lib/bilingual";
 import type { PricingData, PricingPlan, PricingTier } from "@/lib/content-types";
 import type { CSSProperties } from "react";
-import PricingCta from "./PricingCta";
+import PricingDetailsModal from "./PricingDetailsModal";
 
 export default function Pricing({ data }: { data: PricingData }) {
   const { lang } = useLang();
+  const [openPlan, setOpenPlan] = useState<PricingPlan | null>(null);
+
   return (
     <section className="pricing" id="pricing">
       <div className="pricing-head">
@@ -19,8 +22,13 @@ export default function Pricing({ data }: { data: PricingData }) {
       </div>
       <div className="pricing-tiers">
         {data.tiers.map((tier) => (
-          <TierBlock key={tier.id} tier={tier} />
+          <TierBlock key={tier.id} tier={tier} onOpen={setOpenPlan} />
         ))}
+      </div>
+      <div className="pricing-cta-hint">
+        {lang === "ro"
+          ? "Click pe un card pentru toate beneficiile"
+          : "Click any card for full benefits"}
       </div>
       {data.note && pick(data.note, lang) && (
         <div className="pricing-note">
@@ -28,11 +36,20 @@ export default function Pricing({ data }: { data: PricingData }) {
           {pick(data.note, lang)}
         </div>
       )}
+      {openPlan && (
+        <PricingDetailsModal plan={openPlan} onClose={() => setOpenPlan(null)} />
+      )}
     </section>
   );
 }
 
-function TierBlock({ tier }: { tier: PricingTier }) {
+function TierBlock({
+  tier,
+  onOpen,
+}: {
+  tier: PricingTier;
+  onOpen: (p: PricingPlan) => void;
+}) {
   const { lang } = useLang();
   const count = tier.plans.length;
   const classes = [
@@ -52,32 +69,51 @@ function TierBlock({ tier }: { tier: PricingTier }) {
           <p>{pick(tier.subtitle, lang)}</p>
         )}
       </div>
-      <div className={"price-cards" + (count > 1 ? " price-cards-grid" : "")} style={gridStyle}>
+      <div
+        className={"price-cards" + (count > 1 ? " price-cards-grid" : "")}
+        style={gridStyle}
+      >
         {tier.plans.map((p) => (
-          <PlanCard key={p.id} plan={p} featured={tier.featured && count === 1} />
+          <PlanCard
+            key={p.id}
+            plan={p}
+            featured={tier.featured && count === 1}
+            onOpen={onOpen}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function PlanCard({ plan, featured }: { plan: PricingPlan; featured?: boolean }) {
+function PlanCard({
+  plan,
+  featured,
+  onOpen,
+}: {
+  plan: PricingPlan;
+  featured?: boolean;
+  onOpen: (p: PricingPlan) => void;
+}) {
   const { lang } = useLang();
   const name = pick(plan.name, lang);
   const tagline = plan.tagline ? pick(plan.tagline, lang) : "";
   const period = plan.period ? pick(plan.period, lang) : "";
   const currency = pick(plan.currency, lang);
-  const featuresTitle = plan.featuresTitle ? pick(plan.featuresTitle, lang) : "";
   const badge = plan.badge ? pick(plan.badge, lang) : "";
-  const ctaLabel = plan.ctaLabel ? pick(plan.ctaLabel, lang) : "";
 
   const cls =
-    "price-card" +
+    "price-card price-card-compact" +
     (plan.highlighted ? " price-card-hl" : "") +
     (featured ? " price-card-featured" : "");
 
   return (
-    <div className={cls}>
+    <button
+      type="button"
+      className={cls}
+      onClick={() => onOpen(plan)}
+      aria-label={`${name} — vezi detalii`}
+    >
       {badge && <div className="price-badge">{badge}</div>}
       <div className="price-card-main">
         {name && <div className="price-name">{name}</div>}
@@ -91,27 +127,9 @@ function PlanCard({ plan, featured }: { plan: PricingPlan; featured?: boolean })
         {period && <div className="price-period">{period}</div>}
         {tagline && <div className="price-tagline">{tagline}</div>}
       </div>
-      {plan.features.length > 0 && (
-        <div className="price-card-feat">
-          {featuresTitle && <div className="price-feat-title">{featuresTitle}</div>}
-          <ul className="price-feat">
-            {plan.features.map((f, i) => (
-              <li key={i}>{pick(f, lang)}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {ctaLabel && (
-        <PricingCta
-          className="price-cta"
-          label={ctaLabel}
-          priceId={plan.stripePriceId}
-          planId={plan.id}
-          planName={pick(plan.name, lang)}
-          mode={plan.checkoutMode}
-          fallbackHref={plan.ctaHref || "#join"}
-        />
-      )}
-    </div>
+      <div className="price-card-hint">
+        {lang === "ro" ? "Vezi beneficii →" : "See benefits →"}
+      </div>
+    </button>
   );
 }
