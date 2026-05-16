@@ -67,21 +67,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     ...authConfig.callbacks,
     async redirect({ url, baseUrl }) {
-      // After OAuth (Google / Apple) NextAuth's default sends users back to
-      // baseUrl. We want them on /dashboard unless an explicit callbackUrl
-      // already targets a specific in-app page.
+      // After OAuth (Google / Apple / Email) NextAuth's default sends users
+      // to baseUrl or whatever the callbackUrl was. Anything that resolves
+      // to the landing page or /login is bounced to /dashboard so the
+      // authenticated experience is always the dashboard.
       const cleanBase = baseUrl.replace(/\/$/, "");
-      if (!url || url === cleanBase || url === `${cleanBase}/` || url === `${cleanBase}/login`) {
-        return `${cleanBase}/dashboard`;
-      }
-      if (url.startsWith("/")) {
-        return `${cleanBase}${url}`;
-      }
+      const DASH = `${cleanBase}/dashboard`;
+
+      const landsOnLanding =
+        !url ||
+        url === "/" ||
+        url === "" ||
+        url === cleanBase ||
+        url === `${cleanBase}/` ||
+        url === "/login" ||
+        url === `${cleanBase}/login` ||
+        url === "/signup" ||
+        url === `${cleanBase}/signup`;
+      if (landsOnLanding) return DASH;
+
+      // Relative path on our domain — keep it.
+      if (url.startsWith("/")) return `${cleanBase}${url}`;
+
+      // Absolute URL on our domain — keep it.
       try {
         const parsed = new URL(url);
-        if (parsed.origin === cleanBase) return url;
+        if (parsed.origin === cleanBase) {
+          // But still bounce if it points at the landing.
+          if (parsed.pathname === "/" || parsed.pathname === "")
+            return DASH;
+          return url;
+        }
       } catch {}
-      return `${cleanBase}/dashboard`;
+
+      // Anything else (cross-origin) — bounce to dashboard.
+      return DASH;
     },
     async jwt({ token, user, trigger }) {
       if (user) {
