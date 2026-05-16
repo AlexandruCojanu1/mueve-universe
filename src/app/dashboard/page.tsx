@@ -51,47 +51,84 @@ export default async function DashboardHome({
   const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
   const proto = hdrs.get("x-forwarded-proto") || "https";
   const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
-  const deviceCheck = await readDeviceBinding(userId);
+
+  // Each step is wrapped in safe() so one broken dependency doesn't take down
+  // the whole dashboard. Failures are logged so we can see them in Vercel logs.
+  const safe = async <T,>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
+    try {
+      return await fn();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(`[dashboard] ${label} failed:`, e);
+      return fallback;
+    }
+  };
+
+  const deviceCheck = await safe(
+    "readDeviceBinding",
+    () => readDeviceBinding(userId),
+    { ok: true as const, firstBind: false },
+  );
   const initialQr = deviceCheck.ok
     ? issueDynamicToken(userId)
     : { token: "", expiresAt: Date.now() };
 
-  const [userRow] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  const program = await getProgramData();
+  const userRow = (await safe(
+    "users select",
+    () => db.select().from(users).where(eq(users.id, userId)).limit(1),
+    [],
+  ))[0];
 
-  const [
-    stats,
-    worldRows,
-    recentPayments,
-    activeSubRows,
-    credits,
-    pass,
-    xpStats,
-    board,
-    challenges,
-    activity,
-  ] = await Promise.all([
-    computeUserStats(userId),
-    computeWorldBreakdown(userId, program),
-    db
-      .select()
-      .from(payments)
-      .where(eq(payments.userId, userId))
-      .orderBy(desc(payments.createdAt))
-      .limit(5),
-    db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.userId, userId))
-      .orderBy(desc(subscriptions.updatedAt))
-      .limit(1),
-    getCreditBalance(userId),
-    getActivePassRow(userId),
-    getUserStats(userId),
-    getLeaderboard(userId, 10),
-    getChallenges(userId),
-    getActivity(userId, 8),
-  ]);
+  const program = await safe("getProgramData", () => getProgramData(), null);
+
+  const stats = await safe(
+    "computeUserStats",
+    () => computeUserStats(userId),
+    {
+      total: 0,
+      thisMonth: 0,
+      streakDays: 0,
+      favoriteSlot: null,
+      worldBreakdown: [],
+    },
+  );
+  const worldRows = await safe(
+    "computeWorldBreakdown",
+    () => computeWorldBreakdown(userId, program),
+    [],
+  );
+  const recentPayments = await safe(
+    "payments select",
+    () =>
+      db
+        .select()
+        .from(payments)
+        .where(eq(payments.userId, userId))
+        .orderBy(desc(payments.createdAt))
+        .limit(5),
+    [],
+  );
+  const activeSubRows = await safe(
+    "subscriptions select",
+    () =>
+      db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId))
+        .orderBy(desc(subscriptions.updatedAt))
+        .limit(1),
+    [],
+  );
+  const credits = await safe(
+    "getCreditBalance",
+    () => getCreditBalance(userId),
+    { total: 0, nextExpiry: null } as Awaited<ReturnType<typeof getCreditBalance>>,
+  );
+  const pass = await safe("getActivePassRow", () => getActivePassRow(userId), null);
+  const xpStats = await safe("getUserStats", () => getUserStats(userId), null);
+  const board = await safe("getLeaderboard", () => getLeaderboard(userId, 10), []);
+  const challenges = await safe("getChallenges", () => getChallenges(userId), []);
+  const activity = await safe("getActivity", () => getActivity(userId, 8), []);
 
   const activeSub = activeSubRows[0];
   const upcoming = upcomingSessions(program, 7).slice(0, 4);
@@ -219,48 +256,50 @@ export default async function DashboardHome({
       </section>
 
       {/* ── XP & Tier ─────────────────────────────────────────────────── */}
-      <section className="dash-section" id="xp">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title">XP &amp; nivel</h2>
-        </div>
-        <div className="lb-card lb-me">
-          <div className="lb-me-row">
-            <div>
-              <div className="lb-me-tier">{xpStats.tier.name}</div>
-              <div className="lb-me-name">{session?.user?.name || "Tu"}</div>
-            </div>
-            <div className="lb-me-level">LVL {xpStats.tier.level}</div>
+      {xpStats && (
+        <section className="dash-section" id="xp">
+          <div className="dash-section-head">
+            <h2 className="dash-section-title">XP &amp; nivel</h2>
           </div>
-          <div className="lb-xp-bar">
-            <div
-              className="lb-xp-bar-fill"
-              style={{ width: `${Math.round(xpStats.progressToNext * 100)}%` }}
-            />
-          </div>
-          <div className="lb-xp-meta">
-            <span>{xpStats.xp} XP</span>
-            <span>
-              {xpStats.nextTier
-                ? `${xpStats.nextTier.minXp - xpStats.xp} XP până la ${xpStats.nextTier.name}`
-                : "Nivel maxim — Legend"}
-            </span>
-          </div>
-          <div className="lb-stats-row">
-            <div className="lb-stat">
-              <div className="lb-stat-value">{xpStats.runs}</div>
-              <div className="lb-stat-label">Sesiuni</div>
+          <div className="lb-card lb-me">
+            <div className="lb-me-row">
+              <div>
+                <div className="lb-me-tier">{xpStats.tier.name}</div>
+                <div className="lb-me-name">{session?.user?.name || "Tu"}</div>
+              </div>
+              <div className="lb-me-level">LVL {xpStats.tier.level}</div>
             </div>
-            <div className="lb-stat">
-              <div className="lb-stat-value">{xpStats.currentStreak}sapt</div>
-              <div className="lb-stat-label">Streak curent</div>
+            <div className="lb-xp-bar">
+              <div
+                className="lb-xp-bar-fill"
+                style={{ width: `${Math.round(xpStats.progressToNext * 100)}%` }}
+              />
             </div>
-            <div className="lb-stat">
-              <div className="lb-stat-value">{xpStats.longestStreak}sapt</div>
-              <div className="lb-stat-label">Cel mai lung</div>
+            <div className="lb-xp-meta">
+              <span>{xpStats.xp} XP</span>
+              <span>
+                {xpStats.nextTier
+                  ? `${xpStats.nextTier.minXp - xpStats.xp} XP până la ${xpStats.nextTier.name}`
+                  : "Nivel maxim — Legend"}
+              </span>
+            </div>
+            <div className="lb-stats-row">
+              <div className="lb-stat">
+                <div className="lb-stat-value">{xpStats.runs}</div>
+                <div className="lb-stat-label">Sesiuni</div>
+              </div>
+              <div className="lb-stat">
+                <div className="lb-stat-value">{xpStats.currentStreak}sapt</div>
+                <div className="lb-stat-label">Streak curent</div>
+              </div>
+              <div className="lb-stat">
+                <div className="lb-stat-value">{xpStats.longestStreak}sapt</div>
+                <div className="lb-stat-label">Cel mai lung</div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── Leaderboard + Challenges ──────────────────────────────────── */}
       <section className="dash-section" id="leaderboard">
