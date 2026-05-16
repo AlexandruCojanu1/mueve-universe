@@ -9,6 +9,9 @@ import WalletButtons from "@/components/dashboard/WalletButtons";
 import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
 import StravaCard from "@/components/dashboard/StravaCard";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
+import AvatarMenu from "@/components/dashboard/AvatarMenu";
+import { appleWalletEnabled } from "@/lib/wallet/apple";
+import { googleWalletEnabled } from "@/lib/wallet/google";
 import { getProgramData } from "@/lib/coach-schedule";
 import { upcomingSessions } from "@/lib/user-stats";
 import { getCreditBalance, getActivePassRow } from "@/lib/credits";
@@ -149,9 +152,9 @@ export default async function DashboardHome({
       <header className="m-hello">
         <div>
           <div className="m-hello-eyebrow">{today} CREW</div>
-          <h1 className="m-hello-name">Hey, {firstName} 👋</h1>
+          <h1 className="m-hello-name">Hey, {firstName}</h1>
         </div>
-        <div className="m-avatar">{initialsStr}</div>
+        <AvatarMenu initials={initialsStr} />
       </header>
 
       {/* ── Hero XP card ─────────────────────────────────────────────── */}
@@ -162,8 +165,8 @@ export default async function DashboardHome({
               LVL {xpStats.tier.level} · {xpStats.tier.name.toUpperCase()}
             </div>
             <div className="m-streak-badge">
-              <span className="m-streak-icon">🔥</span>
-              <span>{xpStats.currentStreak} WKS</span>
+              <span className="m-streak-num">{xpStats.currentStreak}</span>
+              <span className="m-streak-unit">WKS STREAK</span>
             </div>
           </div>
           <div className="m-hero-xp-amount">
@@ -194,7 +197,6 @@ export default async function DashboardHome({
       {/* ── Action tiles ─────────────────────────────────────────────── */}
       <section className="m-actions" id="actions">
         <a href="#card" className="m-action m-action-yellow">
-          <div className="m-action-icon">📡</div>
           <div className="m-action-label">NFC / QR Check-In</div>
           <div className="m-action-meta">+80 XP · arată cardul</div>
         </a>
@@ -202,7 +204,6 @@ export default async function DashboardHome({
           href={stravaConnected ? "#strava" : "/api/strava/connect"}
           className="m-action m-action-orange"
         >
-          <div className="m-action-icon">🔥</div>
           <div className="m-action-label">
             {stravaConnected ? "Log Strava Run" : "Connect Strava"}
           </div>
@@ -216,17 +217,14 @@ export default async function DashboardHome({
       {xpStats && (
         <section className="m-stats">
           <div className="m-stat-tile">
-            <div className="m-stat-emoji">🏃</div>
             <div className="m-stat-value">{xpStats.runs}</div>
             <div className="m-stat-label">Runs</div>
           </div>
           <div className="m-stat-tile">
-            <div className="m-stat-emoji">🔥</div>
             <div className="m-stat-value">{xpStats.currentStreak}wk</div>
             <div className="m-stat-label">Streak</div>
           </div>
           <div className="m-stat-tile">
-            <div className="m-stat-emoji">📊</div>
             <div className="m-stat-value">{myRank ? `#${myRank}` : "—"}</div>
             <div className="m-stat-label">Rank</div>
           </div>
@@ -356,11 +354,16 @@ export default async function DashboardHome({
         </div>
       </section>
 
-      {/* ── Wallet ───────────────────────────────────────────────────── */}
-      <section className="m-card-section" id="wallet">
-        <div className="m-section-eyebrow">WALLET DIGITAL · APPLE · GOOGLE</div>
-        <WalletButtons />
-      </section>
+      {/* ── Wallet ─ shown only when at least one provider is wired up ── */}
+      {(appleWalletEnabled() || googleWalletEnabled()) && (
+        <section className="m-card-section" id="wallet">
+          <div className="m-section-eyebrow">WALLET DIGITAL</div>
+          <WalletButtons
+            appleEnabled={appleWalletEnabled()}
+            googleEnabled={googleWalletEnabled()}
+          />
+        </section>
+      )}
 
       {/* ── Strava ───────────────────────────────────────────────────── */}
       <section className="m-card-section" id="strava">
@@ -453,19 +456,15 @@ export default async function DashboardHome({
       {/* ── Tab bar ──────────────────────────────────────────────────── */}
       <nav className="m-tabbar">
         <a href="#xp" className="m-tab m-tab-active">
-          <span className="m-tab-icon">⚡</span>
           <span className="m-tab-label">HOME</span>
         </a>
         <a href="#board" className="m-tab">
-          <span className="m-tab-icon">🏆</span>
           <span className="m-tab-label">BOARD</span>
         </a>
         <a href="#quests" className="m-tab">
-          <span className="m-tab-icon">🎯</span>
           <span className="m-tab-label">QUESTS</span>
         </a>
         <a href="#card" className="m-tab">
-          <span className="m-tab-icon">📡</span>
           <span className="m-tab-label">CHECK IN</span>
         </a>
       </nav>

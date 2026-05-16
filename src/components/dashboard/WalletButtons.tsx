@@ -1,7 +1,13 @@
 "use client";
 import { useState } from "react";
 
-export default function WalletButtons() {
+export default function WalletButtons({
+  appleEnabled = true,
+  googleEnabled = true,
+}: {
+  appleEnabled?: boolean;
+  googleEnabled?: boolean;
+}) {
   const [appleErr, setAppleErr] = useState<string | null>(null);
   const [googleErr, setGoogleErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<"apple" | "google" | null>(null);
@@ -53,35 +59,41 @@ export default function WalletButtons() {
     }
   }
 
-  return (
-    <div className="dash-grid-2">
-      <div className="dash-card">
-        <div className="dash-card-label">Apple Wallet</div>
-        <button
-          onClick={addToApple}
-          disabled={busy === "apple"}
-          className="dash-btn dash-btn-dark dash-btn-wide"
-        >
-          {busy === "apple" ? "..." : "Add to Apple Wallet"}
-        </button>
-        {appleErr && (
-          <div style={{ fontSize: "0.72rem", color: "#fca5a5" }}>{appleErr}</div>
-        )}
-      </div>
+  if (!appleEnabled && !googleEnabled) return null;
 
-      <div className="dash-card">
-        <div className="dash-card-label">Google Pay</div>
-        <button
-          onClick={addToGoogle}
-          disabled={busy === "google"}
-          className="dash-btn dash-btn-light dash-btn-wide"
-        >
-          {busy === "google" ? "..." : "Add to Google Pay"}
-        </button>
-        {googleErr && (
-          <div style={{ fontSize: "0.72rem", color: "#fca5a5" }}>{googleErr}</div>
-        )}
-      </div>
+  return (
+    <div className={appleEnabled && googleEnabled ? "dash-grid-2" : ""}>
+      {appleEnabled && (
+        <div className="dash-card">
+          <div className="dash-card-label">Apple Wallet</div>
+          <button
+            onClick={addToApple}
+            disabled={busy === "apple"}
+            className="dash-btn dash-btn-dark dash-btn-wide"
+          >
+            {busy === "apple" ? "..." : "Add to Apple Wallet"}
+          </button>
+          {appleErr && (
+            <div style={{ fontSize: "0.72rem", color: "#fca5a5" }}>{appleErr}</div>
+          )}
+        </div>
+      )}
+
+      {googleEnabled && (
+        <div className="dash-card">
+          <div className="dash-card-label">Google Pay</div>
+          <button
+            onClick={addToGoogle}
+            disabled={busy === "google"}
+            className="dash-btn dash-btn-light dash-btn-wide"
+          >
+            {busy === "google" ? "..." : "Add to Google Pay"}
+          </button>
+          {googleErr && (
+            <div style={{ fontSize: "0.72rem", color: "#fca5a5" }}>{googleErr}</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
