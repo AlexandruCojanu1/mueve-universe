@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { attendances, users, classSlots } from "@/db/schema";
+import { attendances, users, classSlots, stravaActivities } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 
 // XP rules — keep simple, derive everything from attendances so we don't need a
@@ -125,6 +125,15 @@ export type Activity = {
   xp: number;
 };
 
+async function getStravaXp(userId: string): Promise<number> {
+  const [u] = await db
+    .select({ xp: users.stravaXp })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return u?.xp ?? 0;
+}
+
 export async function getUserStats(userId: string): Promise<UserStats> {
   const rows = await db
     .select({ slotDate: attendances.slotDate })
@@ -133,10 +142,13 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   const weekKeys = rows.map((r) => weekKeyFromAttendance(r.slotDate));
   const { current, longest } = computeStreak(weekKeys);
   const runs = rows.length;
+  const stravaXp = await getStravaXp(userId);
   // Challenges completed count is computed elsewhere; pass 0 here and let the
   // caller layer in challenge bonuses if needed.
   const xp =
-    runs * XP_PER_ATTENDANCE + Math.max(0, current - 1) * STREAK_BONUS_PER_WEEK;
+    runs * XP_PER_ATTENDANCE +
+    Math.max(0, current - 1) * STREAK_BONUS_PER_WEEK +
+    stravaXp;
   const tier = tierFor(xp);
   const next = nextTierFor(xp);
   const progressToNext = next
@@ -172,17 +184,18 @@ export async function getLeaderboard(
   meId: string,
   limit = 10,
 ): Promise<LeaderboardEntry[]> {
-  // One query: per-user attendance count + max slotDate.
+  // One query: per-user attendance count + cached strava xp.
   const aggregate = await db
     .select({
       userId: attendances.userId,
       name: users.name,
       email: users.email,
       runs: sql<number>`count(*)::int`,
+      stravaXp: users.stravaXp,
     })
     .from(attendances)
     .innerJoin(users, eq(users.id, attendances.userId))
-    .groupBy(attendances.userId, users.name, users.email);
+    .groupBy(attendances.userId, users.name, users.email, users.stravaXp);
 
   // Fill in streak by re-pulling weeks per top candidate. To keep this cheap,
   // sort first by raw runs (proxy for XP), keep top (limit + 1) including me,
@@ -206,7 +219,8 @@ export async function getLeaderboard(
       const { current } = computeStreak(weeks);
       const xp =
         u.runs * XP_PER_ATTENDANCE +
-        Math.max(0, current - 1) * STREAK_BONUS_PER_WEEK;
+        Math.max(0, current - 1) * STREAK_BONUS_PER_WEEK +
+        (u.stravaXp || 0);
       return {
         rank: 0,
         userId: u.userId,
@@ -279,7 +293,7 @@ export async function getChallenges(userId: string): Promise<Challenge[]> {
 }
 
 export async function getActivity(userId: string, limit = 8): Promise<Activity[]> {
-  const rows = await db
+  const att = await db
     .select({
       slotId: attendances.slotId,
       slotDate: attendances.slotDate,
@@ -291,13 +305,43 @@ export async function getActivity(userId: string, limit = 8): Promise<Activity[]
     .where(eq(attendances.userId, userId))
     .orderBy(desc(attendances.validatedAt))
     .limit(limit);
-  return rows.map((r) => ({
-    id: `${r.slotId}-${r.slotDate}`,
-    at: r.validatedAt,
-    kind: "attendance" as const,
-    label: r.classType ? r.classType : "Sesiune",
-    xp: XP_PER_ATTENDANCE,
-  }));
+
+  const strava = await db
+    .select({
+      id: stravaActivities.id,
+      name: stravaActivities.name,
+      sportType: stravaActivities.sportType,
+      distanceMeters: stravaActivities.distanceMeters,
+      startedAt: stravaActivities.startedAt,
+      xpAwarded: stravaActivities.xpAwarded,
+    })
+    .from(stravaActivities)
+    .where(eq(stravaActivities.userId, userId))
+    .orderBy(desc(stravaActivities.startedAt))
+    .limit(limit);
+
+  const items: Activity[] = [
+    ...att.map((r) => ({
+      id: `att-${r.slotId}-${r.slotDate}`,
+      at: r.validatedAt,
+      kind: "attendance" as const,
+      label: r.classType ? r.classType : "Sesiune",
+      xp: XP_PER_ATTENDANCE,
+    })),
+    ...strava.map((s) => {
+      const km = (s.distanceMeters / 1000).toFixed(1);
+      return {
+        id: `strava-${s.id}`,
+        at: s.startedAt,
+        kind: "attendance" as const,
+        label: `Strava · ${s.sportType.toLowerCase()} ${km}km`,
+        xp: s.xpAwarded,
+      };
+    }),
+  ];
+
+  items.sort((a, b) => b.at.getTime() - a.at.getTime());
+  return items.slice(0, limit);
 }
 
 export { XP_PER_ATTENDANCE, STREAK_BONUS_PER_WEEK, CHALLENGE_BONUS };

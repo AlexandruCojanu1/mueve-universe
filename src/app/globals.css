@@ -4016,3 +4016,81 @@ body.is-day .ham span {
   text-decoration: none;
 }
 .checkin-link:hover { color: var(--sun); }
+
+/* ── Strava card ── */
+.strava-card {
+  background: rgba(11, 22, 46, 0.78);
+  border: 1px solid rgba(252, 76, 2, 0.4);
+  border-radius: 6px;
+  padding: 1.4rem 1.4rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.strava-card-connected {
+  border-color: rgba(252, 76, 2, 0.7);
+  background: linear-gradient(160deg, rgba(40, 18, 8, 0.85), rgba(11, 22, 46, 0.85));
+}
+.strava-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.strava-logo {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.14em;
+  color: #FC4C02;
+}
+.strava-card-eyebrow {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  text-align: right;
+}
+.strava-card-body { font-size: 0.95rem; line-height: 1.5; opacity: 0.85; margin: 0; }
+.strava-meta {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  opacity: 0.75;
+}
+.strava-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.strava-btn {
+  display: inline-block;
+  background: #FC4C02;
+  color: #fff;
+  font-family: var(--ff);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.85rem 1.4rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+.strava-btn:hover { filter: brightness(1.08); }
+.strava-btn:disabled { opacity: 0.6; cursor: wait; }
+.strava-link {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+}
+.strava-link:hover { color: #FC4C02; }
+.strava-msg {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed rgba(252,76,2,0.4);
+  border-radius: 4px;
+}

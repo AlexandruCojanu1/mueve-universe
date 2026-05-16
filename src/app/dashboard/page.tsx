@@ -1,23 +1,19 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { headers } from "next/headers";
 import { db } from "@/db";
 import { subscriptions, payments, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import CheckoutBanner from "@/components/dashboard/CheckoutBanner";
 import AutoCheckout from "@/components/dashboard/AutoCheckout";
-import WalletButtons from "@/components/dashboard/WalletButtons";
-import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
+import StravaCard from "@/components/dashboard/StravaCard";
 import { getProgramData } from "@/lib/coach-schedule";
 import {
   computeUserStats,
   computeWorldBreakdown,
   upcomingSessions,
 } from "@/lib/user-stats";
-import { getCreditBalance, getActivePassRow } from "@/lib/credits";
-import { issueDynamicToken } from "@/lib/qr-dynamic";
-import { checkAndBindDevice } from "@/lib/device-binding";
+import { getCreditBalance } from "@/lib/credits";
 import {
   getActivity,
   getChallenges,
@@ -46,17 +42,6 @@ export default async function DashboardHome({
 
   if (!userId) return null;
 
-  const hdrs = await headers();
-  const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
-  const proto = hdrs.get("x-forwarded-proto") || "https";
-  const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
-  const deviceCheck = await checkAndBindDevice(userId);
-  // Only issue a real token if the device matches; otherwise the card renders
-  // a locked state.
-  const initialQr = deviceCheck.ok
-    ? issueDynamicToken(userId)
-    : { token: "", expiresAt: Date.now() };
-
   const [userRow] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   const program = await getProgramData();
 
@@ -66,7 +51,6 @@ export default async function DashboardHome({
     recentPayments,
     activeSubRows,
     credits,
-    pass,
     xpStats,
     board,
     challenges,
@@ -87,7 +71,6 @@ export default async function DashboardHome({
       .orderBy(desc(subscriptions.updatedAt))
       .limit(1),
     getCreditBalance(userId),
-    getActivePassRow(userId),
     getUserStats(userId),
     getLeaderboard(userId, 10),
     getChallenges(userId),
@@ -105,6 +88,9 @@ export default async function DashboardHome({
         year: "numeric",
       })
     : null;
+  const stravaConnected = !!userRow?.stravaAthleteId;
+  const stravaAthleteName = userRow?.stravaAthleteName ?? null;
+  const stravaLastSync = userRow?.stravaLastSyncAt ?? null;
 
   return (
     <>
@@ -119,105 +105,6 @@ export default async function DashboardHome({
             ? `Membru din ${memberSince}. Continuă ritualul — atingi NFC-ul, te înregistrezi, primești XP.`
             : "Continuă ritualul — atingi NFC-ul, te înregistrezi, primești XP."}
         </p>
-      </section>
-
-      {/* ── Card cu QR rotativ ─────────────────────────────────────────── */}
-      <section className="dash-section" id="card">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title">Cardul meu</h2>
-          <span className="dash-section-meta">
-            {deviceCheck.ok && deviceCheck.firstBind
-              ? "Dispozitiv legat · cardul tău e blocat pe acest telefon"
-              : "Cod rotativ · anti-screenshot"}
-          </span>
-        </div>
-        {!deviceCheck.ok && (
-          <div
-            className="dash-banner dash-banner-error"
-            style={{ marginBottom: "1rem" }}
-          >
-            <div>
-              <div className="dash-banner-title">Dispozitiv neautorizat</div>
-              <div className="dash-banner-body">
-                Acest cont a fost legat de alt dispozitiv. Loghează-te pe
-                dispozitivul original sau scrie-i unui admin să-ți reseteze
-                legătura.
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="dash-qr-card">
-          <div className="dash-qr-head">
-            <div>
-              <div className="dash-qr-eyebrow">Member Card</div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/mueve-logo.png" alt="MUEVE" className="dash-qr-logo" />
-            </div>
-            <div
-              style={{
-                textAlign: "right",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.2rem",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "0.55rem",
-                  fontWeight: 900,
-                  letterSpacing: "0.3em",
-                  textTransform: "uppercase",
-                  opacity: 0.7,
-                }}
-              >
-                Clase rămase
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontWeight: 900,
-                  fontSize: "1.75rem",
-                  lineHeight: 1,
-                }}
-              >
-                {credits.total}
-              </div>
-            </div>
-          </div>
-          <AutoRotateQr
-            origin={origin}
-            initialToken={initialQr.token}
-            initialExpiresAt={initialQr.expiresAt}
-          />
-          <div className="dash-qr-foot">
-            <div className="dash-qr-foot-name">{session?.user?.name || "Membru"}</div>
-            <div className="dash-qr-foot-email">{session?.user?.email}</div>
-            <div
-              style={{
-                fontSize: "0.58rem",
-                fontWeight: 800,
-                letterSpacing: "0.25em",
-                textTransform: "uppercase",
-                opacity: 0.65,
-                marginTop: "0.35rem",
-              }}
-            >
-              {pass
-                ? `Pass activ${
-                    pass.currentPeriodEnd
-                      ? ` · până la ${pass.currentPeriodEnd.toLocaleDateString("ro-RO")}`
-                      : ""
-                  }`
-                : "Fără Pass activ"}
-              {credits.nextExpiry && credits.total > 0 && (
-                <>
-                  {" · "}
-                  următ. expirare {credits.nextExpiry.toLocaleDateString("ro-RO")}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* ── XP & Tier ─────────────────────────────────────────────────── */}
@@ -497,13 +384,17 @@ export default async function DashboardHome({
         </div>
       </section>
 
-      {/* ── Wallet ───────────────────────────────────────────────────── */}
-      <section className="dash-section" id="wallet">
+      {/* ── Strava ───────────────────────────────────────────────────── */}
+      <section className="dash-section" id="strava">
         <div className="dash-section-head">
-          <h2 className="dash-section-title">Portofel digital</h2>
-          <span className="dash-section-meta">Apple Wallet · Google Pay</span>
+          <h2 className="dash-section-title">Strava</h2>
+          <span className="dash-section-meta">+10 XP / km la alergările sincronizate</span>
         </div>
-        <WalletButtons />
+        <StravaCard
+          connected={stravaConnected}
+          athleteName={stravaAthleteName}
+          lastSync={stravaLastSync ? stravaLastSync.toISOString() : null}
+        />
       </section>
 
       {/* ── NFC how-it-works ─────────────────────────────────────────── */}
@@ -516,7 +407,8 @@ export default async function DashboardHome({
           <li>Prezența + XP se înregistrează instant.</li>
         </ol>
         <p className="lb-nfc-hint">
-          Coach-ul poate scana QR-ul tău rotativ din cardul de mai sus. Funcționează în ambele direcții.
+          Conectează-ți și Strava ca să primești XP automat pentru alergările
+          tale, oricând și oriunde.
         </p>
       </section>
     </>
