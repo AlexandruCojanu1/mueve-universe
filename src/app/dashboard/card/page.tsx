@@ -1,17 +1,15 @@
 import { auth } from "@/auth";
 import { headers } from "next/headers";
-import { ensureQrToken } from "@/lib/qr-token";
 import { getCreditBalance, getActivePassRow } from "@/lib/credits";
-import QRCode from "qrcode";
-import RotateQrButton from "@/components/dashboard/RotateQrButton";
+import { issueDynamicToken } from "@/lib/qr-dynamic";
+import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
 
 export const dynamic = "force-dynamic";
 
 export default async function CardPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
-  const [token, credits, pass, hdrs] = await Promise.all([
-    ensureQrToken(session.user.id),
+  const [credits, pass, hdrs] = await Promise.all([
     getCreditBalance(session.user.id),
     getActivePassRow(session.user.id),
     headers(),
@@ -19,12 +17,7 @@ export default async function CardPage() {
   const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
   const proto = hdrs.get("x-forwarded-proto") || "https";
   const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
-  const qrUrl = `${origin}/q/${token}`;
-  const dataUrl = await QRCode.toDataURL(qrUrl, {
-    margin: 1,
-    color: { dark: "#F5F50A", light: "#0B1A2E" },
-    width: 512,
-  });
+  const initial = issueDynamicToken(session.user.id);
 
   return (
     <>
@@ -78,10 +71,11 @@ export default async function CardPage() {
             </div>
           </div>
         </div>
-        <div className="dash-qr-img-wrap">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={dataUrl} alt="QR code" />
-        </div>
+        <AutoRotateQr
+          origin={origin}
+          initialToken={initial.token}
+          initialExpiresAt={initial.expiresAt}
+        />
         <div className="dash-qr-foot">
           <div className="dash-qr-foot-name">{session.user.name || "Membru"}</div>
           <div className="dash-qr-foot-email">{session.user.email}</div>
@@ -110,18 +104,6 @@ export default async function CardPage() {
             )}
           </div>
         </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginTop: "1rem",
-          fontSize: "0.8rem",
-          opacity: 0.7,
-        }}
-      >
-        <RotateQrButton />
       </div>
 
       {!pass && (

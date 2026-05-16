@@ -5,6 +5,10 @@ import { users, attendances, classSlots, reservations } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
+import { generateQrToken } from "@/lib/qr-token";
+import { verifyDynamicToken } from "@/lib/qr-dynamic";
+
+const SCAN_COOLDOWN_MS = 20 * 60 * 1000;
 
 export async function POST(req: Request) {
   const rl = await rateLimitAsync(clientKey(req, "attend"), 120, 60_000);
@@ -69,11 +73,27 @@ export async function POST(req: Request) {
     }
   }
 
-  const where = token
-    ? eq(users.qrToken, token)
-    : eq(users.email, String(email).trim().toLowerCase());
-  const rows = await db.select().from(users).where(where).limit(1);
-  const user = rows[0];
+  // Token can be (a) a short-lived signed dynamic token (preferred — the
+  // dashboard rotates it every ~30s so screenshots die fast), or (b) the
+  // persistent qrToken baked into Apple/Google wallet passes.
+  let user: typeof users.$inferSelect | undefined;
+  if (token) {
+    const dyn = verifyDynamicToken(token);
+    if (dyn) {
+      const rows = await db.select().from(users).where(eq(users.id, dyn.userId)).limit(1);
+      user = rows[0];
+    } else {
+      const rows = await db.select().from(users).where(eq(users.qrToken, token)).limit(1);
+      user = rows[0];
+    }
+  } else if (email) {
+    const rows = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, String(email).trim().toLowerCase()))
+      .limit(1);
+    user = rows[0];
+  }
   if (!user) {
     return NextResponse.json({ error: "Utilizator necunoscut." }, { status: 404 });
   }
@@ -105,6 +125,28 @@ export async function POST(req: Request) {
         creditsRemaining: balance.total,
       },
     });
+  }
+
+  // Anti-sharing: same card cannot be scanned twice in <20 min on different slots.
+  // Coach can still override with force=true (e.g. legitimate transfer between classes).
+  if (user.lastScanAt && !force) {
+    const elapsedMs = Date.now() - new Date(user.lastScanAt).getTime();
+    if (elapsedMs < SCAN_COOLDOWN_MS) {
+      const minutesLeft = Math.ceil((SCAN_COOLDOWN_MS - elapsedMs) / 60_000);
+      return NextResponse.json(
+        {
+          ok: false,
+          cooldown: true,
+          error: `Cardul a fost folosit recent. Mai așteaptă ${minutesLeft} min sau retrimite cu force=true.`,
+          attendee: {
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+          },
+        },
+        { status: 429 },
+      );
+    }
   }
 
   if (slot && !force) {
@@ -190,6 +232,14 @@ export async function POST(req: Request) {
         ? `credit:${consumedCreditId}`
         : null,
   });
+
+  // Rotate the QR token + stamp lastScanAt so a previously screenshotted code
+  // becomes worthless to whomever else holds it. The legitimate user gets a
+  // fresh code on the next dashboard render (the card page auto-refreshes).
+  await db
+    .update(users)
+    .set({ qrToken: generateQrToken(), lastScanAt: new Date() })
+    .where(eq(users.id, user.id));
 
   const balance = await getCreditBalance(user.id);
 

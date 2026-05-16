@@ -44,6 +44,7 @@ export const users = pgTable(
     role: userRole("role").notNull().default("user"),
     stripeCustomerId: text("stripe_customer_id"),
     qrToken: text("qr_token").unique(),
+    lastScanAt: timestamp("last_scan_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("users_stripe_customer_id_idx").on(t.stripeCustomerId)],
