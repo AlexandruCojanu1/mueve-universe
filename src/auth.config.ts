@@ -21,7 +21,8 @@ export const authConfig = {
       if (pathname.startsWith("/coach")) return role === "coach";
       if (pathname.startsWith("/partner")) return role === "partner";
       if (pathname.startsWith("/dashboard")) return !!auth;
-      if (pathname.startsWith("/q/")) return !!auth;
+      // /q/<token> is intentionally public — scanning the member's QR shows
+      // a big VALID / INACTIV screen without forcing the scanner to log in.
       return true;
     },
   },

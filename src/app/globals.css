@@ -4799,3 +4799,59 @@ body.is-day .ham span {
     display: none;
   }
 }
+
+/* ── /q/<token> public scan landing ───────────────────────────────── */
+.qv-screen {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6vh 5vw;
+  background: #050816;
+  transition: background-color 0.4s ease;
+}
+.qv-screen-ok {
+  background: radial-gradient(circle at 50% 30%, #1a6e2a 0%, #0a3614 55%, #050816 100%);
+}
+.qv-screen-warn {
+  background: radial-gradient(circle at 50% 30%, #8a6a08 0%, #4a3700 55%, #050816 100%);
+}
+.qv-screen-bad {
+  background: radial-gradient(circle at 50% 30%, #7a1a1a 0%, #3a0808 55%, #050816 100%);
+}
+.qv-card {
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+.qv-status {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  font-size: clamp(4rem, 18vw, 8rem);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+  margin-bottom: 1.3rem;
+}
+.qv-name {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 800;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.96);
+  margin-bottom: 0.7rem;
+}
+.qv-sub {
+  font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.45;
+}
+.qv-meta {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.6rem;
+}
