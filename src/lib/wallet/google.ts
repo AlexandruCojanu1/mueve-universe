@@ -29,6 +29,11 @@ export type GoogleUserData = {
   qrToken: string;
   qrUrl?: string | null;
   planName?: string | null;
+  streakWeeks?: number;
+  creditsRemaining?: number;
+  xp?: number;
+  tier?: string;
+  memberSince?: string;
 };
 
 export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> {
@@ -41,27 +46,60 @@ export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> 
 
   const objectId = `${issuerId}.${user.userId.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
   const fullClassId = classId.includes(".") ? classId : `${issuerId}.${classId}`;
+  const streak = user.streakWeeks ?? 0;
 
   const genericObject = {
     id: objectId,
     classId: fullClassId,
     state: "ACTIVE",
-    cardTitle: { defaultValue: { language: "en", value: "MUEVE UNIVERSE" } },
+    cardTitle: { defaultValue: { language: "ro", value: "MUEVE" } },
     header: {
-      defaultValue: { language: "en", value: user.planName ?? "Member Card" },
+      defaultValue: {
+        language: "ro",
+        value: streak > 0 ? `${streak}W CONSECVENȚĂ` : "MEMBER CARD",
+      },
     },
     subheader: {
-      defaultValue: { language: "en", value: user.name ?? user.email },
+      defaultValue: {
+        language: "ro",
+        value: user.name ?? user.email.split("@")[0],
+      },
     },
     barcode: {
       type: "QR_CODE",
       value: user.qrUrl || user.qrToken,
       alternateText: "",
     },
-    hexBackgroundColor: "#F5F50A",
+    // Premium look: deep navy body so the yellow Mueve logo pops on top.
+    hexBackgroundColor: "#0F1F40",
     logo: {
       sourceUri: { uri: process.env.GOOGLE_WALLET_LOGO_URL ?? "" },
     },
+    textModulesData: [
+      {
+        id: "tier",
+        header: "TIER",
+        body: user.tier ?? "Member",
+      },
+      {
+        id: "credits",
+        header: "CLASE RĂMASE",
+        body: String(user.creditsRemaining ?? 0),
+      },
+      {
+        id: "xp",
+        header: "XP TOTAL",
+        body: String(user.xp ?? 0),
+      },
+      {
+        id: "plan",
+        header: "PLAN",
+        body: user.planName ?? "Niciun pass activ",
+      },
+      ...(user.memberSince
+        ? [{ id: "since", header: "EST.", body: user.memberSince }]
+        : []),
+    ],
   };
 
   const payload = {

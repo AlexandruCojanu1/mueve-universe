@@ -6,6 +6,8 @@ import { users, subscriptions } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { googleWalletEnabled, buildGoogleSaveUrl } from "@/lib/wallet/google";
 import { ensureQrToken } from "@/lib/qr-token";
+import { getUserStats } from "@/lib/leaderboard";
+import { getCreditBalance } from "@/lib/credits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,6 +48,16 @@ export async function GET() {
   const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
   const qrUrl = origin ? `${origin}/q/${qrToken}` : null;
 
+  const [stats, credits] = await Promise.all([
+    getUserStats(user.id).catch(() => null),
+    getCreditBalance(user.id).catch(() => ({ total: 0 })),
+  ]);
+  const memberSince = user.createdAt
+    ? user.createdAt
+        .toLocaleDateString("ro-RO", { month: "short", year: "numeric" })
+        .toUpperCase()
+    : null;
+
   try {
     const saveUrl = await buildGoogleSaveUrl({
       userId: user.id,
@@ -54,6 +66,11 @@ export async function GET() {
       qrToken,
       qrUrl,
       planName: sub?.planName ?? null,
+      streakWeeks: stats?.currentStreak,
+      creditsRemaining: credits.total,
+      xp: stats?.xp,
+      tier: stats?.tier.name,
+      memberSince: memberSince ?? undefined,
     });
     return NextResponse.json({ saveUrl });
   } catch (err) {

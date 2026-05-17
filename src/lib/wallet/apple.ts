@@ -68,6 +68,11 @@ export type AppleUserData = {
   qrToken: string;
   qrUrl?: string | null;
   planName?: string | null;
+  streakWeeks?: number;
+  creditsRemaining?: number;
+  xp?: number;
+  tier?: string;
+  memberSince?: string; // pre-formatted, e.g. "MAI 2026"
 };
 
 export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
@@ -94,12 +99,13 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
       passTypeIdentifier: cfg.passTypeIdentifier,
       teamIdentifier: cfg.teamIdentifier,
       organizationName: cfg.organizationName,
-      description: "MUEVE UNIVERSE Member Card",
+      description: "Mueve Member Card",
       serialNumber: user.userId,
-      foregroundColor: "rgb(5, 8, 22)",
-      backgroundColor: "rgb(245, 245, 10)",
-      labelColor: "rgb(5, 8, 22)",
-      logoText: "MUEVE UNIVERSE",
+      // Premium look: deep navy body, white values, yellow accents on labels.
+      foregroundColor: "rgb(255, 255, 255)",
+      backgroundColor: "rgb(15, 31, 64)",
+      labelColor: "rgb(245, 245, 10)",
+      logoText: "MUEVE",
     },
   );
 
@@ -108,24 +114,68 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     message: user.qrUrl || user.qrToken,
     format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
-    altText: "Scan to validate",
+    altText: "Mueve member",
   });
 
+  // Primary hero — "consecvență" / streak. This is the moment that makes
+  // the wallet card feel personal: it grows with you.
+  const streak = user.streakWeeks ?? 0;
   pass.primaryFields.push({
-    key: "plan",
-    label: "PLAN",
-    value: user.planName ?? "Member",
+    key: "streak",
+    label: "CONSECVENȚĂ",
+    value: streak > 0 ? `${streak}W` : "—",
   });
-  pass.secondaryFields.push({
-    key: "name",
-    label: "MEMBER",
-    value: user.name ?? user.email,
-  });
-  pass.auxiliaryFields.push({
-    key: "since",
-    label: "SINCE",
-    value: new Date().getFullYear().toString(),
-  });
+
+  pass.secondaryFields.push(
+    {
+      key: "name",
+      label: "MEMBER",
+      value: user.name ?? user.email.split("@")[0],
+    },
+    {
+      key: "tier",
+      label: "TIER",
+      value: user.tier ?? "Member",
+    },
+  );
+
+  pass.auxiliaryFields.push(
+    {
+      key: "credits",
+      label: "CLASE",
+      value: String(user.creditsRemaining ?? 0),
+    },
+    {
+      key: "xp",
+      label: "XP",
+      value: String(user.xp ?? 0),
+    },
+    {
+      key: "since",
+      label: "EST.",
+      value: user.memberSince ?? String(new Date().getFullYear()),
+    },
+  );
+
+  // Backside detail — visible when user taps "(i)" on the pass.
+  pass.backFields.push(
+    {
+      key: "plan",
+      label: "Plan activ",
+      value: user.planName ?? "Niciun pass activ",
+    },
+    {
+      key: "how",
+      label: "Cum se folosește",
+      value:
+        "Arată QR-ul de pe acest card la check-in. Codul este rotativ și se actualizează la fiecare scanare validă, deci nu îl poți da altcuiva.",
+    },
+    {
+      key: "support",
+      label: "Suport",
+      value: "Contact: mueve.universe@gmail.com",
+    },
+  );
 
   return pass.getAsBuffer();
 }
