@@ -74,6 +74,16 @@ export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> 
     logo: {
       sourceUri: { uri: process.env.GOOGLE_WALLET_LOGO_URL ?? "" },
     },
+    heroImage: {
+      sourceUri: {
+        uri:
+          process.env.GOOGLE_WALLET_HERO_URL ??
+          "https://www.mueve.ro/wallet/apple/strip@3x.png",
+      },
+      contentDescription: {
+        defaultValue: { language: "ro", value: "Pescăruși pe orizont" },
+      },
+    },
     textModulesData: [
       {
         id: "tier",
