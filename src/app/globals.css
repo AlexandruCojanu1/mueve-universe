@@ -1790,6 +1790,27 @@ body.is-day .ham span {
   gap: 0;
   max-width: 440px;
   width: 100%;
+  justify-content: center;
+}
+.join-cta {
+  display: inline-block;
+  padding: 1.1rem 2.5rem;
+  background: var(--sun);
+  color: var(--deep);
+  font-family: var(--ff);
+  font-weight: 900;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: transform 0.2s, background 0.3s;
+  width: 100%;
+  text-align: center;
+}
+.join-cta:hover {
+  background: var(--w);
+  transform: translateY(-1px);
 }
 .join-form input {
   flex: 1;
@@ -1833,20 +1854,18 @@ body.is-day .ham span {
   align-items: center;
   justify-content: space-between;
   font-size: 0.7rem;
-  opacity: 0.25;
-  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  color: rgba(10, 14, 30, 0.65);
+  border-top: 1px solid rgba(10, 14, 30, 0.08);
 }
 .foot-social {
   display: flex;
   gap: 1rem;
 }
 .foot-social a {
-  opacity: 0.6;
-  transition: opacity 0.3s;
+  color: rgba(10, 14, 30, 0.7);
+  transition: color 0.3s;
 }
-.foot-social a:hover {
-  opacity: 1;
-}
+.foot-social a:hover { color: rgba(10, 14, 30, 1); }
 .foot-legal {
   display: flex;
   gap: 1.5rem;
@@ -1856,13 +1875,20 @@ body.is-day .ham span {
   font-weight: 700;
 }
 .foot-legal a {
-  opacity: 0.7;
-  transition: opacity 0.3s, color 0.3s;
+  color: rgba(10, 14, 30, 0.75);
+  transition: color 0.3s;
 }
-.foot-legal a:hover {
-  opacity: 1;
-  color: var(--sun);
+.foot-legal a:hover { color: rgba(10, 14, 30, 1); }
+/* Day mode keeps the dark footer text. In a future dark mode body context
+   the .foot color should be overridden to a lighter shade. */
+body.is-night .foot,
+body.is-night .foot-social a,
+body.is-night .foot-legal a {
+  color: rgba(255, 255, 255, 0.7);
 }
+body.is-night .foot { border-top-color: rgba(255, 255, 255, 0.08); }
+body.is-night .foot-social a:hover,
+body.is-night .foot-legal a:hover { color: #fff; }
 
 .text-block {
   position: relative;

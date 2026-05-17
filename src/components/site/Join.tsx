@@ -12,16 +12,11 @@ export default function Join({ data }: { data: JoinData }) {
         <em>{pick(data.heading.accent, lang)}</em>
       </h2>
       <p>{pick(data.body, lang)}</p>
-      <form className="join-form" onSubmit={(e) => e.preventDefault()}>
-        <input
-          type="email"
-          name="email"
-          placeholder={pick(data.emailPlaceholder, lang)}
-          required
-          aria-label="Email"
-        />
-        <button type="submit">{pick(data.submitLabel, lang)}</button>
-      </form>
+      <div className="join-form">
+        <a href="/login?from=/dashboard" className="join-cta">
+          {lang === "ro" ? "Intră în cont" : "Sign in"}
+        </a>
+      </div>
     </section>
   );
 }

@@ -54,8 +54,9 @@ export default function Footer({ data }: { data: FooterData }) {
     <footer className="foot">
       <span>{pick(data.copyright, lang)}</span>
       <div className="foot-legal">
-        <a href="/terms">{lang === "ro" ? "Termeni" : "Terms"}</a>
-        <a href="/privacy">{lang === "ro" ? "Confidențialitate" : "Privacy"}</a>
+        <a href="/terms">
+          {lang === "ro" ? "Termeni & cond." : "Terms & cond."}
+        </a>
       </div>
       <div className="foot-social">
         {data.socials.map((s) => (
