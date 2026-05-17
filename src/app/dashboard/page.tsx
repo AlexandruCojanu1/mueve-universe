@@ -21,27 +21,11 @@ import { getCreditBalance, getActivePassRow } from "@/lib/credits";
 import { issueDynamicToken } from "@/lib/qr-dynamic";
 import { readDeviceBinding } from "@/lib/device-binding";
 import {
-  getActivity,
-  getChallenges,
   getLeaderboard,
   getUserStats,
 } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
-
-const NICE_AGO = (d: Date): string => {
-  const diff = Date.now() - d.getTime();
-  const h = Math.floor(diff / 3_600_000);
-  if (h < 1) {
-    const m = Math.max(1, Math.floor(diff / 60_000));
-    return `${m}m`;
-  }
-  if (h < 24) return `${h}h`;
-  const days = Math.floor(h / 24);
-  if (days < 7) return `${days}z`;
-  const wk = Math.floor(days / 7);
-  return `${wk}sapt`;
-};
 
 const DAYS_RO = ["DUMINICA", "LUNI", "MARTI", "MIERCURI", "JOI", "VINERI", "SAMBATA"];
 
@@ -140,8 +124,6 @@ export default async function DashboardHome({
   );
   const xpStats = await safe("getUserStats", () => getUserStats(userId), null);
   const board = await safe("getLeaderboard", () => getLeaderboard(userId, 10), []);
-  const challenges = await safe("getChallenges", () => getChallenges(userId), []);
-  const activity = await safe("getActivity", () => getActivity(userId, 8), []);
 
   const activeSub = activeSubRows[0];
   const upcoming = program ? upcomingSessions(program, 7).slice(0, 4) : [];
@@ -231,37 +213,6 @@ export default async function DashboardHome({
         </section>
       )}
 
-      {/* ── Crew activity ────────────────────────────────────────────── */}
-      <section className="m-crew" id="leaderboard">
-        <div className="m-section-eyebrow">CREW ACTIVITY</div>
-        <ul className="m-crew-list">
-          {activity.length === 0 && (
-            <li className="m-crew-empty">Niciun XP încă. Vino la o sesiune.</li>
-          )}
-          {activity.slice(0, 6).map((a) => {
-            const who = a.label.startsWith("Strava")
-              ? "Tu"
-              : (session?.user?.name || "Tu").split(" ")[0];
-            const kind = a.label.startsWith("Strava")
-              ? "logged a run"
-              : `checked in · ${a.label.toLowerCase()}`;
-            return (
-              <li key={a.id} className="m-crew-row">
-                <div className="m-crew-avatar">{initials(who, "")}</div>
-                <div className="m-crew-main">
-                  <div className="m-crew-line">
-                    <strong>{who}</strong>{" "}
-                    <span className="m-crew-action">{kind}</span>
-                  </div>
-                  <div className="m-crew-meta">{NICE_AGO(a.at)} ago</div>
-                </div>
-                <div className="m-crew-xp">+{a.xp}</div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
       {/* ── Leaderboard top ──────────────────────────────────────────── */}
       <section className="m-board" id="board">
         <div className="m-section-eyebrow">LEADERBOARD</div>
@@ -288,34 +239,6 @@ export default async function DashboardHome({
         </ul>
       </section>
 
-      {/* ── Quests ───────────────────────────────────────────────────── */}
-      {challenges.length > 0 && (
-        <section className="m-quests" id="quests">
-          <div className="m-section-eyebrow">QUESTS · SĂPTĂMÂNA ASTA</div>
-          <ul className="m-quests-list">
-            {challenges.map((c) => (
-              <li
-                key={c.id}
-                className={"m-quest" + (c.done ? " m-quest-done" : "")}
-              >
-                <div className="m-quest-head">
-                  <span className="m-quest-title">{c.title}</span>
-                  <span className="m-quest-reward">
-                    {c.done ? `✓ +${c.reward}` : `+${c.reward}`} XP
-                  </span>
-                </div>
-                <div className="m-quest-body">{c.description}</div>
-                <div className="m-quest-bar">
-                  <div
-                    className="m-quest-bar-fill"
-                    style={{ width: `${Math.round(c.progress * 100)}%` }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* The on-screen member card was removed — the Apple/Google Wallet card
           is the canonical version. Device-mismatch UX is still surfaced. */}
@@ -462,12 +385,6 @@ export default async function DashboardHome({
         </a>
         <a href="#board" className="m-tab">
           <span className="m-tab-label">BOARD</span>
-        </a>
-        <a href="#quests" className="m-tab">
-          <span className="m-tab-label">QUESTS</span>
-        </a>
-        <a href="#card" className="m-tab">
-          <span className="m-tab-label">CHECK IN</span>
         </a>
       </nav>
     </>
