@@ -106,58 +106,6 @@ export default function Program({ data }: { data: ProgramData }) {
         ))}
       </div>
 
-      {/* Mobile: stacked vertical view — one card per day, all slots visible */}
-      <div className="prog-mobile">
-        {data.dayLabels.map((dayLabel, di) => {
-          const daySlots = data.slots
-            .filter((s) => s.day === di)
-            .sort((a, b) => (a.row === "am" ? -1 : 1) - (b.row === "am" ? -1 : 1));
-          if (daySlots.length === 0) return null;
-          const isToday = now?.day === di;
-          return (
-            <div
-              key={di}
-              className={
-                "pm-day" +
-                (isToday ? " pm-day-today" : "") +
-                (di === 6 ? " pm-day-boss" : "")
-              }
-            >
-              <div className="pm-day-head">
-                <span className="pm-day-name">{pick(dayLabel, lang)}</span>
-                {isToday && <span className="pm-day-today-pill">Azi</span>}
-              </div>
-              <div className="pm-day-slots">
-                {daySlots.map((s) => {
-                  const dot = DOT_COLOR[s.color];
-                  const isNext = s.id === nextSlotId;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      className={
-                        "pm-slot" +
-                        (s.boss ? " pm-slot-boss" : "") +
-                        (isNext ? " pm-slot-next" : "")
-                      }
-                      onClick={() => setOpen(s)}
-                    >
-                      <span
-                        className="pm-slot-dot"
-                        style={{ background: dot.bg, boxShadow: `0 0 10px ${dot.glow}` }}
-                      />
-                      <span className="pm-slot-time">{s.time}</span>
-                      <span className="pm-slot-act">{pick(s.activity, lang)}</span>
-                      <span className="pm-slot-world">{pick(s.world, lang)}</span>
-                      {isNext && <span className="pm-slot-next-badge">URMĂTOAREA</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
       <div className={"day-expand" + (open ? " on" : "")}>
         <div className="day-expand-bg" onClick={() => setOpen(null)} />

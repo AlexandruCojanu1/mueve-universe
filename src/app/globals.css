@@ -701,7 +701,6 @@ body.is-day .ham span {
   grid-template-columns: auto repeat(7, 1fr);
   position: relative;
 }
-.prog-mobile { display: none; }
 
 .pt-corner {
   padding: 1.5vh 1.5vw;
@@ -1995,120 +1994,61 @@ body.is-night .foot-legal a:hover { color: #fff; }
     font-size: clamp(1.8rem, 6.2vmin, 3.4rem);
     width: 92vw;
   }
-  /* Hide the wide 7-column grid on mobile — it requires horizontal scroll.
-     Show the vertical stacked .prog-mobile list instead. */
-  .prog-table { display: none; }
-  .prog-mobile {
-    display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-    padding: 0 4vw;
-  }
-  .pm-day {
-    background: rgba(255, 255, 255, 0.025);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    padding: 0.9rem 0.9rem 0.6rem;
-  }
-  .pm-day-today {
-    border-color: var(--sun, #ffe85c);
-    background: rgba(255, 232, 92, 0.05);
-  }
-  .pm-day-boss {
-    background: rgba(255, 232, 92, 0.04);
-  }
-  .pm-day-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.7rem;
-  }
-  .pm-day-name {
-    font-family: var(--ff);
-    font-weight: 900;
-    font-size: 0.78rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    opacity: 0.7;
-  }
-  .pm-day-today .pm-day-name { opacity: 1; color: var(--sun, #ffe85c); }
-  .pm-day-boss .pm-day-name { color: var(--sun, #ffe85c); }
-  .pm-day-today-pill {
-    font-family: var(--ff);
-    font-weight: 800;
-    font-size: 0.66rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    background: var(--sun, #ffe85c);
-    color: #0a0a0a;
-    padding: 0.18rem 0.55rem;
-    border-radius: 100px;
-  }
-  .pm-day-slots {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .pm-slot {
-    display: grid;
-    grid-template-columns: auto auto 1fr auto;
-    align-items: center;
-    gap: 0.6rem;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    padding: 0.7rem 0.8rem;
-    color: inherit;
-    cursor: pointer;
-    text-align: left;
-    position: relative;
+  /* Mobile: keep the 7-day grid, compact it to fit the viewport without
+     horizontal scroll. Label column collapses, cells get tighter padding. */
+  .prog-table {
+    grid-template-columns: 28px repeat(7, minmax(0, 1fr));
+    overflow: visible;
     width: 100%;
   }
-  .pm-slot-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 100%;
-    flex-shrink: 0;
+  .pt-corner { padding: 0; }
+  .pt-head {
+    padding: 1rem 0;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
   }
-  .pm-slot-time {
-    font-family: var(--ff);
-    font-weight: 800;
-    font-size: 0.85rem;
-    letter-spacing: 0.02em;
+  .pt-label {
+    padding: 1.5vh 0;
+    gap: 0.2rem;
   }
-  .pm-slot-act {
-    font-family: var(--ff);
-    font-weight: 600;
-    font-size: 0.85rem;
+  .pt-label span:first-child {
+    font-size: 0.45rem;
+    letter-spacing: 0.1em;
+  }
+  .pt-label-icon { font-size: 0.85rem; }
+  .pt-cell {
+    padding: 0.9rem 0.2rem;
+    min-height: 8vh;
+    gap: 0.18rem;
+  }
+  .pt-dot {
+    width: 7px !important;
+    height: 7px !important;
+    box-shadow: none !important;
+  }
+  .pt-act {
+    font-size: 0.55rem !important;
+    line-height: 1.1;
+    text-align: center;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
   }
-  .pm-slot-world {
-    font-family: var(--ff);
-    font-size: 0.66rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    opacity: 0.55;
-    white-space: nowrap;
+  .pt-time { font-size: 0.55rem !important; }
+  .pt-world {
+    font-size: 0.45rem !important;
+    letter-spacing: 0.06em;
   }
-  .pm-slot-boss .pm-slot-act { color: var(--sun, #ffe85c); }
-  .pm-slot-next {
-    border-color: var(--sun, #ffe85c);
-    background: rgba(255, 232, 92, 0.08);
+  .pt-next-badge {
+    font-size: 0.4rem !important;
+    padding: 1px 3px !important;
+    top: -5px !important;
   }
-  .pm-slot-next-badge {
-    position: absolute;
-    top: -8px;
-    right: 10px;
-    font-family: var(--ff);
-    font-weight: 800;
-    font-size: 0.58rem;
-    letter-spacing: 0.18em;
-    background: var(--sun, #ffe85c);
-    color: #0a0a0a;
-    padding: 0.15rem 0.5rem;
-    border-radius: 100px;
+  .pt-badge {
+    font-size: 0.4rem !important;
+    padding: 1px 3px !important;
   }
   .world-info {
     padding: 6vh 6vw;
@@ -2128,19 +2068,13 @@ body.is-night .foot-legal a:hover { color: #fff; }
   }
 }
 @media (max-width: 480px) {
-  /* Mobile: first 4 days fit on screen, weekend (Fri/Sat/Sun) swipes into view.
-     Horizontal scroll with snap so the boundary feels intentional. */
+  /* Mobile: all 7 days fit in the viewport, no horizontal scroll. */
   .prog-table {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    grid-template-columns: 1.4rem repeat(7, calc((100vw - 1.4rem - 2rem) / 4));
-    scrollbar-width: none;
+    grid-template-columns: 1.4rem repeat(7, minmax(0, 1fr));
+    overflow: visible;
+    width: 100%;
   }
-  .prog-table::-webkit-scrollbar { display: none; }
-  .pt-cell, .pt-empty {
-    scroll-snap-align: start;
-  }
+  .pt-cell, .pt-empty { scroll-snap-align: none; }
   .pt-label span:first-child {
     writing-mode: vertical-rl;
     text-orientation: mixed;
