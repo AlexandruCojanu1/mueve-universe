@@ -4280,6 +4280,7 @@ body.is-day .ham span {
   gap: 0.85rem;
   margin-bottom: 1.3rem;
 }
+.m-actions-single { grid-template-columns: 1fr; }
 .m-action {
   position: relative;
   border-radius: 14px;

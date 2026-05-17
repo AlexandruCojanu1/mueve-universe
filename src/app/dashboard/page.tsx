@@ -212,25 +212,6 @@ export default async function DashboardHome({
         </section>
       )}
 
-      {/* ── Action tiles ─────────────────────────────────────────────── */}
-      <section className="m-actions" id="actions">
-        <a href="#card" className="m-action m-action-yellow">
-          <div className="m-action-label">NFC / QR Check-In</div>
-          <div className="m-action-meta">+80 XP · arată cardul</div>
-        </a>
-        <a
-          href={stravaConnected ? "#strava" : "/api/strava/connect"}
-          className="m-action m-action-orange"
-        >
-          <div className="m-action-label">
-            {stravaConnected ? "Log Strava Run" : "Connect Strava"}
-          </div>
-          <div className="m-action-meta">
-            {stravaConnected ? "+10 XP / km · sync" : "+10 XP / km · auto"}
-          </div>
-        </a>
-      </section>
-
       {/* ── Stat tiles ───────────────────────────────────────────────── */}
       {xpStats && (
         <section className="m-stats">
@@ -415,6 +396,21 @@ export default async function DashboardHome({
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── Strava tile (compact CTA) — placed directly under the QR card ── */}
+      <section className="m-actions m-actions-single">
+        <a
+          href={stravaConnected ? "#strava" : "/api/strava/connect"}
+          className="m-action m-action-orange"
+        >
+          <div className="m-action-label">
+            {stravaConnected ? "Log Strava Run" : "Connect Strava"}
+          </div>
+          <div className="m-action-meta">
+            {stravaConnected ? "+10 XP / km · sync" : "+10 XP / km · auto"}
+          </div>
+        </a>
       </section>
 
       {/* ── Wallet ─ shown only when at least one provider is wired up ── */}
