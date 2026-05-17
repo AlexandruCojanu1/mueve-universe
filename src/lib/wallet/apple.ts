@@ -1,7 +1,6 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import { PKPass } from "passkit-generator";
-import { buildNamedStrip } from "./strip-renderer";
 
 export type AppleWalletConfig = {
   passTypeIdentifier: string;
@@ -88,11 +87,15 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
       "Missing required Apple Wallet icon at public/wallet/apple/icon.png (29x29).",
     );
   }
-  // Strip rendered per-user with the name baked in the top-left — the strip
-  // sits directly under the logo row in Apple's storeCard layout, so the
-  // user's name visually appears just below "mueve".
-  const displayName = user.name ?? user.email.split("@")[0];
-  Object.assign(assets, await buildNamedStrip(displayName));
+  // Static strip art (sky + gulls). Per-user name is rendered as a secondary
+  // field below it so it appears right above the native QR.
+  for (const n of ["strip.png", "strip@2x.png", "strip@3x.png"]) {
+    try {
+      assets[n] = await fs.readFile(path.join(templateDir, n));
+    } catch {
+      /* optional */
+    }
+  }
 
   const pass = new PKPass(
     assets,
@@ -137,8 +140,13 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     value: streak > 0 ? `${streak}W` : "—",
   });
 
-  // Name is baked into the strip image (top-left, under the logo). No fields
-  // on the front below the strip → Apple renders the QR larger.
+  // Member name displayed right above the QR (auxiliary slot is the row
+  // closest to the barcode in storeCard layout).
+  pass.auxiliaryFields.push({
+    key: "name",
+    label: "MEMBER",
+    value: user.name ?? user.email.split("@")[0],
+  });
 
   // Backside detail — visible when user taps "(i)" on the pass.
   pass.backFields.push(
