@@ -12,7 +12,6 @@ import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AvatarMenu from "@/components/dashboard/AvatarMenu";
 import DeviceSwitchModal from "@/components/dashboard/DeviceSwitchModal";
 import AttendanceList from "@/components/dashboard/AttendanceList";
-import ReserveBoard from "@/components/dashboard/ReserveBoard";
 import { appleWalletEnabled } from "@/lib/wallet/apple";
 import { googleWalletEnabled } from "@/lib/wallet/google";
 import { getProgramData } from "@/lib/coach-schedule";
@@ -213,31 +212,6 @@ export default async function DashboardHome({
         </section>
       )}
 
-      {/* ── Leaderboard top ──────────────────────────────────────────── */}
-      <section className="m-board" id="board">
-        <div className="m-section-eyebrow">LEADERBOARD</div>
-        <ul className="m-board-list">
-          {board.length === 0 && (
-            <li className="m-crew-empty">Niciun runner încă.</li>
-          )}
-          {board.slice(0, 10).map((e) => (
-            <li
-              key={e.userId}
-              className={"m-board-row" + (e.isMe ? " m-board-row-me" : "")}
-            >
-              <span className="m-board-rank">#{e.rank}</span>
-              <span className="m-board-avatar">
-                {initials(e.name, e.email)}
-              </span>
-              <span className="m-board-name">{e.name}</span>
-              <span className="m-board-meta">
-                {e.runs} runs · {e.streak}wk
-              </span>
-              <span className="m-board-xp">{e.xp}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
 
 
       {/* The on-screen member card was removed — the Apple/Google Wallet card
@@ -370,7 +344,7 @@ export default async function DashboardHome({
         <a href="#xp" className="m-tab m-tab-active">
           <span className="m-tab-label">HOME</span>
         </a>
-        <a href="#board" className="m-tab">
+        <a href="/dashboard/board" className="m-tab">
           <span className="m-tab-label">BOARD</span>
         </a>
       </nav>
