@@ -1,6 +1,6 @@
 import path from "node:path";
-import fs from "node:fs/promises";
 import { PKPass } from "passkit-generator";
+import { buildStripWithQr, loadStaticPassAssets } from "./strip-renderer";
 
 export type AppleWalletConfig = {
   passTypeIdentifier: string;
@@ -47,27 +47,6 @@ export function getAppleConfig(): AppleWalletConfig | null {
   };
 }
 
-async function loadTemplateAssets(dir: string): Promise<Record<string, Buffer>> {
-  const names = [
-    "icon.png",
-    "icon@2x.png",
-    "logo.png",
-    "logo@2x.png",
-    "strip.png",
-    "strip@2x.png",
-    "strip@3x.png",
-  ];
-  const out: Record<string, Buffer> = {};
-  for (const n of names) {
-    const p = path.join(dir, n);
-    try {
-      out[n] = await fs.readFile(p);
-    } catch {
-      // optional — if missing, pass validation may fail on Apple's side; user is told to add
-    }
-  }
-  return out;
-}
 
 export type AppleUserData = {
   userId: string;
@@ -87,12 +66,20 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
   const cfg = getAppleConfig();
   if (!cfg) throw new Error("Apple Wallet is not configured.");
   const templateDir = path.join(process.cwd(), "public", "wallet", "apple");
-  const assets = await loadTemplateAssets(templateDir);
-  if (!assets["icon.png"]) {
+  const staticAssets = await loadStaticPassAssets(templateDir);
+  if (!staticAssets["icon.png"]) {
     throw new Error(
       "Missing required Apple Wallet icon at public/wallet/apple/icon.png (29x29). Add icon.png, icon@2x.png, logo.png, logo@2x.png before generating passes.",
     );
   }
+  // Per-user strip with the QR baked in the middle, so the QR appears above
+  // the secondary/auxiliary fields (Apple renders the strip image between
+  // header and primary fields; if we omit setBarcodes, no QR is drawn at
+  // the bottom and the baked one is the only one shown — exactly what the
+  // pass design calls for).
+  const stripPayload = user.qrUrl || user.qrToken;
+  const stripAssets = await buildStripWithQr(stripPayload);
+  const assets: Record<string, Buffer> = { ...staticAssets, ...stripAssets };
 
   const pass = new PKPass(
     assets,
@@ -120,11 +107,8 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
   // storeCard supports the strip image (a horizontal banner under the header) —
   // we use it to render the seagull horizon scene that expresses consecvență.
   pass.type = "storeCard";
-  pass.setBarcodes({
-    message: user.qrUrl || user.qrToken,
-    format: "PKBarcodeFormatQR",
-    messageEncoding: "iso-8859-1",
-  });
+  // No native barcode — the QR is baked into the strip image so it can sit
+  // above the secondary/auxiliary fields instead of at the very bottom.
 
   // Streak in the header (top-right, small, beside logo) so the strip art
   // breathes and the QR sits closer to mid-card. The number still travels
