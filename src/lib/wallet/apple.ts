@@ -146,6 +146,7 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     key: "name",
     label: "MEMBER",
     value: user.name ?? user.email.split("@")[0],
+    textAlignment: "PKTextAlignmentCenter",
   });
 
   // Backside detail — visible when user taps "(i)" on the pass.
