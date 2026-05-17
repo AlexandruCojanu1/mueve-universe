@@ -1,5 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+type Platform = "apple" | "google" | "other";
+
+function detectPlatform(): Platform {
+  if (typeof navigator === "undefined") return "other";
+  const ua = navigator.userAgent || "";
+  // iOS / iPadOS — iPad on iPadOS 13+ reports as Mac, distinguish via touch.
+  const isIos =
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (/Macintosh/i.test(ua) && typeof document !== "undefined" && "ontouchend" in document);
+  if (isIos) return "apple";
+  if (/Android/i.test(ua)) return "google";
+  return "other";
+}
 
 export default function WalletButtons({
   appleEnabled = true,
@@ -11,6 +25,16 @@ export default function WalletButtons({
   const [appleErr, setAppleErr] = useState<string | null>(null);
   const [googleErr, setGoogleErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<"apple" | "google" | null>(null);
+  const [platform, setPlatform] = useState<Platform | null>(null);
+
+  useEffect(() => {
+    setPlatform(detectPlatform());
+  }, []);
+
+  // On a known mobile platform we show only the matching button.
+  // On desktop / unknown we fall back to both so the user can pick.
+  const showApple = appleEnabled && (platform === "apple" || platform === "other" || platform === null);
+  const showGoogle = googleEnabled && (platform === "google" || platform === "other" || platform === null);
 
   async function addToApple() {
     setAppleErr(null);
@@ -62,8 +86,8 @@ export default function WalletButtons({
   if (!appleEnabled && !googleEnabled) return null;
 
   return (
-    <div className={appleEnabled && googleEnabled ? "dash-grid-2" : ""}>
-      {appleEnabled && (
+    <div className={showApple && showGoogle ? "dash-grid-2" : ""}>
+      {showApple && (
         <div className="dash-card">
           <div className="dash-card-label">Apple Wallet</div>
           <button
@@ -79,7 +103,7 @@ export default function WalletButtons({
         </div>
       )}
 
-      {googleEnabled && (
+      {showGoogle && (
         <div className="dash-card">
           <div className="dash-card-label">Google Pay</div>
           <button
