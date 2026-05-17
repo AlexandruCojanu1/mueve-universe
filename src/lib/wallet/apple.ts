@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import { PKPass } from "passkit-generator";
+import { buildNamedStrip } from "./strip-renderer";
 
 export type AppleWalletConfig = {
   passTypeIdentifier: string;
@@ -73,9 +74,6 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     "logo.png",
     "logo@2x.png",
     "logo@3x.png",
-    "strip.png",
-    "strip@2x.png",
-    "strip@3x.png",
   ];
   const assets: Record<string, Buffer> = {};
   for (const n of names) {
@@ -90,6 +88,11 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
       "Missing required Apple Wallet icon at public/wallet/apple/icon.png (29x29).",
     );
   }
+  // Strip rendered per-user with the name baked in the top-left — the strip
+  // sits directly under the logo row in Apple's storeCard layout, so the
+  // user's name visually appears just below "mueve".
+  const displayName = user.name ?? user.email.split("@")[0];
+  Object.assign(assets, await buildNamedStrip(displayName));
 
   const pass = new PKPass(
     assets,
@@ -134,13 +137,8 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     value: streak > 0 ? `${streak}W` : "—",
   });
 
-  // Single secondary field — just the member name. No TIER / XP / EST. on
-  // the front; those are visible on the back (tap ⓘ).
-  pass.secondaryFields.push({
-    key: "name",
-    label: "MEMBER",
-    value: user.name ?? user.email.split("@")[0],
-  });
+  // Name is baked into the strip image (top-left, under the logo). No fields
+  // on the front below the strip → Apple renders the QR larger.
 
   // Backside detail — visible when user taps "(i)" on the pass.
   pass.backFields.push(
