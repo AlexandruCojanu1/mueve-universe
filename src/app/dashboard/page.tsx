@@ -154,6 +154,11 @@ export default async function DashboardHome({
   const today = DAYS_RO[new Date().getDay()];
   const firstName = (session?.user?.name || "").split(" ")[0] || "Runner";
   const initialsStr = initials(session?.user?.name, session?.user?.email);
+  const memberSince = userRow?.createdAt
+    ? userRow.createdAt
+        .toLocaleDateString("ro-RO", { month: "short", year: "numeric" })
+        .toUpperCase()
+    : null;
 
   return (
     <>
@@ -329,38 +334,80 @@ export default async function DashboardHome({
         </section>
       )}
 
-      {/* ── Card cu QR rotativ ───────────────────────────────────────── */}
+      {/* ── Member card — awwwards-grade ─────────────────────────────── */}
       <section className="m-card-section" id="card">
-        <div className="m-section-eyebrow">CARDUL MEU · COD ROTATIV</div>
+        <div className="m-section-eyebrow">CARDUL TĂU</div>
         {!deviceCheck.ok && (
           <div className="m-banner-err">
             Acest cont a fost legat de alt dispozitiv. Loghează-te pe
             telefonul original sau cere admin reset.
           </div>
         )}
-        <div className="dash-qr-card">
-          <div className="dash-qr-head">
-            <div>
-              <div className="dash-qr-eyebrow">Member Card</div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/mueve-logo.png" alt="MUEVE" className="dash-qr-logo" />
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div className="m-card-pill">{credits.total} clase</div>
+        <div className="mc-card">
+          <div className="mc-rays" aria-hidden />
+          <div className="mc-grain" aria-hidden />
+
+          <div className="mc-top">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/mueve-logo.png" alt="MUEVE" className="mc-logo" />
+            <div className="mc-tier-block">
+              <div className="mc-tier">{xpStats?.tier.name ?? "Member"}</div>
+              <div className="mc-meta">LVL {xpStats?.tier.level ?? 1}</div>
             </div>
           </div>
-          <AutoRotateQr
-            origin={origin}
-            initialToken={initialQr.token}
-            initialExpiresAt={initialQr.expiresAt}
-          />
-          <div className="dash-qr-foot">
-            <div className="dash-qr-foot-name">{session?.user?.name || "Membru"}</div>
-            <div className="dash-qr-foot-email">{session?.user?.email}</div>
-            <div className="m-card-pass">
-              {pass
-                ? `Pass activ${pass.currentPeriodEnd ? ` · până la ${pass.currentPeriodEnd.toLocaleDateString("ro-RO")}` : ""}`
-                : "Fără Pass activ"}
+
+          <div className="mc-streak-strip">
+            <div className="mc-streak-big">
+              <span className="mc-streak-num">{xpStats?.currentStreak ?? 0}</span>
+              <span className="mc-streak-week">W</span>
+            </div>
+            <div className="mc-streak-side">
+              <div className="mc-streak-label">CONSECVENȚĂ</div>
+              <div className="mc-streak-sub">
+                {xpStats?.currentStreak
+                  ? `${xpStats.currentStreak} săptămâni la rând`
+                  : "Începe streak-ul săptămâna asta"}
+              </div>
+            </div>
+          </div>
+
+          <div className="mc-qr-frame">
+            <AutoRotateQr
+              origin={origin}
+              initialToken={initialQr.token}
+              initialExpiresAt={initialQr.expiresAt}
+            />
+          </div>
+
+          <div className="mc-divider" />
+
+          <div className="mc-foot">
+            <div className="mc-name">
+              {session?.user?.name || session?.user?.email?.split("@")[0] || "Membru"}
+            </div>
+            <div className="mc-stats">
+              <div className="mc-stat">
+                <div className="mc-stat-num">{credits.total}</div>
+                <div className="mc-stat-key">CLASE</div>
+              </div>
+              <div className="mc-stat">
+                <div className="mc-stat-num">{xpStats?.runs ?? 0}</div>
+                <div className="mc-stat-key">SESIUNI</div>
+              </div>
+              <div className="mc-stat">
+                <div className="mc-stat-num">
+                  {xpStats?.xp ? xpStats.xp.toLocaleString("ro-RO") : 0}
+                </div>
+                <div className="mc-stat-key">XP</div>
+              </div>
+            </div>
+            <div className="mc-status-row">
+              <span className={pass ? "mc-status mc-status-ok" : "mc-status mc-status-bad"}>
+                {pass ? "● PASS ACTIV" : "○ FĂRĂ PASS"}
+              </span>
+              {memberSince && (
+                <span className="mc-since">EST. {memberSince}</span>
+              )}
             </div>
           </div>
         </div>

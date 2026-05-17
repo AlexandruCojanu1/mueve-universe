@@ -4855,3 +4855,261 @@ body.is-day .ham span {
   color: rgba(255, 255, 255, 0.7);
   margin-top: 0.6rem;
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   MEMBER CARD — awwwards-grade premium look. Deep navy, yellow accents,
+   sport texture via subtle radial rays + grain. Streak block expresses
+   "consecvență" — the long-game discipline of training.
+   ───────────────────────────────────────────────────────────────────── */
+
+.mc-card {
+  position: relative;
+  background: linear-gradient(165deg, #0F1F40 0%, #0A1530 45%, #050816 100%);
+  border: 1px solid rgba(245, 245, 10, 0.22);
+  border-radius: 22px;
+  padding: 1.8rem 1.6rem 1.6rem;
+  overflow: hidden;
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(245, 245, 10, 0.05) inset,
+    0 0 90px rgba(245, 245, 10, 0.05) inset;
+}
+
+/* Animated yellow rays radiating from top-left — gives it motion/sport feel */
+.mc-rays {
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background:
+    conic-gradient(
+      from 200deg at 22% 18%,
+      transparent 0deg,
+      rgba(245, 245, 10, 0.08) 12deg,
+      transparent 24deg,
+      transparent 60deg,
+      rgba(245, 245, 10, 0.05) 70deg,
+      transparent 82deg,
+      transparent 120deg,
+      rgba(245, 245, 10, 0.04) 130deg,
+      transparent 140deg,
+      transparent 360deg
+    );
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Topographic grain — printed-card texture */
+.mc-grain {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(245, 245, 10, 0.18), transparent 30%),
+    radial-gradient(circle at 85% 110%, rgba(50, 80, 160, 0.12), transparent 45%);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.mc-top {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.4rem;
+  z-index: 2;
+}
+.mc-logo {
+  height: 32px;
+  width: auto;
+  filter: drop-shadow(0 0 14px rgba(245, 245, 10, 0.55));
+}
+.mc-tier-block {
+  text-align: right;
+}
+.mc-tier {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--m-yellow);
+  line-height: 1;
+}
+.mc-meta {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.4rem;
+}
+
+/* Streak strip — the "consecvență" hero */
+.mc-streak-strip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background:
+    linear-gradient(110deg, rgba(245, 245, 10, 0.1), rgba(245, 245, 10, 0.02) 70%);
+  border: 1px solid rgba(245, 245, 10, 0.18);
+  margin-bottom: 1.4rem;
+  z-index: 2;
+}
+.mc-streak-big {
+  display: flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  color: var(--m-yellow);
+  line-height: 1;
+}
+.mc-streak-num {
+  font-size: 2.4rem;
+  letter-spacing: -0.03em;
+}
+.mc-streak-week {
+  font-size: 0.95rem;
+  font-weight: 800;
+  opacity: 0.85;
+}
+.mc-streak-side {
+  flex: 1;
+  min-width: 0;
+}
+.mc-streak-label {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--m-yellow);
+  opacity: 0.85;
+  margin-bottom: 0.2rem;
+}
+.mc-streak-sub {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.35;
+}
+
+/* QR frame */
+.mc-qr-frame {
+  position: relative;
+  background: #060A1A;
+  border-radius: 14px;
+  padding: 0.9rem;
+  border: 1px solid rgba(245, 245, 10, 0.22);
+  z-index: 2;
+}
+.mc-card .dash-qr-img-wrap {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.mc-card .dash-qr-img-wrap img {
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+.mc-qr-frame > div:last-child {
+  color: rgba(245, 245, 10, 0.7);
+  margin-top: 0.5rem;
+}
+
+/* Divider — fine line with center notch */
+.mc-divider {
+  position: relative;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(245, 245, 10, 0.3) 30%,
+    rgba(245, 245, 10, 0.3) 70%,
+    transparent
+  );
+  margin: 1.3rem 0 1.1rem;
+  z-index: 2;
+}
+.mc-divider::before,
+.mc-divider::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--m-yellow);
+  box-shadow: 0 0 10px rgba(245, 245, 10, 0.7);
+}
+.mc-divider::before { left: 0; }
+.mc-divider::after { right: 0; }
+
+/* Foot */
+.mc-foot {
+  position: relative;
+  z-index: 2;
+}
+.mc-name {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  font-size: clamp(1.2rem, 4.5vw, 1.55rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+.mc-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.mc-stat {
+  text-align: center;
+  padding: 0.55rem 0.4rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(245, 245, 10, 0.1);
+  border-radius: 8px;
+}
+.mc-stat-num {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--m-yellow);
+}
+.mc-stat-key {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 0.3rem;
+}
+.mc-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.mc-status {
+  font-weight: 700;
+}
+.mc-status-ok { color: #6fff90; }
+.mc-status-bad { color: rgba(255, 150, 150, 0.8); }
+.mc-since { color: rgba(255, 255, 255, 0.45); }
+
+@media (max-width: 480px) {
+  .mc-card { padding: 1.4rem 1.2rem 1.3rem; }
+  .mc-streak-num { font-size: 2rem; }
+  .mc-name { font-size: 1.15rem; }
+  .mc-stat-num { font-size: 1rem; }
+}
