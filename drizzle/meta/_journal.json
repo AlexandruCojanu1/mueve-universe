@@ -78,6 +78,13 @@
       "when": 1778965254663,
       "tag": "0010_flat_selene",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1779018668991,
+      "tag": "0011_blocked_devices",
+      "breakpoints": true
     }
   ]
 }
