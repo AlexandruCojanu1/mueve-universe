@@ -26,10 +26,29 @@ export default function WalletButtons({
   const [googleErr, setGoogleErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<"apple" | "google" | null>(null);
   const [platform, setPlatform] = useState<Platform | null>(null);
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
     setPlatform(detectPlatform());
+    try {
+      setAdded(localStorage.getItem("mueve_wallet_added") === "1");
+    } catch {
+      /* localStorage blocked */
+    }
   }, []);
+
+  const markAdded = () => {
+    setAdded(true);
+    try {
+      localStorage.setItem("mueve_wallet_added", "1");
+    } catch {}
+  };
+  const reset = () => {
+    setAdded(false);
+    try {
+      localStorage.removeItem("mueve_wallet_added");
+    } catch {}
+  };
 
   // On a known mobile platform we show only the matching button.
   // On desktop / unknown we fall back to both so the user can pick.
@@ -55,6 +74,7 @@ export default function WalletButtons({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      markAdded();
     } catch {
       setAppleErr("Eroare de rețea.");
     } finally {
@@ -72,6 +92,7 @@ export default function WalletButtons({
         error?: string;
       };
       if (data.saveUrl) {
+        markAdded();
         window.location.href = data.saveUrl;
         return;
       }
@@ -84,6 +105,31 @@ export default function WalletButtons({
   }
 
   if (!appleEnabled && !googleEnabled) return null;
+
+  if (added) {
+    return (
+      <div className="dash-card" style={{ textAlign: "center" }}>
+        <div className="dash-card-label" style={{ color: "#7be37b" }}>
+          ✓ Card adăugat în wallet
+        </div>
+        <button
+          type="button"
+          onClick={reset}
+          style={{
+            background: "none",
+            border: "none",
+            color: "rgba(255,255,255,0.55)",
+            fontSize: "0.78rem",
+            textDecoration: "underline",
+            cursor: "pointer",
+            marginTop: "0.4rem",
+          }}
+        >
+          Adaugă din nou
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={showApple && showGoogle ? "dash-grid-2" : ""}>
