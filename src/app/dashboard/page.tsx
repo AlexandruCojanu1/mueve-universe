@@ -254,21 +254,6 @@ export default async function DashboardHome({
         <DeviceSwitchModal />
       )}
 
-      {/* ── Strava tile (compact CTA) — placed directly under the QR card ── */}
-      <section className="m-actions m-actions-single">
-        <a
-          href={stravaConnected ? "#strava" : "/api/strava/connect"}
-          className="m-action m-action-orange"
-        >
-          <div className="m-action-label">
-            {stravaConnected ? "Log Strava Run" : "Connect Strava"}
-          </div>
-          <div className="m-action-meta">
-            {stravaConnected ? "+10 XP / km · sync" : "+10 XP / km · auto"}
-          </div>
-        </a>
-      </section>
-
       {/* ── Wallet ─ shown only when at least one provider is wired up ── */}
       {(appleWalletEnabled() || googleWalletEnabled()) && (
         <section className="m-card-section" id="wallet">
@@ -280,15 +265,17 @@ export default async function DashboardHome({
         </section>
       )}
 
-      {/* ── Strava ───────────────────────────────────────────────────── */}
-      <section className="m-card-section" id="strava">
-        <div className="m-section-eyebrow">STRAVA · ALERGĂRILE TALE</div>
-        <StravaCard
-          connected={stravaConnected}
-          athleteName={stravaAthleteName}
-          lastSync={stravaLastSync ? stravaLastSync.toISOString() : null}
-        />
-      </section>
+      {/* ── Strava — hidden once user is connected (sync runs in background) */}
+      {!stravaConnected && (
+        <section className="m-card-section" id="strava">
+          <div className="m-section-eyebrow">STRAVA · ALERGĂRILE TALE</div>
+          <StravaCard
+            connected={stravaConnected}
+            athleteName={stravaAthleteName}
+            lastSync={stravaLastSync ? stravaLastSync.toISOString() : null}
+          />
+        </section>
+      )}
 
       {/* ── Pass + payments ──────────────────────────────────────────── */}
       <section className="m-card-section" id="pass">
