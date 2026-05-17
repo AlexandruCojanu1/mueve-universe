@@ -48,7 +48,15 @@ export function getAppleConfig(): AppleWalletConfig | null {
 }
 
 async function loadTemplateAssets(dir: string): Promise<Record<string, Buffer>> {
-  const names = ["icon.png", "icon@2x.png", "logo.png", "logo@2x.png"];
+  const names = [
+    "icon.png",
+    "icon@2x.png",
+    "logo.png",
+    "logo@2x.png",
+    "strip.png",
+    "strip@2x.png",
+    "strip@3x.png",
+  ];
   const out: Record<string, Buffer> = {};
   for (const n of names) {
     const p = path.join(dir, n);
@@ -109,7 +117,9 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     },
   );
 
-  pass.type = "generic";
+  // storeCard supports the strip image (a horizontal banner under the header) —
+  // we use it to render the seagull horizon scene that expresses consecvență.
+  pass.type = "storeCard";
   pass.setBarcodes({
     message: user.qrUrl || user.qrToken,
     format: "PKBarcodeFormatQR",
