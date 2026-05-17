@@ -101,11 +101,11 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
       organizationName: cfg.organizationName,
       description: "Mueve Member Card",
       serialNumber: user.userId,
-      // Premium look: deep navy body, white values, yellow accents on labels.
+      // Horizon palette: lighter ocean-blue body evokes sky + flight (consecvență
+      // = ritmul valurilor, zborul pescărușilor). Yellow accents on labels.
       foregroundColor: "rgb(255, 255, 255)",
-      backgroundColor: "rgb(15, 31, 64)",
-      labelColor: "rgb(245, 245, 10)",
-      logoText: "MUEVE",
+      backgroundColor: "rgb(58, 110, 165)",
+      labelColor: "rgb(255, 232, 92)",
     },
   );
 
@@ -114,7 +114,6 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     message: user.qrUrl || user.qrToken,
     format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
-    altText: "Mueve member",
   });
 
   // Primary hero — "consecvență" / streak. This is the moment that makes
@@ -140,11 +139,6 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
   );
 
   pass.auxiliaryFields.push(
-    {
-      key: "credits",
-      label: "CLASE",
-      value: String(user.creditsRemaining ?? 0),
-    },
     {
       key: "xp",
       label: "XP",

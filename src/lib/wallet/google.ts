@@ -52,7 +52,7 @@ export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> 
     id: objectId,
     classId: fullClassId,
     state: "ACTIVE",
-    cardTitle: { defaultValue: { language: "ro", value: "MUEVE" } },
+    cardTitle: { defaultValue: { language: "ro", value: "MEMBER CARD" } },
     header: {
       defaultValue: {
         language: "ro",
@@ -68,10 +68,9 @@ export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> 
     barcode: {
       type: "QR_CODE",
       value: user.qrUrl || user.qrToken,
-      alternateText: "",
     },
-    // Premium look: deep navy body so the yellow Mueve logo pops on top.
-    hexBackgroundColor: "#0F1F40",
+    // Horizon palette: lighter ocean blue — sky + flight (consecvență).
+    hexBackgroundColor: "#3A6EA5",
     logo: {
       sourceUri: { uri: process.env.GOOGLE_WALLET_LOGO_URL ?? "" },
     },
@@ -80,11 +79,6 @@ export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> 
         id: "tier",
         header: "TIER",
         body: user.tier ?? "Member",
-      },
-      {
-        id: "credits",
-        header: "CLASE RĂMASE",
-        body: String(user.creditsRemaining ?? 0),
       },
       {
         id: "xp",
