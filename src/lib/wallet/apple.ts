@@ -126,10 +126,11 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
     messageEncoding: "iso-8859-1",
   });
 
-  // Primary hero — "consecvență" / streak. This is the moment that makes
-  // the wallet card feel personal: it grows with you.
+  // Streak in the header (top-right, small, beside logo) so the strip art
+  // breathes and the QR sits closer to mid-card. The number still travels
+  // with the member — just understated.
   const streak = user.streakWeeks ?? 0;
-  pass.primaryFields.push({
+  pass.headerFields.push({
     key: "streak",
     label: "CONSECVENȚĂ",
     value: streak > 0 ? `${streak}W` : "—",
