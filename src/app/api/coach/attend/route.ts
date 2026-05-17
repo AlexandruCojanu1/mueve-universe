@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { users, attendances, classSlots, reservations } from "@/db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
 import { generateQrToken } from "@/lib/qr-token";
 import { verifyDynamicToken } from "@/lib/qr-dynamic";
 
-const SCAN_COOLDOWN_MS = 20 * 60 * 1000;
+// Anti-fraud: a member can only attend max 2 times in a rolling 2h window.
+// Stops one person from passing their QR around to two friends at the door.
+const SCAN_WINDOW_MS = 2 * 60 * 60 * 1000;
+const SCAN_WINDOW_MAX = 2;
 
 export async function POST(req: Request) {
   const rl = await rateLimitAsync(clientKey(req, "attend"), 120, 60_000);
@@ -127,17 +130,20 @@ export async function POST(req: Request) {
     });
   }
 
-  // Anti-sharing: same card cannot be scanned twice in <20 min on different slots.
-  // Coach can still override with force=true (e.g. legitimate transfer between classes).
-  if (user.lastScanAt && !force) {
-    const elapsedMs = Date.now() - new Date(user.lastScanAt).getTime();
-    if (elapsedMs < SCAN_COOLDOWN_MS) {
-      const minutesLeft = Math.ceil((SCAN_COOLDOWN_MS - elapsedMs) / 60_000);
+  // Anti-sharing: max 2 scans in a 2h rolling window.
+  if (!force) {
+    const since = new Date(Date.now() - SCAN_WINDOW_MS);
+    const recent = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(attendances)
+      .where(and(eq(attendances.userId, user.id), gte(attendances.validatedAt, since)));
+    const recentCount = recent[0]?.count ?? 0;
+    if (recentCount >= SCAN_WINDOW_MAX) {
       return NextResponse.json(
         {
           ok: false,
           cooldown: true,
-          error: `Cardul a fost folosit recent. Mai așteaptă ${minutesLeft} min sau retrimite cu force=true.`,
+          error: `Limită atinsă: ${SCAN_WINDOW_MAX} scanări per 2h. Retrimite cu force=true ca să suprascrii.`,
           attendee: {
             userId: user.id,
             name: user.name,

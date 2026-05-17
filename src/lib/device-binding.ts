@@ -1,61 +1,79 @@
 import { randomBytes } from "crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { users, blockedDevices } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 
-// Lightweight device binding: the first device that ever requests a dynamic
-// QR token gets its UUID cookie stored on the user row. Subsequent requests
-// from a different cookie are refused unless an admin resets the binding.
+// Device binding with permanent lockout on switch.
 //
-// This stops account sharing — Bob can't just log in with Alice's password
-// on his own phone, because his cookie won't match Alice's bound device.
-// (The rotating 60-second QR token already stops QR-screenshot sharing.)
+//  - First login on a device → cookie is minted and bound to user
+//  - Same device → silent pass
+//  - Different device → returns needsSwitch so the UI can ask the user
+//    "vrei să muți accesul aici? telefonul vechi va fi blocat definitiv"
+//  - Switch confirmed → old deviceId moves to blocked_devices (never
+//    accepted again) and new device becomes the bound one
+//  - Cookie that appears in blocked_devices for this user → 403 forever
 
 const COOKIE = "mueve_did";
 const ONE_YEAR_SEC = 60 * 60 * 24 * 365;
 
-type CheckResult =
+export type CheckResult =
   | { ok: true; firstBind: boolean }
-  | { ok: false; reason: "device_mismatch" };
+  | { ok: false; reason: "device_mismatch"; needsSwitch: true }
+  | { ok: false; reason: "permanently_blocked" };
 
 function newDeviceId(): string {
   return randomBytes(16).toString("hex");
 }
 
-/**
- * READ-ONLY device check, safe for Server Components (pages).
- *
- * Does NOT write cookies — Server Components in Next.js cannot mutate
- * cookies. Returns ok:true with firstBind=false if the user has no cookie
- * yet (the bind will happen on their first /api/qr/dynamic call, which is
- * a Route Handler and can write).
- */
+async function getClientMeta() {
+  const h = await headers();
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    null;
+  const ua = h.get("user-agent") || null;
+  return { ip, ua };
+}
+
+async function isBlocked(userId: string, deviceId: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: blockedDevices.id })
+    .from(blockedDevices)
+    .where(
+      and(eq(blockedDevices.userId, userId), eq(blockedDevices.deviceId, deviceId)),
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
+/** Read-only check, safe for Server Components. */
 export async function readDeviceBinding(userId: string): Promise<CheckResult> {
   const jar = await cookies();
   const did = jar.get(COOKIE)?.value;
+
+  if (did && (await isBlocked(userId, did))) {
+    return { ok: false, reason: "permanently_blocked" };
+  }
+
   const [user] = await db
     .select({ deviceId: users.deviceId })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-
   if (!user) return { ok: true, firstBind: false };
-  // Bind hasn't happened yet (no cookie OR no DB record). API will set it.
   if (!user.deviceId) return { ok: true, firstBind: false };
-  // We have a stored binding but the browser cookie doesn't match.
-  if (!did || user.deviceId !== did) return { ok: false, reason: "device_mismatch" };
+  if (!did || user.deviceId !== did) {
+    return { ok: false, reason: "device_mismatch", needsSwitch: true };
+  }
   return { ok: true, firstBind: false };
 }
 
-/**
- * Mutating version — only call from a Route Handler or Server Action.
- * Mints the cookie if missing, binds it to the user on first call.
- */
+/** Mutating version — only for Route Handlers / Server Actions. */
 export async function checkAndBindDevice(userId: string): Promise<CheckResult> {
   const jar = await cookies();
   let did = jar.get(COOKIE)?.value;
-  const newCookieValue = !did;
+  const minted = !did;
   if (!did) {
     did = newDeviceId();
     jar.set(COOKIE, did, {
@@ -67,12 +85,15 @@ export async function checkAndBindDevice(userId: string): Promise<CheckResult> {
     });
   }
 
+  if (await isBlocked(userId, did)) {
+    return { ok: false, reason: "permanently_blocked" };
+  }
+
   const [user] = await db
     .select({ deviceId: users.deviceId })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-
   if (!user) return { ok: true, firstBind: false };
 
   if (!user.deviceId) {
@@ -84,16 +105,69 @@ export async function checkAndBindDevice(userId: string): Promise<CheckResult> {
   }
 
   if (user.deviceId !== did) {
-    if (newCookieValue) {
-      jar.delete(COOKIE);
-    }
-    return { ok: false, reason: "device_mismatch" };
+    if (minted) jar.delete(COOKIE);
+    return { ok: false, reason: "device_mismatch", needsSwitch: true };
   }
 
   return { ok: true, firstBind: false };
 }
 
-/** Admin reset — clears the binding so the user can re-bind on next visit. */
+/**
+ * Move binding to the current device cookie. The previously-bound deviceId
+ * is stored in blocked_devices and will never be accepted again, even if
+ * it later presents valid credentials.
+ */
+export async function switchDeviceToCurrent(userId: string): Promise<{
+  ok: boolean;
+  blocked?: string;
+}> {
+  const jar = await cookies();
+  let did = jar.get(COOKIE)?.value;
+  if (!did) {
+    did = newDeviceId();
+    jar.set(COOKIE, did, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: ONE_YEAR_SEC,
+    });
+  }
+
+  if (await isBlocked(userId, did)) {
+    return { ok: false };
+  }
+
+  const [user] = await db
+    .select({ deviceId: users.deviceId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  const oldDeviceId = user?.deviceId ?? null;
+  const { ip, ua } = await getClientMeta();
+
+  if (oldDeviceId && oldDeviceId !== did) {
+    await db
+      .insert(blockedDevices)
+      .values({
+        userId,
+        deviceId: oldDeviceId,
+        ipAddress: ip,
+        userAgent: ua,
+      })
+      .onConflictDoNothing();
+  }
+
+  await db
+    .update(users)
+    .set({ deviceId: did, deviceBoundAt: new Date() })
+    .where(eq(users.id, userId));
+
+  return { ok: true, blocked: oldDeviceId ?? undefined };
+}
+
+/** Admin reset — clears active binding (does NOT un-block past devices). */
 export async function unbindDevice(userId: string): Promise<void> {
   await db
     .update(users)

@@ -10,6 +10,7 @@ import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
 import StravaCard from "@/components/dashboard/StravaCard";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AvatarMenu from "@/components/dashboard/AvatarMenu";
+import DeviceSwitchModal from "@/components/dashboard/DeviceSwitchModal";
 import ReserveBoard from "@/components/dashboard/ReserveBoard";
 import { appleWalletEnabled } from "@/lib/wallet/apple";
 import { googleWalletEnabled } from "@/lib/wallet/google";
@@ -337,11 +338,14 @@ export default async function DashboardHome({
       {/* ── Member card — awwwards-grade ─────────────────────────────── */}
       <section className="m-card-section" id="card">
         <div className="m-section-eyebrow">CARDUL TĂU</div>
-        {!deviceCheck.ok && (
+        {!deviceCheck.ok && deviceCheck.reason === "permanently_blocked" && (
           <div className="m-banner-err">
-            Acest cont a fost legat de alt dispozitiv. Loghează-te pe
-            telefonul original sau cere admin reset.
+            Acest dispozitiv a fost blocat permanent pentru contul tău. Nu te
+            mai poți loga niciodată de pe el. Contactează suport.
           </div>
+        )}
+        {!deviceCheck.ok && deviceCheck.reason === "device_mismatch" && (
+          <DeviceSwitchModal />
         )}
         <div className="mc-card">
           <div className="mc-rays" aria-hidden />

@@ -79,6 +79,22 @@ export const accounts = pgTable(
   (a) => [primaryKey({ columns: [a.provider, a.providerAccountId] })],
 );
 
+/**
+ * Permanently-blocked device fingerprints. When a user switches devices,
+ * the old device cookie is moved here and never accepted again — even if
+ * the user logs in correctly. Prevents account sharing.
+ */
+export const blockedDevices = pgTable("blocked_devices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  deviceId: text("device_id").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  blockedAt: timestamp("blocked_at").notNull().defaultNow(),
+});
+
 export const sessions = pgTable("sessions", {
   sessionToken: text("session_token").primaryKey(),
   userId: uuid("user_id")
