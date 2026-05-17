@@ -11,6 +11,7 @@ import StravaCard from "@/components/dashboard/StravaCard";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AvatarMenu from "@/components/dashboard/AvatarMenu";
 import DeviceSwitchModal from "@/components/dashboard/DeviceSwitchModal";
+import AttendanceList from "@/components/dashboard/AttendanceList";
 import ReserveBoard from "@/components/dashboard/ReserveBoard";
 import { appleWalletEnabled } from "@/lib/wallet/apple";
 import { googleWalletEnabled } from "@/lib/wallet/google";
@@ -316,87 +317,19 @@ export default async function DashboardHome({
         </section>
       )}
 
-      {/* ── Member card — awwwards-grade ─────────────────────────────── */}
-      <section className="m-card-section" id="card">
-        <div className="m-section-eyebrow">CARDUL TĂU</div>
-        {!deviceCheck.ok && deviceCheck.reason === "permanently_blocked" && (
+      {/* The on-screen member card was removed — the Apple/Google Wallet card
+          is the canonical version. Device-mismatch UX is still surfaced. */}
+      {!deviceCheck.ok && deviceCheck.reason === "permanently_blocked" && (
+        <section className="m-card-section">
           <div className="m-banner-err">
             Acest dispozitiv a fost blocat permanent pentru contul tău. Nu te
             mai poți loga niciodată de pe el. Contactează suport.
           </div>
-        )}
-        {!deviceCheck.ok && deviceCheck.reason === "device_mismatch" && (
-          <DeviceSwitchModal />
-        )}
-        <div className="mc-card">
-          <div className="mc-rays" aria-hidden />
-          <div className="mc-grain" aria-hidden />
-
-          <div className="mc-top">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/mueve-logo.png" alt="MUEVE" className="mc-logo" />
-            <div className="mc-tier-block">
-              <div className="mc-tier">{xpStats?.tier.name ?? "Member"}</div>
-              <div className="mc-meta">LVL {xpStats?.tier.level ?? 1}</div>
-            </div>
-          </div>
-
-          <div className="mc-streak-strip">
-            <div className="mc-streak-big">
-              <span className="mc-streak-num">{xpStats?.currentStreak ?? 0}</span>
-              <span className="mc-streak-week">W</span>
-            </div>
-            <div className="mc-streak-side">
-              <div className="mc-streak-label">CONSECVENȚĂ</div>
-              <div className="mc-streak-sub">
-                {xpStats?.currentStreak
-                  ? `${xpStats.currentStreak} săptămâni la rând`
-                  : "Începe streak-ul săptămâna asta"}
-              </div>
-            </div>
-          </div>
-
-          <div className="mc-qr-frame">
-            <AutoRotateQr
-              origin={origin}
-              initialToken={initialQr.token}
-              initialExpiresAt={initialQr.expiresAt}
-            />
-          </div>
-
-          <div className="mc-divider" />
-
-          <div className="mc-foot">
-            <div className="mc-name">
-              {session?.user?.name || session?.user?.email?.split("@")[0] || "Membru"}
-            </div>
-            <div className="mc-stats">
-              <div className="mc-stat">
-                <div className="mc-stat-num">{credits.total}</div>
-                <div className="mc-stat-key">CLASE</div>
-              </div>
-              <div className="mc-stat">
-                <div className="mc-stat-num">{xpStats?.runs ?? 0}</div>
-                <div className="mc-stat-key">SESIUNI</div>
-              </div>
-              <div className="mc-stat">
-                <div className="mc-stat-num">
-                  {xpStats?.xp ? xpStats.xp.toLocaleString("ro-RO") : 0}
-                </div>
-                <div className="mc-stat-key">XP</div>
-              </div>
-            </div>
-            <div className="mc-status-row">
-              <span className={pass ? "mc-status mc-status-ok" : "mc-status mc-status-bad"}>
-                {pass ? "● PASS ACTIV" : "○ FĂRĂ PASS"}
-              </span>
-              {memberSince && (
-                <span className="mc-since">EST. {memberSince}</span>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
+      {!deviceCheck.ok && deviceCheck.reason === "device_mismatch" && (
+        <DeviceSwitchModal />
+      )}
 
       {/* ── Strava tile (compact CTA) — placed directly under the QR card ── */}
       <section className="m-actions m-actions-single">
@@ -487,16 +420,6 @@ export default async function DashboardHome({
         </div>
       </section>
 
-      {/* ── Rezervă sesiuni ──────────────────────────────────────────── */}
-      <section className="m-card-section" id="sessions">
-        <div className="m-section-eyebrow">REZERVĂ SESIUNI</div>
-        <p className="m-section-sub">
-          Rezervă-ți loc la sesiuni — se consumă o clasă. Dacă anulezi cu peste
-          2h înainte, clasa se întoarce.
-        </p>
-        <ReserveBoard />
-      </section>
-
       {upcoming.length > 0 && (
         <section className="m-card-section">
           <div className="m-section-eyebrow">PROGRAM SĂPTĂMÂNAL</div>
@@ -522,29 +445,14 @@ export default async function DashboardHome({
       {/* ── Istoric prezențe ─────────────────────────────────────────── */}
       <section className="m-card-section" id="history">
         <div className="m-section-eyebrow">ISTORIC PREZENȚE</div>
-        {attendanceHistory.length === 0 ? (
-          <div className="m-mini-meta">
-            Încă nu ai fost marcat la nicio sesiune. Arată cardul tău QR
-            coach-ului la intrarea în sesiune.
-          </div>
-        ) : (
-          <ul className="m-upcoming-list">
-            {attendanceHistory.slice(0, 10).map((r) => (
-              <li
-                key={`${r.slotId}-${r.slotDate}`}
-                className="m-upcoming-row"
-              >
-                <div className="m-upcoming-main">
-                  <div className="m-upcoming-title">{r.slotDate}</div>
-                  <div className="m-upcoming-meta">
-                    {r.validatedAt.toLocaleString("ro-RO")}
-                  </div>
-                </div>
-                <span className="m-upcoming-world">{r.method}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <AttendanceList
+          rows={attendanceHistory.map((r) => ({
+            slotId: r.slotId,
+            slotDate: r.slotDate,
+            validatedAt: r.validatedAt.toISOString(),
+            method: r.method,
+          }))}
+        />
       </section>
 
       {/* ── Tab bar ──────────────────────────────────────────────────── */}
