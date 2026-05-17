@@ -684,16 +684,21 @@ body.is-day .ham span {
   font-size: clamp(3rem, 7vw, 6rem);
   line-height: 0.95;
   text-transform: uppercase;
+  /* Day mode draws clouds behind this section — a soft dark shadow keeps the
+     white letters readable when they overlap a bright cloud. */
+  text-shadow: 0 2px 12px rgba(8, 12, 32, 0.55);
 }
 .prog-head h2 span {
   color: var(--sun);
+  text-shadow: 0 2px 14px rgba(8, 12, 32, 0.7);
 }
 .prog-head p {
-  opacity: 0.4;
+  opacity: 0.85;
   margin-top: 1rem;
   max-width: 400px;
   font-size: 0.95rem;
   line-height: 1.7;
+  text-shadow: 0 1px 6px rgba(8, 12, 32, 0.45);
 }
 
 .prog-table {
@@ -2041,11 +2046,9 @@ body.is-night .foot-legal a:hover { color: #fff; }
     font-size: 0.45rem !important;
     letter-spacing: 0.06em;
   }
-  .pt-next-badge {
-    font-size: 0.4rem !important;
-    padding: 1px 3px !important;
-    top: -5px !important;
-  }
+  /* Cell already glows (border + box-shadow) — the text badge is too wide for
+     a 46px cell and gets clipped, so hide it on mobile. */
+  .pt-next-badge { display: none !important; }
   .pt-badge {
     font-size: 0.4rem !important;
     padding: 1px 3px !important;
