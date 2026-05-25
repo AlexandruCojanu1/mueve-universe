@@ -1,13 +1,10 @@
 import type { CSSProperties } from "react";
 import CheckoutBanner from "@/components/dashboard/CheckoutBanner";
 import AutoCheckout from "@/components/dashboard/AutoCheckout";
-import WalletButtons from "@/components/dashboard/WalletButtons";
-import StravaCard from "@/components/dashboard/StravaCard";
-import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AvatarMenu from "@/components/dashboard/AvatarMenu";
 import DeviceSwitchModal from "@/components/dashboard/DeviceSwitchModal";
-import AttendanceList from "@/components/dashboard/AttendanceList";
 import NamePrompt from "@/components/dashboard/NamePrompt";
+import DashboardTabBar from "@/components/dashboard/DashboardTabBar";
 
 type WorldColor = "yellow" | "purple" | "blue" | "orange";
 
@@ -40,16 +37,6 @@ export type DashboardHomeData = {
     xpToGo: number;
     pct: number;
   } | null;
-
-  upcoming: { id: string; title: string; meta: string; world: string }[];
-
-  wallet: { appleEnabled: boolean; googleEnabled: boolean };
-  showStrava: boolean;
-  strava: { athleteName: string | null; lastSync: string | null };
-  activeSub: { planName: string | null; status: string; periodEnd: string | null } | null;
-  creditsTotal: number;
-  recentPayments: { id: string; label: string; amount: string }[];
-  attendance: { slotId: string; slotDate: string; validatedAt: string; method: string }[];
 };
 
 export default function DashboardHomeView({ data }: { data: DashboardHomeData }) {
@@ -114,7 +101,7 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
               </span>
             </div>
           )}
-          <a className="m-next-cta" href="/dashboard/sessions">
+          <a className="m-next-cta" href="/dashboard/program">
             Rezervă-ți locul
           </a>
         </section>
@@ -122,7 +109,7 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
         <section className="m-next m-next-empty">
           <div className="m-next-eyebrow">PROGRAM</div>
           <div className="m-next-act">Niciun antrenament programat momentan.</div>
-          <a className="m-next-cta" href="/#prog">
+          <a className="m-next-cta" href="/dashboard/program">
             Vezi programul
           </a>
         </section>
@@ -221,115 +208,7 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
       )}
       {d.deviceMismatch && <DeviceSwitchModal />}
 
-      {/* ── Wallet ────────────────────────────────────────────────────── */}
-      {(d.wallet.appleEnabled || d.wallet.googleEnabled) && (
-        <section className="m-card-section" id="wallet">
-          <div className="m-section-eyebrow">WALLET DIGITAL</div>
-          <WalletButtons
-            appleEnabled={d.wallet.appleEnabled}
-            googleEnabled={d.wallet.googleEnabled}
-          />
-        </section>
-      )}
-
-      {/* ── Strava ────────────────────────────────────────────────────── */}
-      {d.showStrava && (
-        <section className="m-card-section" id="strava">
-          <div className="m-section-eyebrow">STRAVA · ALERGĂRILE TALE</div>
-          <StravaCard
-            connected={false}
-            athleteName={d.strava.athleteName}
-            lastSync={d.strava.lastSync}
-          />
-        </section>
-      )}
-
-      {/* ── Pass + payments ───────────────────────────────────────────── */}
-      <section className="m-card-section" id="pass">
-        <div className="m-section-eyebrow">PASS · PLĂȚI</div>
-        <div className="m-grid-2">
-          <div className="m-mini-card">
-            <div className="m-mini-label">PASS</div>
-            {d.activeSub ? (
-              <>
-                <div className="m-mini-value">
-                  {d.activeSub.planName || "Pass activ"}
-                </div>
-                <div className="m-mini-meta">
-                  {d.activeSub.status.toUpperCase()}
-                  {d.activeSub.periodEnd && ` · până la ${d.activeSub.periodEnd}`}
-                </div>
-                <div className="m-mini-meta">
-                  {d.creditsTotal > 0
-                    ? `${d.creditsTotal} ${d.creditsTotal === 1 ? "clasă rămasă" : "clase rămase"}`
-                    : "Nicio clasă cumpărată."}
-                </div>
-                <ManageSubscription />
-              </>
-            ) : (
-              <>
-                <div className="m-mini-value">Fără Pass activ</div>
-                <a className="m-mini-link" href="/#pricing">
-                  Vezi Pass-ul →
-                </a>
-              </>
-            )}
-          </div>
-
-          <div className="m-mini-card">
-            <div className="m-mini-label">Plăți recente</div>
-            {d.recentPayments.length === 0 ? (
-              <div className="m-mini-meta">Încă nicio plată.</div>
-            ) : (
-              <ul className="m-mini-list">
-                {d.recentPayments.map((p) => (
-                  <li key={p.id} className="m-mini-row">
-                    <span>{p.label}</span>
-                    <span className="m-mini-amount">{p.amount}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Upcoming week ─────────────────────────────────────────────── */}
-      {d.upcoming.length > 0 && (
-        <section className="m-card-section">
-          <div className="m-section-eyebrow">PROGRAM SĂPTĂMÂNAL</div>
-          <ul className="m-upcoming-list">
-            {d.upcoming.map((u) => (
-              <li key={u.id} className="m-upcoming-row">
-                <div className="m-upcoming-main">
-                  <div className="m-upcoming-title">{u.title}</div>
-                  <div className="m-upcoming-meta">{u.meta}</div>
-                </div>
-                <span className="m-upcoming-world">{u.world}</span>
-              </li>
-            ))}
-          </ul>
-          <a className="m-mini-link" href="/#prog">
-            Programul complet →
-          </a>
-        </section>
-      )}
-
-      {/* ── Attendance history ────────────────────────────────────────── */}
-      <section className="m-card-section" id="history">
-        <div className="m-section-eyebrow">ISTORIC PREZENȚE</div>
-        <AttendanceList rows={d.attendance} />
-      </section>
-
-      {/* ── Tab bar ───────────────────────────────────────────────────── */}
-      <nav className="m-tabbar">
-        <a href="/dashboard" className="m-tab m-tab-active">
-          <span className="m-tab-label">HOME</span>
-        </a>
-        <a href="/dashboard/board" className="m-tab">
-          <span className="m-tab-label">BOARD</span>
-        </a>
-      </nav>
+      <DashboardTabBar active="home" />
     </>
   );
 }

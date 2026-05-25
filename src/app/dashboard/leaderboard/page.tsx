@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function LeaderboardRedirect() {
-  redirect("/dashboard#leaderboard");
+  redirect("/dashboard/board");
 }

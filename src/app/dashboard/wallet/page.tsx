@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function WalletRedirect() {
-  redirect("/dashboard#wallet");
+  redirect("/dashboard/profile#wallet");
 }

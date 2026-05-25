@@ -1,17 +1,14 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { subscriptions, payments, users, attendances } from "@/db/schema";
+import { users, attendances } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import DashboardHomeView, {
   type DashboardHomeData,
 } from "@/components/dashboard/DashboardHomeView";
 import { cleanDisplayName } from "@/lib/display-name";
-import { appleWalletEnabled } from "@/lib/wallet/apple";
-import { googleWalletEnabled } from "@/lib/wallet/google";
 import { getProgramData } from "@/lib/coach-schedule";
 import { upcomingSessions } from "@/lib/user-stats";
 import { isoDate } from "@/lib/coach-schedule";
-import { getCreditBalance } from "@/lib/credits";
 import { readDeviceBinding } from "@/lib/device-binding";
 import { getLeaderboard, getUserStats } from "@/lib/leaderboard";
 
@@ -69,48 +66,19 @@ export default async function DashboardHome({
 
   const program = await safe("getProgramData", () => getProgramData(), null);
 
-  const recentPayments = await safe(
-    "payments select",
-    () =>
-      db
-        .select()
-        .from(payments)
-        .where(eq(payments.userId, userId))
-        .orderBy(desc(payments.createdAt))
-        .limit(5),
-    [],
-  );
-  const activeSubRows = await safe(
-    "subscriptions select",
-    () =>
-      db
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.userId, userId))
-        .orderBy(desc(subscriptions.updatedAt))
-        .limit(1),
-    [],
-  );
-  const credits = await safe(
-    "getCreditBalance",
-    () => getCreditBalance(userId),
-    { total: 0, nextExpiry: null } as Awaited<ReturnType<typeof getCreditBalance>>,
-  );
   const attendanceHistory = await safe(
     "attendance history",
     () =>
       db
-        .select()
+        .select({ slotDate: attendances.slotDate })
         .from(attendances)
         .where(eq(attendances.userId, userId))
         .orderBy(desc(attendances.validatedAt))
-        .limit(20),
+        .limit(40),
     [],
   );
   const xpStats = await safe("getUserStats", () => getUserStats(userId), null);
   const board = await safe("getLeaderboard", () => getLeaderboard(userId, 10), []);
-
-  const activeSub = activeSubRows[0];
 
   // ── Derived view data ──────────────────────────────────────────────
   const now = new Date();
@@ -204,41 +172,6 @@ export default async function DashboardHome({
           pct: Math.round(xpStats.progressToNext * 100),
         }
       : null,
-
-    upcoming: upcomingAll.slice(0, 4).map((u) => ({
-      id: `${u.date}-${u.slot.id}`,
-      title: u.slot.activity.ro,
-      meta: `${u.dayLabel} · ${u.date.slice(5).replace("-", ".")} · ${u.slot.time}`,
-      world: u.slot.world.ro,
-    })),
-
-    wallet: { appleEnabled: appleWalletEnabled(), googleEnabled: googleWalletEnabled() },
-    showStrava: !userRow?.stravaAthleteId,
-    strava: {
-      athleteName: userRow?.stravaAthleteName ?? null,
-      lastSync: userRow?.stravaLastSyncAt ? userRow.stravaLastSyncAt.toISOString() : null,
-    },
-    activeSub: activeSub
-      ? {
-          planName: activeSub.planName,
-          status: activeSub.status,
-          periodEnd: activeSub.currentPeriodEnd
-            ? activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")
-            : null,
-        }
-      : null,
-    creditsTotal: credits.total,
-    recentPayments: recentPayments.map((p) => ({
-      id: p.id,
-      label: p.planName || p.mode || "Plată",
-      amount: `${(p.amount / 100).toFixed(2)} ${p.currency.toUpperCase()}`,
-    })),
-    attendance: attendanceHistory.map((r) => ({
-      slotId: r.slotId,
-      slotDate: r.slotDate,
-      validatedAt: r.validatedAt.toISOString(),
-      method: r.method,
-    })),
   };
 
   return <DashboardHomeView data={data} />;
