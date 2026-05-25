@@ -74,11 +74,13 @@ async function main() {
     const dayOfWeek = s.day + 1; // marketing 0=Mon..6=Sun -> class_slots 1=Mon..7=Sun
     const startTime = s.time.padStart(5, "0");
 
-    // Business rules: all sessions are outdoors (no headcount limit); The Big
-    // Social Run is always free (no class credit required).
+    // Business rules: all sessions are outdoors (no headcount limit); the big
+    // social run is always free (no class credit required).
     const unlimited = true;
-    const free = /big.*social.*run/i.test(act);
+    const free = /big.*social.*run|marea alergare/i.test(act);
 
+    // Match by day + time (not name) so renaming an activity updates the
+    // existing slot instead of creating a duplicate.
     const existing = await db
       .select({ id: classSlots.id })
       .from(classSlots)
@@ -87,14 +89,13 @@ async function main() {
           eq(classSlots.coachId, owner.id),
           eq(classSlots.dayOfWeek, dayOfWeek),
           eq(classSlots.startTime, startTime),
-          eq(classSlots.classType, act),
         ),
       )
       .limit(1);
     if (existing[0]) {
       await db
         .update(classSlots)
-        .set({ unlimited, free })
+        .set({ classType: act, unlimited, free })
         .where(eq(classSlots.id, existing[0].id));
       updated.push(`${act} dow${dayOfWeek} ${startTime} (unlimited=${unlimited} free=${free})`);
       continue;
