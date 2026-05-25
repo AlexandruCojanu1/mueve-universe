@@ -23,12 +23,12 @@ export async function GET(req: Request) {
 
   if (err || !code) {
     return NextResponse.redirect(
-      new URL("/dashboard?strava=cancelled#strava", url),
+      new URL("/dashboard/profile?strava=cancelled#strava", url),
     );
   }
   if (!state || state !== expectedState) {
     return NextResponse.redirect(
-      new URL("/dashboard?strava=state#strava", url),
+      new URL("/dashboard/profile?strava=state#strava", url),
     );
   }
 
@@ -37,12 +37,12 @@ export async function GET(req: Request) {
     tokens = await exchangeCode(code);
   } catch {
     return NextResponse.redirect(
-      new URL("/dashboard?strava=oauth_failed#strava", url),
+      new URL("/dashboard/profile?strava=oauth_failed#strava", url),
     );
   }
   if (!tokens.athlete?.id) {
     return NextResponse.redirect(
-      new URL("/dashboard?strava=no_athlete#strava", url),
+      new URL("/dashboard/profile?strava=no_athlete#strava", url),
     );
   }
 
@@ -68,5 +68,5 @@ export async function GET(req: Request) {
     await syncRecentActivities(userId);
   } catch {}
 
-  return NextResponse.redirect(new URL("/dashboard?strava=connected#strava", url));
+  return NextResponse.redirect(new URL("/dashboard/profile?strava=connected#strava", url));
 }

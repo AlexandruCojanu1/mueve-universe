@@ -9,12 +9,28 @@
  * Capacity/duration use sensible defaults (16 / 60 min) — adjust per slot in
  * /admin/slots afterwards.
  */
+import postgres from "postgres";
 import { db } from "../src/db";
 import { sections, users, classSlots } from "../src/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
 const DEFAULT_CAPACITY = 16;
 const DEFAULT_DURATION = 60;
+
+// Ensure the unlimited/free columns exist (idempotent). DDL prefers the
+// unpooled connection — PgBouncer transaction mode doesn't handle it well.
+async function ensureColumns() {
+  const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL(_UNPOOLED) is not set");
+  const sql = postgres(url, { ssl: "require", max: 1 });
+  try {
+    await sql`ALTER TABLE class_slots ADD COLUMN IF NOT EXISTS unlimited boolean NOT NULL DEFAULT false`;
+    await sql`ALTER TABLE class_slots ADD COLUMN IF NOT EXISTS free boolean NOT NULL DEFAULT false`;
+    console.log("Columns ensured: unlimited, free");
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
 
 type ProgramSlot = {
   day: number; // 0=Mon..6=Sun
@@ -26,6 +42,8 @@ const isTime = (t: string) => /^\d{1,2}:\d{2}$/.test(t || "");
 const isComingSoon = (name: string) => /coming soon|în curând|in curand/i.test(name || "");
 
 async function main() {
+  await ensureColumns();
+
   // Owner: prefer the grappes admin, else any admin/coach.
   const staff = await db
     .select({ id: users.id, email: users.email, role: users.role })
@@ -44,6 +62,7 @@ async function main() {
   const slots = ((progRow?.data as { slots?: ProgramSlot[] } | undefined)?.slots ?? []) as ProgramSlot[];
 
   const created: string[] = [];
+  const updated: string[] = [];
   const skipped: string[] = [];
 
   for (const s of slots) {
@@ -54,6 +73,11 @@ async function main() {
     }
     const dayOfWeek = s.day + 1; // marketing 0=Mon..6=Sun -> class_slots 1=Mon..7=Sun
     const startTime = s.time.padStart(5, "0");
+
+    // Business rules: all sessions are outdoors (no headcount limit); The Big
+    // Social Run is always free (no class credit required).
+    const unlimited = true;
+    const free = /big.*social.*run/i.test(act);
 
     const existing = await db
       .select({ id: classSlots.id })
@@ -68,7 +92,11 @@ async function main() {
       )
       .limit(1);
     if (existing[0]) {
-      skipped.push(`${act} dow${dayOfWeek} ${startTime} (exists)`);
+      await db
+        .update(classSlots)
+        .set({ unlimited, free })
+        .where(eq(classSlots.id, existing[0].id));
+      updated.push(`${act} dow${dayOfWeek} ${startTime} (unlimited=${unlimited} free=${free})`);
       continue;
     }
 
@@ -79,13 +107,17 @@ async function main() {
       durationMin: DEFAULT_DURATION,
       classType: act,
       capacity: DEFAULT_CAPACITY,
+      unlimited,
+      free,
       active: true,
     });
-    created.push(`dow${dayOfWeek} ${startTime} ${act}`);
+    created.push(`dow${dayOfWeek} ${startTime} ${act} (unlimited=${unlimited} free=${free})`);
   }
 
   console.log(`\nCreated ${created.length}:`);
   created.forEach((c) => console.log("  + " + c));
+  console.log(`Updated ${updated.length}:`);
+  updated.forEach((c) => console.log("  ~ " + c));
   console.log(`Skipped ${skipped.length}: ${skipped.join(", ")}`);
   process.exit(0);
 }

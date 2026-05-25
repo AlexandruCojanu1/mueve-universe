@@ -90,6 +90,8 @@ export async function GET() {
         durationMin: s.durationMin,
         classType: s.classType,
         capacity: s.capacity,
+        unlimited: s.unlimited,
+        free: s.free,
         taken: countMap.get(key) ?? 0,
         reserved: bookedSet.has(key),
       });

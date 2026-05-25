@@ -9,6 +9,8 @@ export type Slot = {
   durationMin: number;
   classType: string;
   capacity: number;
+  unlimited: boolean;
+  free: boolean;
   taken: number;
   reserved: boolean;
 };
@@ -122,16 +124,19 @@ export default function ReserveBoard({ initialSlots }: { initialSlots?: Slot[] }
           <div className="m-day-slots">
             {list.map((s) => {
               const key = `${s.slotId}|${s.slotDate}`;
-              const full = s.taken >= s.capacity;
+              const full = !s.unlimited && s.taken >= s.capacity;
               const isBusy = busy === key;
               return (
                 <div className="m-slot" data-c={colorFor(s.classType)} key={key}>
                   <span className="m-slot-time">{s.startTime.slice(0, 5)}</span>
                   <span className="m-slot-main">
-                    <span className="m-slot-act">{s.classType || "Clasă"}</span>
+                    <span className="m-slot-act">
+                      {s.classType || "Clasă"}
+                      {s.free && <span className="m-slot-free">GRATIS</span>}
+                    </span>
                     <span className="m-slot-world">
                       <span className="m-slot-dot" />
-                      {s.taken}/{s.capacity} locuri
+                      {s.unlimited ? "În aer liber" : `${s.taken}/${s.capacity} locuri`}
                     </span>
                   </span>
                   {s.reserved ? (

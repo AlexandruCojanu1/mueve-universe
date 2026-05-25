@@ -29,6 +29,8 @@ export default function StravaCard({ connected, athleteName, lastSync }: Props) 
     else if (flash === "state") setMsg("Sesiune OAuth invalidă. Încearcă din nou.");
     else if (flash === "oauth_failed") setMsg("Strava a refuzat tokenul. Încearcă din nou.");
     else if (flash === "no_athlete") setMsg("Strava nu ne-a returnat athlete-ul.");
+    else if (flash === "disabled")
+      setMsg("Strava nu e configurat pe server (lipsesc cheile API). Contactează adminul.");
   }, [flash]);
 
   async function sync() {

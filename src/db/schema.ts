@@ -323,6 +323,10 @@ export const classSlots = pgTable(
     durationMin: integer("duration_min").notNull().default(60),
     classType: text("class_type").notNull().default(""),
     capacity: integer("capacity").notNull().default(20),
+    // Outdoor sessions have no headcount limit; `capacity` is ignored when true.
+    unlimited: boolean("unlimited").notNull().default(false),
+    // Free sessions don't require/consume a class credit (e.g. The Big Social Run).
+    free: boolean("free").notNull().default(false),
     active: boolean("active").notNull().default(true),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

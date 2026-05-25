@@ -110,7 +110,8 @@ export async function POST(req: Request) {
         eq(reservations.status, "active"),
       ),
     );
-  if ((activeCount[0]?.c ?? 0) >= slot.capacity) {
+  // Outdoor (unlimited) sessions ignore capacity entirely.
+  if (!slot.unlimited && (activeCount[0]?.c ?? 0) >= slot.capacity) {
     return NextResponse.json(
       { error: `Slot plin (${activeCount[0]?.c}/${slot.capacity}).`, full: true },
       { status: 409 },
@@ -118,41 +119,46 @@ export async function POST(req: Request) {
   }
 
   const now = new Date();
-  const creditRows = await db
-    .select({ id: classCredits.id })
-    .from(classCredits)
-    .where(
-      and(
-        eq(classCredits.userId, session.user.id),
-        isNull(classCredits.consumedAt),
-        gte(classCredits.expiresAt, now),
-      ),
-    )
-    .orderBy(asc(classCredits.expiresAt))
-    .limit(1);
-  const credit = creditRows[0];
-  if (!credit) {
-    return NextResponse.json(
-      { error: "Fără clase rămase.", noCredit: true },
-      { status: 402 },
-    );
-  }
+  // Free sessions (e.g. The Big Social Run) don't require or consume a credit.
+  let creditId: string | null = null;
+  if (!slot.free) {
+    const creditRows = await db
+      .select({ id: classCredits.id })
+      .from(classCredits)
+      .where(
+        and(
+          eq(classCredits.userId, session.user.id),
+          isNull(classCredits.consumedAt),
+          gte(classCredits.expiresAt, now),
+        ),
+      )
+      .orderBy(asc(classCredits.expiresAt))
+      .limit(1);
+    const credit = creditRows[0];
+    if (!credit) {
+      return NextResponse.json(
+        { error: "Fără clase rămase.", noCredit: true },
+        { status: 402 },
+      );
+    }
 
-  const updated = await db
-    .update(classCredits)
-    .set({
-      consumedAt: now,
-      consumedSlotId: body.slotId,
-      consumedSlotDate: body.slotDate,
-    })
-    .where(and(eq(classCredits.id, credit.id), isNull(classCredits.consumedAt)))
-    .returning({ id: classCredits.id });
+    const updated = await db
+      .update(classCredits)
+      .set({
+        consumedAt: now,
+        consumedSlotId: body.slotId,
+        consumedSlotDate: body.slotDate,
+      })
+      .where(and(eq(classCredits.id, credit.id), isNull(classCredits.consumedAt)))
+      .returning({ id: classCredits.id });
 
-  if (updated.length === 0) {
-    return NextResponse.json(
-      { error: "Creditul nu mai este disponibil." },
-      { status: 409 },
-    );
+    if (updated.length === 0) {
+      return NextResponse.json(
+        { error: "Creditul nu mai este disponibil." },
+        { status: 409 },
+      );
+    }
+    creditId = credit.id;
   }
 
   if (dup[0]) {
@@ -160,7 +166,7 @@ export async function POST(req: Request) {
       .update(reservations)
       .set({
         status: "active",
-        creditId: credit.id,
+        creditId,
         cancelledAt: null,
         createdAt: new Date(),
       })
@@ -177,7 +183,7 @@ export async function POST(req: Request) {
       slotId: body.slotId,
       slotDate: body.slotDate,
       status: "active",
-      creditId: credit.id,
+      creditId,
     });
   }
 
