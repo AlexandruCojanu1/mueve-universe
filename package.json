@@ -13,7 +13,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
     "db:content-update": "tsx --env-file=.env.local scripts/apply-content-update.ts",
-    "db:seed-demo": "tsx --env-file=.env.local scripts/seed-demo-data.ts"
+    "db:seed-demo": "tsx --env-file=.env.local scripts/seed-demo-data.ts",
+    "db:sync-slots": "tsx --env-file=.env.local scripts/sync-class-slots.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

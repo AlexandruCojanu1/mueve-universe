@@ -5165,6 +5165,47 @@ body.is-night .foot-legal a:hover { color: #fff; }
   font-style: italic;
 }
 
+/* ── Reservation board (Program) ───────────────────────────────────── */
+.m-reserve { display: flex; flex-direction: column; gap: 1.2rem; }
+.m-reserve-err {
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 80, 80, 0.15);
+  color: #ff9b9b;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 80, 80, 0.3);
+}
+.m-slot-btn {
+  flex-shrink: 0;
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: var(--m-bg);
+  background: var(--m-yellow);
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.15s ease;
+}
+.m-slot-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.m-slot-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--m-text-dim);
+}
+.m-slot-btn-on {
+  background: transparent;
+  color: #7cf5b8;
+  border: 1px solid rgba(124, 245, 184, 0.5);
+}
+.m-slot-btn-on:disabled {
+  background: transparent;
+  color: #7cf5b8;
+  opacity: 0.7;
+}
+
 /* ── PROFIL page ───────────────────────────────────────────────────── */
 .m-prof-card {
   display: flex;
