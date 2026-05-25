@@ -4163,6 +4163,14 @@ body.is-night .foot-legal a:hover { color: #fff; }
 }
 .strava-btn:hover { filter: brightness(1.08); }
 .strava-btn:disabled { opacity: 0.6; cursor: wait; }
+/* Official "Connect with Strava" button asset — keep aspect ratio, don't restyle. */
+.strava-connect-btn { display: inline-block; line-height: 0; align-self: flex-start; }
+.strava-connect-btn img { height: 44px; width: auto; display: block; }
+.strava-connect-btn:hover { opacity: 0.92; }
+/* Official "Powered by Strava" attribution logo, shown with imported data. */
+.strava-pwrd { display: inline-block; line-height: 0; margin-top: 1rem; opacity: 0.85; align-self: flex-start; }
+.strava-pwrd img { height: 16px; width: auto; display: block; }
+.strava-pwrd:hover { opacity: 1; }
 .strava-link {
   background: none;
   border: none;

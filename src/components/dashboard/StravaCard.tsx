@@ -71,15 +71,24 @@ export default function StravaCard({ connected, athleteName, lastSync }: Props) 
     return (
       <div className="strava-card">
         <div className="strava-card-head">
-          <div className="strava-logo">STRAVA</div>
           <div className="strava-card-eyebrow">Sincronizează-ți alergările</div>
         </div>
         <p className="strava-card-body">
           Conectează-ți contul Strava și primești <strong>+10 XP / km</strong> pentru fiecare
           alergare, mers sau drumeție. Plafon zilnic 120 XP — sigur de farming.
         </p>
-        <a className="strava-btn" href="/api/strava/connect">
-          Conectează Strava →
+        <a
+          className="strava-connect-btn"
+          href="/api/strava/connect"
+          aria-label="Connect with Strava"
+        >
+          {/* Official Strava-provided button asset — do not modify (brand guidelines). */}
+          <img
+            src="/strava/btn_connect_orange.svg"
+            alt="Connect with Strava"
+            width={207}
+            height={42}
+          />
         </a>
         {msg && <div className="strava-msg">{msg}</div>}
       </div>
@@ -89,7 +98,6 @@ export default function StravaCard({ connected, athleteName, lastSync }: Props) 
   return (
     <div className="strava-card strava-card-connected">
       <div className="strava-card-head">
-        <div className="strava-logo">STRAVA</div>
         <div className="strava-card-eyebrow">
           Conectat ca {athleteName || "athlete"}
         </div>
@@ -118,6 +126,16 @@ export default function StravaCard({ connected, athleteName, lastSync }: Props) 
         </button>
       </div>
       {msg && <div className="strava-msg">{msg}</div>}
+      <a
+        className="strava-pwrd"
+        href="https://www.strava.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Powered by Strava"
+      >
+        {/* Official attribution logo shown next to imported Strava data. */}
+        <img src="/strava/powered_by_strava_white.svg" alt="Powered by Strava" />
+      </a>
     </div>
   );
 }
