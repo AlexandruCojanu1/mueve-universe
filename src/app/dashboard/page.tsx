@@ -1,41 +1,38 @@
 import { auth } from "@/auth";
-import { headers } from "next/headers";
 import { db } from "@/db";
 import { subscriptions, payments, users, attendances } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import CheckoutBanner from "@/components/dashboard/CheckoutBanner";
-import AutoCheckout from "@/components/dashboard/AutoCheckout";
-import WalletButtons from "@/components/dashboard/WalletButtons";
-import AutoRotateQr from "@/components/dashboard/AutoRotateQr";
-import StravaCard from "@/components/dashboard/StravaCard";
-import ManageSubscription from "@/components/dashboard/ManageSubscription";
-import AvatarMenu from "@/components/dashboard/AvatarMenu";
-import DeviceSwitchModal from "@/components/dashboard/DeviceSwitchModal";
-import AttendanceList from "@/components/dashboard/AttendanceList";
+import DashboardHomeView, {
+  type DashboardHomeData,
+} from "@/components/dashboard/DashboardHomeView";
+import { cleanDisplayName } from "@/lib/display-name";
 import { appleWalletEnabled } from "@/lib/wallet/apple";
 import { googleWalletEnabled } from "@/lib/wallet/google";
 import { getProgramData } from "@/lib/coach-schedule";
 import { upcomingSessions } from "@/lib/user-stats";
-import { getCreditBalance, getActivePassRow } from "@/lib/credits";
-import { issueDynamicToken } from "@/lib/qr-dynamic";
+import { isoDate } from "@/lib/coach-schedule";
+import { getCreditBalance } from "@/lib/credits";
 import { readDeviceBinding } from "@/lib/device-binding";
-import {
-  getLeaderboard,
-  getUserStats,
-} from "@/lib/leaderboard";
+import { getLeaderboard, getUserStats } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
 
 const DAYS_RO = ["DUMINICA", "LUNI", "MARTI", "MIERCURI", "JOI", "VINERI", "SAMBATA"];
+const WEEK_LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
 
-function initials(name: string | null | undefined, email: string | null | undefined): string {
-  const src = (name || email || "").trim();
+function initials(name: string | null | undefined): string {
+  const src = (name || "").trim();
   if (!src) return "M";
   const parts = src.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return src.slice(0, 2).toUpperCase();
+}
+
+function slotDateTime(dateStr: string, time: string): Date {
+  const [h, m] = time.split(":").map((n) => parseInt(n, 10) || 0);
+  const dt = new Date(`${dateStr}T00:00:00`);
+  dt.setHours(h, m, 0, 0);
+  return dt;
 }
 
 export default async function DashboardHome({
@@ -45,15 +42,8 @@ export default async function DashboardHome({
 }) {
   const sp = await searchParams;
   const session = await auth();
-  const name = session?.user?.name || session?.user?.email || "";
   const userId = session?.user?.id;
-
   if (!userId) return null;
-
-  const hdrs = await headers();
-  const host = hdrs.get("x-forwarded-host") || hdrs.get("host") || "";
-  const proto = hdrs.get("x-forwarded-proto") || "https";
-  const origin = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : "");
 
   const safe = async <T,>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
     try {
@@ -70,9 +60,6 @@ export default async function DashboardHome({
     () => readDeviceBinding(userId),
     { ok: true as const, firstBind: false },
   );
-  const initialQr = deviceCheck.ok
-    ? issueDynamicToken(userId)
-    : { token: "", expiresAt: Date.now() };
 
   const userRow = (await safe(
     "users select",
@@ -109,7 +96,6 @@ export default async function DashboardHome({
     () => getCreditBalance(userId),
     { total: 0, nextExpiry: null } as Awaited<ReturnType<typeof getCreditBalance>>,
   );
-  const pass = await safe("getActivePassRow", () => getActivePassRow(userId), null);
   const attendanceHistory = await safe(
     "attendance history",
     () =>
@@ -125,229 +111,135 @@ export default async function DashboardHome({
   const board = await safe("getLeaderboard", () => getLeaderboard(userId, 10), []);
 
   const activeSub = activeSubRows[0];
-  const upcoming = program ? upcomingSessions(program, 7).slice(0, 4) : [];
 
-  const stravaConnected = !!userRow?.stravaAthleteId;
-  const stravaAthleteName = userRow?.stravaAthleteName ?? null;
-  const stravaLastSync = userRow?.stravaLastSyncAt ?? null;
+  // ── Derived view data ──────────────────────────────────────────────
+  const now = new Date();
+  const today = DAYS_RO[now.getDay()];
+  const todayIso = isoDate(now);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  const tomorrowIso = isoDate(tomorrow);
 
-  const me = board.find((b) => b.isMe);
-  const myRank = me?.rank ?? null;
+  const cleanName = cleanDisplayName(userRow?.name);
+  const needsName = deviceCheck.ok && !cleanName;
+  const firstName = (cleanName ?? "").split(" ")[0] || "Runner";
 
-  const today = DAYS_RO[new Date().getDay()];
-  const firstName = (session?.user?.name || "").split(" ")[0] || "Runner";
-  const initialsStr = initials(session?.user?.name, session?.user?.email);
-  const memberSince = userRow?.createdAt
-    ? userRow.createdAt
-        .toLocaleDateString("ro-RO", { month: "short", year: "numeric" })
-        .toUpperCase()
+  const myRank = board.find((b) => b.isMe)?.rank ?? null;
+
+  // Next session: the soonest slot whose start time hasn't passed yet.
+  const upcomingAll = program ? upcomingSessions(program, 7) : [];
+  const nextUp =
+    upcomingAll.find((u) => slotDateTime(u.date, u.slot.time) >= now) ??
+    upcomingAll[0] ??
+    null;
+
+  const dayWord = nextUp
+    ? nextUp.date === todayIso
+      ? "AZI"
+      : nextUp.date === tomorrowIso
+        ? "MÂINE"
+        : (nextUp.dayLabel || "").toUpperCase()
+    : "";
+
+  const nextSession: DashboardHomeData["nextSession"] = nextUp
+    ? {
+        dayWord,
+        time: nextUp.slot.time,
+        activity: nextUp.slot.activity.ro,
+        world: nextUp.slot.world.ro,
+        color: nextUp.slot.color,
+        spotsLabel: null,
+      }
     : null;
 
-  return (
-    <>
-      <AutoCheckout />
-      <CheckoutBanner status={sp.checkout} />
+  // Weekly attendance — distinct days attended in the current Mon–Sun week.
+  const slotToday = (now.getDay() + 6) % 7; // 0=Mon..6=Sun
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - slotToday);
+  monday.setHours(0, 0, 0, 0);
+  const attendedSet = new Set(attendanceHistory.map((r) => r.slotDate));
+  const weekAttended: boolean[] = [];
+  let weekCount = 0;
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(monday);
+    dt.setDate(monday.getDate() + i);
+    const on = attendedSet.has(isoDate(dt));
+    weekAttended.push(on);
+    if (on) weekCount++;
+  }
 
-      {/* ── Hello ─────────────────────────────────────────────────────── */}
-      <header className="m-hello">
-        <div>
-          <div className="m-hello-eyebrow">{today} CREW</div>
-          <h1 className="m-hello-name">Hey, {firstName}</h1>
-        </div>
-        <AvatarMenu initials={initialsStr} />
-      </header>
+  const crew = board
+    .filter((b) => !b.isMe)
+    .slice(0, 4)
+    .map((b) => {
+      const nm = cleanDisplayName(b.name);
+      return { name: (nm ?? "Membru").split(" ")[0], initials: initials(nm) };
+    });
 
-      {/* ── Hero XP card ─────────────────────────────────────────────── */}
-      {xpStats && (
-        <section className="m-hero-xp" id="xp">
-          <div className="m-hero-xp-row">
-            <div className="m-hero-xp-tier">
-              LVL {xpStats.tier.level} · {xpStats.tier.name.toUpperCase()}
-            </div>
-            <div className="m-streak-badge">
-              <span className="m-streak-num">{xpStats.currentStreak}</span>
-              <span className="m-streak-unit">WKS STREAK</span>
-            </div>
-          </div>
-          <div className="m-hero-xp-amount">
-            {xpStats.xp}
-            <span className="m-hero-xp-unit">XP</span>
-          </div>
-          <div className="m-hero-xp-foot">
-            <span>
-              {xpStats.nextTier
-                ? `→ ${xpStats.nextTier.name}`
-                : "→ Nivel maxim"}
-            </span>
-            <span>
-              {xpStats.nextTier
-                ? `${xpStats.nextTier.minXp - xpStats.xp} XP to go`
-                : "Legend"}
-            </span>
-          </div>
-          <div className="m-hero-xp-bar">
-            <div
-              className="m-hero-xp-bar-fill"
-              style={{ width: `${Math.round(xpStats.progressToNext * 100)}%` }}
-            />
-          </div>
-        </section>
-      )}
+  const data: DashboardHomeData = {
+    today,
+    firstName,
+    initials: initials(cleanName),
+    needsName,
+    checkoutStatus: sp.checkout,
+    deviceBlocked: !deviceCheck.ok && deviceCheck.reason === "permanently_blocked",
+    deviceMismatch: !deviceCheck.ok && deviceCheck.reason === "device_mismatch",
 
-      {/* ── Stat tiles ───────────────────────────────────────────────── */}
-      {xpStats && (
-        <section className="m-stats">
-          <div className="m-stat-tile">
-            <div className="m-stat-value">{xpStats.runs}</div>
-            <div className="m-stat-label">Runs</div>
-          </div>
-          <div className="m-stat-tile">
-            <div className="m-stat-value">{xpStats.currentStreak}wk</div>
-            <div className="m-stat-label">Streak</div>
-          </div>
-          <div className="m-stat-tile">
-            <div className="m-stat-value">{myRank ? `#${myRank}` : "—"}</div>
-            <div className="m-stat-label">Rank</div>
-          </div>
-        </section>
-      )}
+    nextSession,
+    streakWeeks: xpStats?.currentStreak ?? 0,
+    week: { letters: WEEK_LETTERS, attended: weekAttended, count: weekCount },
+    crew,
 
+    stats: {
+      runs: xpStats?.runs ?? 0,
+      xp: xpStats?.xp ?? 0,
+      streakWeeks: xpStats?.currentStreak ?? 0,
+      rank: myRank,
+    },
+    progress: xpStats
+      ? {
+          tierName: xpStats.tier.name,
+          nextTierName: xpStats.nextTier?.name ?? null,
+          xpToGo: xpStats.nextTier ? xpStats.nextTier.minXp - xpStats.xp : 0,
+          pct: Math.round(xpStats.progressToNext * 100),
+        }
+      : null,
 
+    upcoming: upcomingAll.slice(0, 4).map((u) => ({
+      id: `${u.date}-${u.slot.id}`,
+      title: u.slot.activity.ro,
+      meta: `${u.dayLabel} · ${u.date.slice(5).replace("-", ".")} · ${u.slot.time}`,
+      world: u.slot.world.ro,
+    })),
 
-      {/* The on-screen member card was removed — the Apple/Google Wallet card
-          is the canonical version. Device-mismatch UX is still surfaced. */}
-      {!deviceCheck.ok && deviceCheck.reason === "permanently_blocked" && (
-        <section className="m-card-section">
-          <div className="m-banner-err">
-            Acest dispozitiv a fost blocat permanent pentru contul tău. Nu te
-            mai poți loga niciodată de pe el. Contactează suport.
-          </div>
-        </section>
-      )}
-      {!deviceCheck.ok && deviceCheck.reason === "device_mismatch" && (
-        <DeviceSwitchModal />
-      )}
+    wallet: { appleEnabled: appleWalletEnabled(), googleEnabled: googleWalletEnabled() },
+    showStrava: !userRow?.stravaAthleteId,
+    strava: {
+      athleteName: userRow?.stravaAthleteName ?? null,
+      lastSync: userRow?.stravaLastSyncAt ? userRow.stravaLastSyncAt.toISOString() : null,
+    },
+    activeSub: activeSub
+      ? {
+          planName: activeSub.planName,
+          status: activeSub.status,
+          periodEnd: activeSub.currentPeriodEnd
+            ? activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")
+            : null,
+        }
+      : null,
+    creditsTotal: credits.total,
+    recentPayments: recentPayments.map((p) => ({
+      id: p.id,
+      label: p.planName || p.mode || "Plată",
+      amount: `${(p.amount / 100).toFixed(2)} ${p.currency.toUpperCase()}`,
+    })),
+    attendance: attendanceHistory.map((r) => ({
+      slotId: r.slotId,
+      slotDate: r.slotDate,
+      validatedAt: r.validatedAt.toISOString(),
+      method: r.method,
+    })),
+  };
 
-      {/* ── Wallet ─ shown only when at least one provider is wired up ── */}
-      {(appleWalletEnabled() || googleWalletEnabled()) && (
-        <section className="m-card-section" id="wallet">
-          <div className="m-section-eyebrow">WALLET DIGITAL</div>
-          <WalletButtons
-            appleEnabled={appleWalletEnabled()}
-            googleEnabled={googleWalletEnabled()}
-          />
-        </section>
-      )}
-
-      {/* ── Strava — hidden once user is connected (sync runs in background) */}
-      {!stravaConnected && (
-        <section className="m-card-section" id="strava">
-          <div className="m-section-eyebrow">STRAVA · ALERGĂRILE TALE</div>
-          <StravaCard
-            connected={stravaConnected}
-            athleteName={stravaAthleteName}
-            lastSync={stravaLastSync ? stravaLastSync.toISOString() : null}
-          />
-        </section>
-      )}
-
-      {/* ── Pass + payments ──────────────────────────────────────────── */}
-      <section className="m-card-section" id="pass">
-        <div className="m-section-eyebrow">PASS · PLĂȚI</div>
-        <div className="m-grid-2">
-          <div className="m-mini-card">
-            <div className="m-mini-label">PASS</div>
-            {activeSub ? (
-              <>
-                <div className="m-mini-value">
-                  {activeSub.planName || "Pass activ"}
-                </div>
-                <div className="m-mini-meta">
-                  {activeSub.status.toUpperCase()}
-                  {activeSub.currentPeriodEnd &&
-                    ` · până la ${activeSub.currentPeriodEnd.toLocaleDateString("ro-RO")}`}
-                </div>
-                <div className="m-mini-meta">
-                  {credits.total > 0
-                    ? `${credits.total} ${credits.total === 1 ? "clasă rămasă" : "clase rămase"}`
-                    : "Nicio clasă cumpărată."}
-                </div>
-                <ManageSubscription />
-              </>
-            ) : (
-              <>
-                <div className="m-mini-value">Fără Pass activ</div>
-                <a className="m-mini-link" href="/#pricing">
-                  Vezi Pass-ul →
-                </a>
-              </>
-            )}
-          </div>
-
-          <div className="m-mini-card">
-            <div className="m-mini-label">Plăți recente</div>
-            {recentPayments.length === 0 ? (
-              <div className="m-mini-meta">Încă nicio plată.</div>
-            ) : (
-              <ul className="m-mini-list">
-                {recentPayments.map((p) => (
-                  <li key={p.id} className="m-mini-row">
-                    <span>{p.planName || p.mode}</span>
-                    <span className="m-mini-amount">
-                      {(p.amount / 100).toFixed(2)} {p.currency.toUpperCase()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {upcoming.length > 0 && (
-        <section className="m-card-section">
-          <div className="m-section-eyebrow">PROGRAM SĂPTĂMÂNAL</div>
-          <ul className="m-upcoming-list">
-            {upcoming.map((u) => (
-              <li key={`${u.date}-${u.slot.id}`} className="m-upcoming-row">
-                <div className="m-upcoming-main">
-                  <div className="m-upcoming-title">{u.slot.activity.ro}</div>
-                  <div className="m-upcoming-meta">
-                    {u.dayLabel} · {u.date.slice(5).replace("-", ".")} · {u.slot.time}
-                  </div>
-                </div>
-                <span className="m-upcoming-world">{u.slot.world.ro}</span>
-              </li>
-            ))}
-          </ul>
-          <a className="m-mini-link" href="/#prog">
-            Programul complet →
-          </a>
-        </section>
-      )}
-
-      {/* ── Istoric prezențe ─────────────────────────────────────────── */}
-      <section className="m-card-section" id="history">
-        <div className="m-section-eyebrow">ISTORIC PREZENȚE</div>
-        <AttendanceList
-          rows={attendanceHistory.map((r) => ({
-            slotId: r.slotId,
-            slotDate: r.slotDate,
-            validatedAt: r.validatedAt.toISOString(),
-            method: r.method,
-          }))}
-        />
-      </section>
-
-      {/* ── Tab bar ──────────────────────────────────────────────────── */}
-      <nav className="m-tabbar">
-        <a href="#xp" className="m-tab m-tab-active">
-          <span className="m-tab-label">HOME</span>
-        </a>
-        <a href="/dashboard/board" className="m-tab">
-          <span className="m-tab-label">BOARD</span>
-        </a>
-      </nav>
-    </>
-  );
+  return <DashboardHomeView data={data} />;
 }

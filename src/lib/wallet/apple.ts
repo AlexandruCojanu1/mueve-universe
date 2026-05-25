@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import { PKPass } from "passkit-generator";
+import { cleanDisplayName } from "@/lib/display-name";
 
 export type AppleWalletConfig = {
   passTypeIdentifier: string;
@@ -142,10 +143,12 @@ export async function buildApplePass(user: AppleUserData): Promise<Buffer> {
 
   // Member name displayed right above the QR (auxiliary slot is the row
   // closest to the barcode in storeCard layout).
+  // Never print a relay/email address on the card — if we don't have a real
+  // name yet (Apple Hide-My-Email), show a neutral label instead.
   pass.auxiliaryFields.push({
     key: "name",
     label: "MEMBER",
-    value: user.name ?? user.email.split("@")[0],
+    value: cleanDisplayName(user.name) ?? "MEMBRU MUEVE",
     textAlignment: "PKTextAlignmentCenter",
   });
 

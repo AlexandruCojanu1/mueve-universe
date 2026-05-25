@@ -1,4 +1,5 @@
 import { SignJWT, importPKCS8 } from "jose";
+import { cleanDisplayName } from "@/lib/display-name";
 
 export function googleWalletEnabled(): boolean {
   return !!(
@@ -62,7 +63,8 @@ export async function buildGoogleSaveUrl(user: GoogleUserData): Promise<string> 
     subheader: {
       defaultValue: {
         language: "ro",
-        value: user.name ?? user.email.split("@")[0],
+        // Never print a relay/email address — neutral label until a real name exists.
+        value: cleanDisplayName(user.name) ?? "MEMBRU MUEVE",
       },
     },
     barcode: {

@@ -1554,21 +1554,25 @@ body.is-day .ham span {
     margin-bottom: 0.5rem;
   }
   .price-cards-grid .price-amount {
-    gap: 0.15rem;
+    gap: 0.1rem;
     align-items: baseline;
     justify-content: center;
     min-height: 2rem;
     margin-top: 0;
     flex-wrap: nowrap;
+    max-width: 100%;
+    /* The widest value is the drop-in "34.90"; with the currency beside it
+       this row must never spill past the card edge. */
+    white-space: nowrap;
   }
   .price-cards-grid .price-value {
-    font-size: clamp(1.3rem, 6.2vw, 1.9rem);
+    font-size: clamp(1.05rem, 5vw, 1.7rem);
     line-height: 1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
   }
   .price-cards-grid .price-currency {
-    font-size: 0.55rem;
-    letter-spacing: 0.08em;
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
   }
   .price-cards-grid .price-original {
     font-size: 0.65rem;
@@ -2032,14 +2036,18 @@ body.is-night .foot-legal a:hover { color: #fff; }
     box-shadow: none !important;
   }
   .pt-act {
-    font-size: 0.55rem !important;
-    line-height: 1.1;
+    font-size: 0.5rem !important;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
     text-align: center;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    word-break: break-word;
+    /* Keep long single words (CALISTHENICS) intact on one line. */
+    word-break: keep-all;
+    overflow-wrap: normal;
+    hyphens: none;
   }
   .pt-time { font-size: 0.55rem !important; }
   .pt-world {
@@ -2102,13 +2110,20 @@ body.is-night .foot-legal a:hover { color: #fff; }
     min-height: 5.5rem;
   }
   .pt-act {
-    font-size: 0.46rem;
-    letter-spacing: 0.01em;
-    line-height: 1.2;
-    -webkit-line-clamp: 3;
+    /* !important to win over the max-width:768px rule above (which also uses it),
+       so the long single word CALISTHENICS fits one line with margin to spare. */
+    font-size: 0.44rem !important;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    -webkit-line-clamp: 2;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    /* Long single words (e.g. CALISTHENICS) must stay on one line — break
+       only at spaces, never inside a word. */
+    word-break: keep-all;
+    overflow-wrap: normal;
+    hyphens: none;
   }
   .pt-time {
     font-size: 0.52rem;
@@ -4432,6 +4447,320 @@ body.is-night .foot-legal a:hover { color: #fff; }
   margin-top: 0.25rem;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Pace-style dashboard — Next Session hero, weekly ring, This Month, note.
+   Mueve palette (yellow on navy); per-session accent from the world colour.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* ── NEXT SESSION hero ─────────────────────────────────────────────── */
+.m-next {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 1.5rem 1.4rem 1.4rem;
+  margin-bottom: 1.1rem;
+  background: linear-gradient(165deg, #16264d 0%, #0b1730 60%, #0a1226 100%);
+  border: 1px solid var(--m-line);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  --c: #f5f50a;
+}
+.m-next[data-c="yellow"] { --c: #f5f50a; }
+.m-next[data-c="blue"]   { --c: #3b82f6; }
+.m-next[data-c="purple"] { --c: #a855f7; }
+.m-next[data-c="orange"] { --c: #f59e0b; }
+.m-next-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.m-next[data-c="yellow"] .m-next-glow { background: radial-gradient(85% 65% at 92% 0%, rgba(245, 245, 10, 0.20), transparent 60%); }
+.m-next[data-c="blue"]   .m-next-glow { background: radial-gradient(85% 65% at 92% 0%, rgba(59, 130, 246, 0.30), transparent 60%); }
+.m-next[data-c="purple"] .m-next-glow { background: radial-gradient(85% 65% at 92% 0%, rgba(168, 85, 247, 0.30), transparent 60%); }
+.m-next[data-c="orange"] .m-next-glow { background: radial-gradient(85% 65% at 92% 0%, rgba(245, 158, 11, 0.28), transparent 60%); }
+.m-next-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.m-next-eyebrow {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  color: var(--m-text-dim);
+}
+.m-streak-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--m-yellow);
+  background: rgba(245, 245, 10, 0.08);
+  border: 1px solid rgba(245, 245, 10, 0.3);
+  padding: 0.32rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.m-next-when {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0.9rem 0 0.25rem;
+}
+.m-next-day,
+.m-next-time {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 900;
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.m-next-time { color: var(--m-yellow); }
+.m-next-act {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  color: var(--m-text-dim);
+  margin-bottom: 1rem;
+}
+.m-next-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.1rem;
+}
+.m-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+}
+.m-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 8px var(--c);
+}
+.m-next-crew {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+.m-ava-stack { display: flex; }
+.m-ava {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--m-bg);
+  background: linear-gradient(135deg, var(--m-yellow), var(--m-yellow-2));
+  border: 2px solid #10203f;
+  margin-left: -9px;
+}
+.m-ava:first-child { margin-left: 0; }
+.m-next-crew-label {
+  font-size: 0.78rem;
+  color: var(--m-text-dim);
+}
+.m-next-cta {
+  position: relative;
+  z-index: 1;
+  display: block;
+  text-align: center;
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--m-bg);
+  background: linear-gradient(135deg, var(--m-yellow), var(--m-yellow-2));
+  padding: 1rem;
+  border-radius: 14px;
+  text-decoration: none;
+  box-shadow: 0 12px 30px rgba(245, 245, 10, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.m-next-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(245, 245, 10, 0.28);
+}
+.m-next-empty .m-next-act { margin: 0.6rem 0 1rem; color: var(--m-text); }
+
+/* ── WEEKLY attendance ring ────────────────────────────────────────── */
+.m-week {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--m-card);
+  border: 1px solid var(--m-line-soft);
+  border-radius: 18px;
+  padding: 1.1rem 1.2rem;
+  margin-bottom: 1.6rem;
+}
+.m-week-ring {
+  position: relative;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: conic-gradient(var(--m-yellow) var(--ring, 0%), rgba(255, 255, 255, 0.08) 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.m-week-ring::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: var(--m-card);
+}
+.m-week-flame { position: relative; z-index: 1; font-size: 1.2rem; }
+.m-week-body { flex: 1; min-width: 0; }
+.m-week-title {
+  font-size: 0.9rem;
+  color: var(--m-text-dim);
+  margin-bottom: 0.6rem;
+}
+.m-week-title strong { color: var(--m-text); font-weight: 700; }
+.m-week-days { display: flex; gap: 0.4rem; }
+.m-week-day {
+  flex: 1;
+  aspect-ratio: 1;
+  max-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--m-text-min);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.m-week-day.on {
+  color: var(--m-bg);
+  background: var(--m-yellow);
+  border-color: var(--m-yellow);
+  box-shadow: 0 0 12px rgba(245, 245, 10, 0.4);
+}
+
+/* ── THIS MONTH stats ──────────────────────────────────────────────── */
+.m-month { margin-bottom: 1.6rem; }
+.m-month-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+.m-month-title {
+  font-family: var(--ff-heading, var(--ff));
+  font-weight: 800;
+  font-size: 1.15rem;
+  margin: 0;
+}
+.m-month-link {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: var(--m-yellow);
+  text-decoration: none;
+}
+.m-stats-2 {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 0;
+}
+.m-stats-2 .m-stat-tile {
+  text-align: left;
+  padding: 1.1rem 1.1rem 1rem;
+  background: var(--m-card);
+  border: 1px solid var(--m-line-soft);
+  border-radius: 16px;
+}
+.m-stats-2 .m-stat-value {
+  font-size: 2rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.m-stat-accent { color: var(--m-yellow); }
+.m-stat-rank { color: #7cf5b8; }
+.m-stat-unit {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--m-text-min);
+  letter-spacing: 0.04em;
+}
+
+/* ── PROGRESS note (coach-note style) ──────────────────────────────── */
+.m-note {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  background: var(--m-card);
+  border: 1px solid var(--m-line-soft);
+  border-left: 3px solid var(--m-yellow);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  margin-bottom: 1.8rem;
+}
+.m-note-icon { font-size: 1.4rem; line-height: 1; flex-shrink: 0; margin-top: 0.1rem; }
+.m-note-body { flex: 1; min-width: 0; }
+.m-note-eyebrow {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  color: var(--m-yellow);
+  margin-bottom: 0.4rem;
+}
+.m-note-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--m-text-dim);
+  margin: 0 0 0.7rem;
+}
+.m-note-text strong { color: var(--m-text); font-weight: 700; }
+.m-note-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.m-note-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--m-yellow), var(--m-orange));
+  box-shadow: 0 0 12px rgba(245, 245, 10, 0.5);
+  transition: width 0.4s ease;
+}
+
 /* ── Section eyebrows ──────────────────────────────────────────────── */
 .m-section-eyebrow {
   font-family: 'Space Mono', ui-monospace, monospace;
@@ -5263,3 +5592,21 @@ body.is-night .foot-legal a:hover { color: #fff; }
 }
 .dsm-cancel:hover, .dsm-confirm:hover { transform: translateY(-1px); }
 .dsm-cancel:disabled, .dsm-confirm:disabled { opacity: 0.5; cursor: wait; }
+.dsm-input {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+.dsm-input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 400; }
+.dsm-input:focus {
+  outline: 2px solid #ffe85c;
+  outline-offset: 1px;
+  border-color: transparent;
+}
