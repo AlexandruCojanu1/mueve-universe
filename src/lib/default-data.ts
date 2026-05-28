@@ -22,10 +22,9 @@ export function defaultDataForType(type: SectionType): Record<string, unknown> {
       return {
         logo: "MUEVE UNIVERSE",
         links: [
-          { label: { ro: "Lumi", en: "Worlds" }, href: "#worlds" },
           { label: { ro: "Calendar", en: "Calendar" }, href: "#prog" },
-          { label: { ro: "Misiune", en: "Mission" }, href: "#mission" },
-          { label: { ro: "Intră", en: "Join" }, href: "#join" },
+          { label: { ro: "Abonamente", en: "Memberships" }, href: "#pricing" },
+          { label: { ro: "Misiuni", en: "Missions" }, href: "#mission" },
         ],
       } satisfies NavData as unknown as Record<string, unknown>;
     case "hero":

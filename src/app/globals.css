@@ -1114,6 +1114,18 @@ body.is-day .ham span {
   color: var(--sun);
   opacity: 0.95;
 }
+/* Compact subscription cards: center all content on desktop + mobile. The wide
+   featured hero card keeps its left-aligned 2-column layout. */
+.price-card-compact:not(.price-card-featured) {
+  text-align: center;
+  align-items: center;
+}
+.price-card-compact:not(.price-card-featured) .price-card-main {
+  align-items: center;
+}
+.price-card-compact:not(.price-card-featured) .price-amount {
+  justify-content: center;
+}
 .pricing-cta-hint {
   text-align: center;
   margin-top: 1.6rem;

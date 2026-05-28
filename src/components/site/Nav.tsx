@@ -8,7 +8,7 @@ export default function Nav({ data }: { data: NavData }) {
   const { lang, toggle } = useLang();
   const [mob, setMob] = useState(false);
 
-  const merchLabel = lang === "ro" ? "Merch" : "Merch";
+  const merchLabel = lang === "ro" ? "Magazin" : "Store";
   const soonLabel = lang === "ro" ? "În curând" : "Soon";
 
   return (

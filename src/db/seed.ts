@@ -69,10 +69,9 @@ async function main() {
   const nav: NavData = {
     logo: "MUEVE UNIVERSE",
     links: [
-      { label: bi("Lumi", "Worlds"), href: "#worlds" },
       { label: bi("Calendar", "Calendar"), href: "#prog" },
-      { label: bi("Misiune", "Mission"), href: "#mission" },
-      { label: bi("Intră", "Join"), href: "#join" },
+      { label: bi("Abonamente", "Memberships"), href: "#pricing" },
+      { label: bi("Misiuni", "Missions"), href: "#mission" },
     ],
   };
   await add("nav", nav);
