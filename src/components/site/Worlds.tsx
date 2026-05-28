@@ -1,7 +1,8 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { pick } from "@/lib/bilingual";
-import type { WorldsData, WorldCard } from "@/lib/content-types";
+import type { WorldsData, WorldCard, Lang } from "@/lib/content-types";
 
 function Symbol({ k }: { k: WorldCard["key"] }) {
   const common = {
@@ -50,8 +51,81 @@ function Symbol({ k }: { k: WorldCard["key"] }) {
   }
 }
 
+function WorldsModal({
+  data,
+  lang,
+  onClose,
+}: {
+  data: WorldsData;
+  lang: Lang;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div className="pricing-modal-backdrop" onClick={onClose}>
+      <div
+        className="worlds-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${pick(data.heading.lead, lang)} ${pick(data.heading.accent, lang)}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="pricing-modal-close"
+          onClick={onClose}
+          aria-label="Închide"
+        >
+          ×
+        </button>
+        <div className="worlds-modal-head">
+          <h2>
+            {pick(data.heading.lead, lang)}{" "}
+            <span>{pick(data.heading.accent, lang)}</span>
+          </h2>
+          <p>{pick(data.intro, lang)}</p>
+        </div>
+        <div className="worlds-modal-list">
+          {data.worlds.map((w) => (
+            <div key={w.id} className={`worlds-modal-item wr-${w.key}`}>
+              <div className="w-symbol worlds-modal-symbol">
+                <Symbol k={w.key} />
+              </div>
+              <div className="worlds-modal-info">
+                <div className="w-label">{pick(w.label, lang)}</div>
+                <h3>{pick(w.title, lang)}</h3>
+                <p>{pick(w.body, lang)}</p>
+                {w.tags.length > 0 && (
+                  <div className="w-tags">
+                    {w.tags.map((t, i) => (
+                      <span key={i}>{pick(t, lang)}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Worlds({ data }: { data: WorldsData }) {
   const { lang } = useLang();
+  const [open, setOpen] = useState(false);
+
   return (
     <div id="worlds">
       <div className="worlds-intro">
@@ -61,27 +135,14 @@ export default function Worlds({ data }: { data: WorldsData }) {
           <span>{pick(data.heading.accent, lang)}</span>
         </h2>
         <p>{pick(data.intro, lang)}</p>
+        <button className="worlds-cta" onClick={() => setOpen(true)}>
+          {lang === "ro" ? "Explorează lumile" : "Explore the worlds"}
+          <span aria-hidden> →</span>
+        </button>
       </div>
-      {data.worlds.map((w) => (
-        <div key={w.id} className={`world-row wr-${w.key}`}>
-          <div className="world-color">
-            <div className="big-icon">{w.bigIcon}</div>
-            <div className="w-symbol">
-              <Symbol k={w.key} />
-            </div>
-          </div>
-          <div className="world-info">
-            <div className="w-label">{pick(w.label, lang)}</div>
-            <h3>{pick(w.title, lang)}</h3>
-            <p>{pick(w.body, lang)}</p>
-            <div className="w-tags">
-              {w.tags.map((t, i) => (
-                <span key={i}>{pick(t, lang)}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
+      {open && (
+        <WorldsModal data={data} lang={lang} onClose={() => setOpen(false)} />
+      )}
     </div>
   );
 }
