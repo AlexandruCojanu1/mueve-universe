@@ -713,6 +713,24 @@ body.is-day .ham span {
   padding: 2.4rem 2rem 2rem;
   box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6), 0 0 80px rgba(245, 245, 10, 0.06) inset;
   animation: pm-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 245, 10, 0.35) transparent;
+}
+/* Always-visible scrollbar so it's obvious the worlds list scrolls (macOS hides
+   overlay scrollbars until you scroll, which made the modal look truncated). */
+.worlds-modal::-webkit-scrollbar {
+  width: 8px;
+}
+.worlds-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+.worlds-modal::-webkit-scrollbar-thumb {
+  background: rgba(245, 245, 10, 0.35);
+  border-radius: 4px;
+}
+.worlds-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 245, 10, 0.55);
 }
 .worlds-modal-head h2 {
   font-size: clamp(1.6rem, 4vw, 2.4rem);
