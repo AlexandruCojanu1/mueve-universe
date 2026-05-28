@@ -1,56 +1,25 @@
 import { db } from "@/db";
-import { attendances, users, classSlots, stravaActivities } from "@/db/schema";
+import { attendances, users, classSlots, xpEvents } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
+import {
+  XP_PER_ATTENDANCE,
+  CHALLENGE_BONUS,
+  computeStreak,
+  weekKeyFromDate,
+  currentWeekKey,
+  levelForXp,
+  xpForLevel,
+  tierForXp,
+  nextTierFor,
+  awardChallenge,
+  reconcileMilestones,
+  type Tier,
+} from "@/lib/xp";
 
-// XP rules — keep simple, derive everything from attendances so we don't need a
-// background job or a denormalized counter. Numbers picked to match the
-// artifact ranges (You at ~8 runs / 890 XP / lvl 2).
-const XP_PER_ATTENDANCE = 80;
-const STREAK_BONUS_PER_WEEK = 30;
-const CHALLENGE_BONUS = 50;
+// This module is the read layer over the XP ledger (xp_events). All totals come
+// from SUM(awarded_xp); streaks/challenges are derived live for display.
 
-// Tiers — see artifact: Pavement Newbie → Steady Strider → Road Warrior →
-// Mile Crusher → Pack Leader → Legend.
-export type Tier = { level: number; name: string; minXp: number };
-
-const TIERS: Tier[] = [
-  { level: 1, name: "Pavement Newbie", minXp: 0 },
-  { level: 2, name: "Steady Strider", minXp: 400 },
-  { level: 3, name: "Road Warrior", minXp: 900 },
-  { level: 4, name: "Mile Crusher", minXp: 1600 },
-  { level: 5, name: "Pack Leader", minXp: 2400 },
-  { level: 6, name: "Legend", minXp: 3500 },
-];
-
-export function tierFor(xp: number): Tier {
-  let current = TIERS[0];
-  for (const t of TIERS) {
-    if (xp >= t.minXp) current = t;
-  }
-  return current;
-}
-
-export function nextTierFor(xp: number): Tier | null {
-  for (const t of TIERS) {
-    if (t.minXp > xp) return t;
-  }
-  return null;
-}
-
-// ISO week number — used for streaks and "this week" challenges.
-function isoWeekKey(d: Date): string {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const day = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - day);
-  const year = date.getUTCFullYear();
-  const jan1 = new Date(Date.UTC(year, 0, 1));
-  const week = Math.ceil(((+date - +jan1) / 86_400_000 + 1) / 7);
-  return `${year}-W${String(week).padStart(2, "0")}`;
-}
-
-function weekKeyFromAttendance(slotDate: string): string {
-  return isoWeekKey(new Date(`${slotDate}T00:00:00Z`));
-}
+export type { Tier };
 
 export type UserStats = {
   userId: string;
@@ -59,55 +28,143 @@ export type UserStats = {
   longestStreak: number;
   weeksWithAttendance: string[];
   xp: number;
+  level: number;
+  xpIntoLevel: number; // xp earned within the current level
+  xpForNextLevel: number; // xp span of the current level (level → level+1)
   tier: Tier;
   nextTier: Tier | null;
-  progressToNext: number; // 0..1
+  progressToNext: number; // 0..1 toward next tier
   challengesCompleted: number;
 };
 
-function computeStreak(weekKeys: string[]): { current: number; longest: number } {
-  if (weekKeys.length === 0) return { current: 0, longest: 0 };
-  const set = new Set(weekKeys);
-  // Convert each key to a numeric ordinal (year * 53 + week)
-  const ord = (k: string) => {
-    const [y, w] = k.split("-W");
-    return parseInt(y, 10) * 53 + parseInt(w, 10);
+export async function getUserStats(userId: string): Promise<UserStats> {
+  const rows = await db
+    .select({ slotDate: attendances.slotDate })
+    .from(attendances)
+    .where(eq(attendances.userId, userId));
+  const weekKeys = rows.map((r) => weekKeyFromDate(r.slotDate));
+  const { current, longest } = computeStreak(weekKeys);
+  const runs = rows.length;
+
+  const [totalRow] = await db
+    .select({ total: sql<number>`coalesce(sum(${xpEvents.awardedXp}), 0)::int` })
+    .from(xpEvents)
+    .where(eq(xpEvents.userId, userId));
+  const xp = totalRow?.total ?? 0;
+
+  const [challengeRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(xpEvents)
+    .where(sql`${xpEvents.userId} = ${userId} and ${xpEvents.source} = 'challenge'`);
+
+  const level = levelForXp(xp);
+  const levelFloor = xpForLevel(level);
+  const levelCeil = xpForLevel(level + 1);
+  const tier = tierForXp(xp);
+  const next = nextTierFor(xp);
+  const progressToNext = next
+    ? Math.min(1, Math.max(0, (xp - tier.minXp) / (next.minXp - tier.minXp)))
+    : 1;
+
+  return {
+    userId,
+    runs,
+    currentStreak: current,
+    longestStreak: longest,
+    weeksWithAttendance: [...new Set(weekKeys)].sort(),
+    xp,
+    level,
+    xpIntoLevel: xp - levelFloor,
+    xpForNextLevel: levelCeil - levelFloor,
+    tier,
+    nextTier: next,
+    progressToNext,
+    challengesCompleted: challengeRow?.n ?? 0,
   };
-  const sorted = [...set].sort();
-  let longest = 1;
-  let run = 1;
-  for (let i = 1; i < sorted.length; i++) {
-    if (ord(sorted[i]) === ord(sorted[i - 1]) + 1) {
-      run++;
-      longest = Math.max(longest, run);
-    } else {
-      run = 1;
-    }
-  }
-  const currentWeek = isoWeekKey(new Date());
-  const lastWeek = isoWeekKey(new Date(Date.now() - 7 * 86_400_000));
-  // Current streak counts only if the user attended this week or last week.
-  if (!set.has(currentWeek) && !set.has(lastWeek)) {
-    return { current: 0, longest };
-  }
-  let current = 0;
-  let cursor = set.has(currentWeek) ? currentWeek : lastWeek;
-  while (set.has(cursor)) {
-    current++;
-    const [y, w] = cursor.split("-W");
-    let wNum = parseInt(w, 10) - 1;
-    let yNum = parseInt(y, 10);
-    if (wNum < 1) {
-      yNum--;
-      wNum = 52;
-    }
-    cursor = `${yNum}-W${String(wNum).padStart(2, "0")}`;
-  }
-  return { current, longest: Math.max(longest, current) };
 }
 
-// Weekly challenges. Source-of-truth definition — derived results live in
-// computeChallenges() so we never store state for unfinished challenges.
+export type LeaderboardEntry = {
+  rank: number;
+  userId: string;
+  name: string;
+  email: string;
+  runs: number;
+  streak: number;
+  xp: number;
+  level: number;
+  tier: Tier;
+  isMe: boolean;
+};
+
+export async function getLeaderboard(
+  meId: string,
+  limit = 10,
+): Promise<LeaderboardEntry[]> {
+  // One aggregate over the ledger: total XP + attendance count per user.
+  const runsByUser = db
+    .select({
+      userId: attendances.userId,
+      runs: sql<number>`count(*)::int`.as("runs"),
+    })
+    .from(attendances)
+    .groupBy(attendances.userId)
+    .as("runs_by_user");
+
+  const aggregate = await db
+    .select({
+      userId: xpEvents.userId,
+      name: users.name,
+      email: users.email,
+      xp: sql<number>`coalesce(sum(${xpEvents.awardedXp}), 0)::int`,
+      runs: sql<number>`coalesce(${runsByUser.runs}, 0)::int`,
+    })
+    .from(xpEvents)
+    .innerJoin(users, eq(users.id, xpEvents.userId))
+    .leftJoin(runsByUser, eq(runsByUser.userId, xpEvents.userId))
+    .groupBy(xpEvents.userId, users.name, users.email, runsByUser.runs);
+
+  const sortedByXp = [...aggregate].sort((a, b) => b.xp - a.xp || b.runs - a.runs);
+  const topCount = Math.max(limit, 6);
+  const candidates = sortedByXp.slice(0, topCount);
+  if (!candidates.some((u) => u.userId === meId)) {
+    const mine = aggregate.find((u) => u.userId === meId);
+    if (mine) candidates.push(mine);
+  }
+
+  // Streak is the only per-user value not in the aggregate — pull weeks for the
+  // (small) candidate set only.
+  const enriched: LeaderboardEntry[] = await Promise.all(
+    candidates.map(async (u) => {
+      const ws = await db
+        .select({ slotDate: attendances.slotDate })
+        .from(attendances)
+        .where(eq(attendances.userId, u.userId));
+      const { current } = computeStreak(ws.map((r) => weekKeyFromDate(r.slotDate)));
+      return {
+        rank: 0,
+        userId: u.userId,
+        name: u.name || (u.userId === meId ? "Tu" : "Membru"),
+        email: u.email,
+        runs: u.runs,
+        streak: current,
+        xp: u.xp,
+        level: levelForXp(u.xp),
+        tier: tierForXp(u.xp),
+        isMe: u.userId === meId,
+      };
+    }),
+  );
+  enriched.sort((a, b) => b.xp - a.xp || b.runs - a.runs);
+  enriched.forEach((e, i) => {
+    e.rank = i + 1;
+  });
+  return enriched.slice(
+    0,
+    limit + (enriched.some((e) => e.isMe && e.rank <= limit) ? 0 : 1),
+  );
+}
+
+// ── Weekly challenges ──
 export type Challenge = {
   id: string;
   title: string;
@@ -125,125 +182,11 @@ export type Activity = {
   xp: number;
 };
 
-async function getStravaXp(userId: string): Promise<number> {
-  const [u] = await db
-    .select({ xp: users.stravaXp })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  return u?.xp ?? 0;
-}
-
-export async function getUserStats(userId: string): Promise<UserStats> {
-  const rows = await db
-    .select({ slotDate: attendances.slotDate })
-    .from(attendances)
-    .where(eq(attendances.userId, userId));
-  const weekKeys = rows.map((r) => weekKeyFromAttendance(r.slotDate));
-  const { current, longest } = computeStreak(weekKeys);
-  const runs = rows.length;
-  const stravaXp = await getStravaXp(userId);
-  // Challenges completed count is computed elsewhere; pass 0 here and let the
-  // caller layer in challenge bonuses if needed.
-  const xp =
-    runs * XP_PER_ATTENDANCE +
-    Math.max(0, current - 1) * STREAK_BONUS_PER_WEEK +
-    stravaXp;
-  const tier = tierFor(xp);
-  const next = nextTierFor(xp);
-  const progressToNext = next
-    ? Math.min(1, Math.max(0, (xp - tier.minXp) / (next.minXp - tier.minXp)))
-    : 1;
-  return {
-    userId,
-    runs,
-    currentStreak: current,
-    longestStreak: longest,
-    weeksWithAttendance: [...new Set(weekKeys)].sort(),
-    xp,
-    tier,
-    nextTier: next,
-    progressToNext,
-    challengesCompleted: 0,
-  };
-}
-
-export type LeaderboardEntry = {
-  rank: number;
-  userId: string;
-  name: string;
-  email: string;
-  runs: number;
-  streak: number;
-  xp: number;
-  tier: Tier;
-  isMe: boolean;
-};
-
-export async function getLeaderboard(
-  meId: string,
-  limit = 10,
-): Promise<LeaderboardEntry[]> {
-  // One query: per-user attendance count + cached strava xp.
-  const aggregate = await db
-    .select({
-      userId: attendances.userId,
-      name: users.name,
-      email: users.email,
-      runs: sql<number>`count(*)::int`,
-      stravaXp: users.stravaXp,
-    })
-    .from(attendances)
-    .innerJoin(users, eq(users.id, attendances.userId))
-    .groupBy(attendances.userId, users.name, users.email, users.stravaXp);
-
-  // Fill in streak by re-pulling weeks per top candidate. To keep this cheap,
-  // sort first by raw runs (proxy for XP), keep top (limit + 1) including me,
-  // then compute precise streak/xp for those.
-  const sortedByRuns = [...aggregate].sort((a, b) => b.runs - a.runs);
-  const topCount = Math.max(limit, 6);
-  const candidates = sortedByRuns.slice(0, topCount);
-  const meInTop = candidates.some((u) => u.userId === meId);
-  if (!meInTop) {
-    const mine = aggregate.find((u) => u.userId === meId);
-    if (mine) candidates.push(mine);
-  }
-
-  const enriched: LeaderboardEntry[] = await Promise.all(
-    candidates.map(async (u) => {
-      const ws = await db
-        .select({ slotDate: attendances.slotDate })
-        .from(attendances)
-        .where(eq(attendances.userId, u.userId));
-      const weeks = ws.map((r) => weekKeyFromAttendance(r.slotDate));
-      const { current } = computeStreak(weeks);
-      const xp =
-        u.runs * XP_PER_ATTENDANCE +
-        Math.max(0, current - 1) * STREAK_BONUS_PER_WEEK +
-        (u.stravaXp || 0);
-      return {
-        rank: 0,
-        userId: u.userId,
-        name: u.name || (u.userId === meId ? "Tu" : "Membru"),
-        email: u.email,
-        runs: u.runs,
-        streak: current,
-        xp,
-        tier: tierFor(xp),
-        isMe: u.userId === meId,
-      };
-    }),
-  );
-  enriched.sort((a, b) => b.xp - a.xp || b.runs - a.runs);
-  enriched.forEach((e, i) => {
-    e.rank = i + 1;
-  });
-  return enriched.slice(0, limit + (enriched.some((e) => e.isMe && e.rank <= limit) ? 0 : 1));
-}
-
-export async function getChallenges(userId: string): Promise<Challenge[]> {
-  const thisWeek = isoWeekKey(new Date());
-  // Pull this week's attendances + slot info.
+async function computeChallenges(userId: string): Promise<{
+  challenges: Challenge[];
+  weekKey: string;
+}> {
+  const weekKey = currentWeekKey();
   const rows = await db
     .select({
       slotDate: attendances.slotDate,
@@ -254,14 +197,13 @@ export async function getChallenges(userId: string): Promise<Challenge[]> {
     .leftJoin(classSlots, eq(classSlots.id, attendances.slotId))
     .where(eq(attendances.userId, userId));
 
-  const thisWeekRows = rows.filter(
-    (r) => weekKeyFromAttendance(r.slotDate) === thisWeek,
-  );
+  const thisWeekRows = rows.filter((r) => weekKeyFromDate(r.slotDate) === weekKey);
   const uniqueWorldsThisWeek = new Set(
     thisWeekRows.map((r) => (r.classType || "").toLowerCase()).filter(Boolean),
   );
 
-  const stats = await getUserStats(userId);
+  const weekKeys = rows.map((r) => weekKeyFromDate(r.slotDate));
+  const { current } = computeStreak(weekKeys);
 
   const challenges: Challenge[] = [
     {
@@ -276,72 +218,85 @@ export async function getChallenges(userId: string): Promise<Challenge[]> {
       id: "streak-3",
       title: "3 săptămâni la rând",
       description: "Menține un streak de 3 săptămâni.",
-      reward: CHALLENGE_BONUS,
-      progress: Math.min(1, stats.currentStreak / 3),
-      done: stats.currentStreak >= 3,
+      reward: 100,
+      progress: Math.min(1, current / 3),
+      done: current >= 3,
     },
     {
       id: "variety",
       title: "Două lumi diferite",
-      description: "Atinge două activități diferite (yoga, calisthenics, run...) săptămâna asta.",
+      description:
+        "Atinge două activități diferite (yoga, calisthenics, run...) săptămâna asta.",
       reward: CHALLENGE_BONUS,
       progress: Math.min(1, uniqueWorldsThisWeek.size / 2),
       done: uniqueWorldsThisWeek.size >= 2,
     },
   ];
+  return { challenges, weekKey };
+}
+
+export async function getChallenges(userId: string): Promise<Challenge[]> {
+  const { challenges } = await computeChallenges(userId);
   return challenges;
 }
 
-export async function getActivity(userId: string, limit = 8): Promise<Activity[]> {
-  const att = await db
-    .select({
-      slotId: attendances.slotId,
-      slotDate: attendances.slotDate,
-      validatedAt: attendances.validatedAt,
-      classType: classSlots.classType,
-    })
-    .from(attendances)
-    .leftJoin(classSlots, eq(classSlots.id, attendances.slotId))
-    .where(eq(attendances.userId, userId))
-    .orderBy(desc(attendances.validatedAt))
-    .limit(limit);
-
-  const strava = await db
-    .select({
-      id: stravaActivities.id,
-      name: stravaActivities.name,
-      sportType: stravaActivities.sportType,
-      distanceMeters: stravaActivities.distanceMeters,
-      startedAt: stravaActivities.startedAt,
-      xpAwarded: stravaActivities.xpAwarded,
-    })
-    .from(stravaActivities)
-    .where(eq(stravaActivities.userId, userId))
-    .orderBy(desc(stravaActivities.startedAt))
-    .limit(limit);
-
-  const items: Activity[] = [
-    ...att.map((r) => ({
-      id: `att-${r.slotId}-${r.slotDate}`,
-      at: r.validatedAt,
-      kind: "attendance" as const,
-      label: r.classType ? r.classType : "Sesiune",
-      xp: XP_PER_ATTENDANCE,
-    })),
-    ...strava.map((s) => {
-      const km = (s.distanceMeters / 1000).toFixed(1);
-      return {
-        id: `strava-${s.id}`,
-        at: s.startedAt,
-        kind: "attendance" as const,
-        label: `Strava · ${s.sportType.toLowerCase()} ${km}km`,
-        xp: s.xpAwarded,
-      };
-    }),
-  ];
-
-  items.sort((a, b) => b.at.getTime() - a.at.getTime());
-  return items.slice(0, limit);
+// Awards XP for any challenge/milestone the user has completed but not yet been
+// granted. Idempotent — call on the user's own dashboard load + after a check-in
+// or Strava sync. Never call this for *other* users (it writes).
+export async function reconcileUserXp(userId: string): Promise<number> {
+  let total = 0;
+  try {
+    const { challenges, weekKey } = await computeChallenges(userId);
+    for (const c of challenges) {
+      if (c.done) total += await awardChallenge(userId, c.id, c.reward, weekKey);
+    }
+    total += await reconcileMilestones(userId);
+  } catch {
+    // best-effort; never block a page render on XP reconciliation
+  }
+  return total;
 }
 
-export { XP_PER_ATTENDANCE, STREAK_BONUS_PER_WEEK, CHALLENGE_BONUS };
+export async function getActivity(userId: string, limit = 8): Promise<Activity[]> {
+  const events = await db
+    .select({
+      id: xpEvents.id,
+      source: xpEvents.source,
+      refId: xpEvents.refId,
+      awardedXp: xpEvents.awardedXp,
+      occurredAt: xpEvents.occurredAt,
+      metadata: xpEvents.metadata,
+    })
+    .from(xpEvents)
+    .where(eq(xpEvents.userId, userId))
+    .orderBy(desc(xpEvents.occurredAt))
+    .limit(limit);
+
+  const labelFor = (
+    source: string,
+    metadata: Record<string, unknown> | null,
+  ): { kind: Activity["kind"]; label: string } => {
+    switch (source) {
+      case "attendance":
+        return { kind: "attendance", label: "Sesiune în club" };
+      case "strava": {
+        const sport = (metadata?.sportType as string)?.toLowerCase() || "activitate";
+        const km = metadata?.km ? `${metadata.km}km` : "";
+        return { kind: "attendance", label: `Strava · ${sport} ${km}`.trim() };
+      }
+      case "challenge":
+        return { kind: "challenge", label: "Challenge completat" };
+      case "milestone":
+        return { kind: "streak", label: "Milestone 🏅" };
+      default:
+        return { kind: "attendance", label: "XP" };
+    }
+  };
+
+  return events.map((e) => {
+    const { kind, label } = labelFor(e.source, e.metadata);
+    return { id: e.id, at: e.occurredAt, kind, label, xp: e.awardedXp };
+  });
+}
+
+export { XP_PER_ATTENDANCE, CHALLENGE_BONUS };

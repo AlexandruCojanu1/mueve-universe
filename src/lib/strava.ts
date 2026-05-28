@@ -1,6 +1,16 @@
 import { db } from "@/db";
 import { users, stravaActivities } from "@/db/schema";
 import { and, desc, eq, gte } from "drizzle-orm";
+import {
+  STRAVA_XP_PER_KM_CARDIO,
+  STRAVA_XP_PER_KM_RIDE,
+  STRAVA_MIN_KM,
+  STRAVA_DAILY_CAP_XP,
+  STRAVA_WEEKLY_CAP_XP,
+  isoWeekKey,
+  awardStravaActivity,
+  awardStravaFirstSync,
+} from "@/lib/xp";
 
 const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID || "";
 const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET || "";
@@ -97,24 +107,23 @@ type StravaActivity = {
   start_date: string;
 };
 
-// XP rules: 10 XP per km for running/walking, with a generous daily cap so
-// people can't farm by re-syncing. Cap matches the in-club +80 XP per
-// attendance ballpark.
-const XP_PER_KM = 10;
-const DAILY_CAP_XP = 120;
-
-function xpForActivity(a: StravaActivity): number {
+// XP rules live in src/lib/xp.ts (single source of truth). Trust-weighted by
+// activity type, with daily + weekly caps so re-syncing or a phone can't
+// out-earn someone who actually shows up in the club. The cap is enforced on
+// the BASE km-XP; the streak multiplier is then applied at award time.
+function baseXpForActivity(a: StravaActivity): number {
   const kind = (a.sport_type || a.type || "").toLowerCase();
+  const km = a.distance / 1000;
+  if (km < STRAVA_MIN_KM) return 0;
   const isCardio =
     kind.includes("run") ||
     kind.includes("walk") ||
     kind.includes("hike") ||
-    kind === "ride" ||
     kind.includes("treadmill");
-  if (!isCardio) return 0;
-  const km = a.distance / 1000;
-  if (km < 0.5) return 0;
-  return Math.round(km * XP_PER_KM);
+  const isRide = kind === "ride" || kind.includes("ride") || kind.includes("bike");
+  if (isCardio) return Math.round(km * STRAVA_XP_PER_KM_CARDIO);
+  if (isRide) return Math.round(km * STRAVA_XP_PER_KM_RIDE);
+  return 0;
 }
 
 export async function syncRecentActivities(userId: string): Promise<{
@@ -140,16 +149,19 @@ export async function syncRecentActivities(userId: string): Promise<{
   let xpAwarded = 0;
   let skipped = 0;
 
-  // Track per-day XP to enforce the daily cap. Re-fetch what's already in DB
-  // so the cap survives across syncs.
+  // Track per-day and per-week base XP to enforce caps. Re-fetch what's already
+  // in DB so the caps survive across syncs.
   const dayBucket = new Map<string, number>();
+  const weekBucket = new Map<string, number>();
 
   const startedOldest = activities
     .map((a) => new Date(a.start_date))
     .sort((a, b) => a.getTime() - b.getTime())[0];
   if (startedOldest) {
+    // Back up a full week so weekly capping sees the whole ISO week.
     const horizon = new Date(startedOldest);
     horizon.setUTCHours(0, 0, 0, 0);
+    horizon.setUTCDate(horizon.getUTCDate() - 7);
     const prior = await db
       .select({
         startedAt: stravaActivities.startedAt,
@@ -164,11 +176,21 @@ export async function syncRecentActivities(userId: string): Promise<{
       );
     for (const p of prior) {
       const day = p.startedAt.toISOString().slice(0, 10);
+      const week = isoWeekKey(p.startedAt);
       dayBucket.set(day, (dayBucket.get(day) || 0) + p.xp);
+      weekBucket.set(week, (weekBucket.get(week) || 0) + p.xp);
     }
   }
 
-  for (const a of activities) {
+  // Award the first-sync milestone once (idempotent).
+  await awardStravaFirstSync(userId).catch(() => {});
+
+  // Process oldest → newest so caps fill in chronological order.
+  const ordered = [...activities].sort(
+    (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
+  );
+
+  for (const a of ordered) {
     const id = String(a.id);
     const existing = await db
       .select({ id: stravaActivities.id })
@@ -179,12 +201,15 @@ export async function syncRecentActivities(userId: string): Promise<{
       skipped++;
       continue;
     }
-    const rawXp = xpForActivity(a);
+    const rawXp = baseXpForActivity(a);
     const startedAt = new Date(a.start_date);
     const day = startedAt.toISOString().slice(0, 10);
-    const alreadyToday = dayBucket.get(day) || 0;
-    const cappedXp = Math.max(0, Math.min(rawXp, DAILY_CAP_XP - alreadyToday));
-    dayBucket.set(day, alreadyToday + cappedXp);
+    const week = isoWeekKey(startedAt);
+    const dayRoom = STRAVA_DAILY_CAP_XP - (dayBucket.get(day) || 0);
+    const weekRoom = STRAVA_WEEKLY_CAP_XP - (weekBucket.get(week) || 0);
+    const cappedBase = Math.max(0, Math.min(rawXp, dayRoom, weekRoom));
+    dayBucket.set(day, (dayBucket.get(day) || 0) + cappedBase);
+    weekBucket.set(week, (weekBucket.get(week) || 0) + cappedBase);
 
     await db.insert(stravaActivities).values({
       id,
@@ -194,29 +219,29 @@ export async function syncRecentActivities(userId: string): Promise<{
       distanceMeters: Math.round(a.distance),
       movingTimeSec: a.moving_time,
       startedAt,
-      xpAwarded: cappedXp,
+      xpAwarded: cappedBase, // base (pre-multiplier) for history + cap accounting
+    });
+    // Bank the streak-multiplied award in the ledger (idempotent on activity id).
+    const awarded = await awardStravaActivity({
+      userId,
+      activityId: id,
+      xp: cappedBase,
+      occurredAt: startedAt,
+      metadata: {
+        sportType: a.sport_type || a.type || "",
+        km: +(a.distance / 1000).toFixed(1),
+      },
     });
     imported++;
-    xpAwarded += cappedXp;
+    xpAwarded += awarded;
   }
 
   await db
     .update(users)
-    .set({
-      stravaLastSyncAt: new Date(),
-      stravaXp: await sumStravaXp(userId),
-    })
+    .set({ stravaLastSyncAt: new Date() })
     .where(eq(users.id, userId));
 
   return { imported, xpAwarded, skipped };
-}
-
-async function sumStravaXp(userId: string): Promise<number> {
-  const rows = await db
-    .select({ xp: stravaActivities.xpAwarded })
-    .from(stravaActivities)
-    .where(eq(stravaActivities.userId, userId));
-  return rows.reduce((s, r) => s + r.xp, 0);
 }
 
 export async function listRecentStravaForUser(userId: string, limit = 5) {
@@ -241,5 +266,3 @@ export async function disconnectStrava(userId: string): Promise<void> {
     .where(eq(users.id, userId));
   // Keep the imported activity rows + XP — disconnecting shouldn't wipe history.
 }
-
-export { XP_PER_KM, DAILY_CAP_XP };

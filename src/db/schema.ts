@@ -352,6 +352,44 @@ export const stravaActivities = pgTable(
   (t) => [index("strava_activities_user_idx").on(t.userId, t.startedAt)],
 );
 
+// ── XP ledger ──
+// Single source of truth for all XP. Total XP for a user = SUM(awarded_xp).
+// Append-only + idempotent (unique idempotency_key) so XP is monotonic and
+// can never be double-awarded. See src/lib/xp.ts for the engine.
+export const xpSource = pgEnum("xp_source", [
+  "attendance",
+  "strava",
+  "challenge",
+  "milestone",
+  "adjustment",
+]);
+
+export const xpEvents = pgTable(
+  "xp_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    source: xpSource("source").notNull(),
+    refId: text("ref_id"), // slotId / strava activity id / challenge id…
+    baseXp: integer("base_xp").notNull().default(0),
+    multiplierBp: integer("multiplier_bp").notNull().default(100), // 100 = ×1.0
+    awardedXp: integer("awarded_xp").notNull(),
+    // Award-once guarantee. e.g. "attendance:{user}:{slot}:{date}",
+    // "strava:{activityId}", "challenge:{week}:{id}:{user}",
+    // "milestone:sessions-50:{user}".
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    occurredAt: timestamp("occurred_at").notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("xp_events_user_idx").on(t.userId),
+    index("xp_events_user_source_idx").on(t.userId, t.source),
+  ],
+);
+
 // ── Types ──
 export type Theme = typeof theme.$inferSelect;
 export type Section = typeof sections.$inferSelect;
@@ -375,3 +413,6 @@ export type NewClassSlot = typeof classSlots.$inferInsert;
 export type Reservation = typeof reservations.$inferSelect;
 export type NewReservation = typeof reservations.$inferInsert;
 export type ReservationStatus = (typeof reservationStatus.enumValues)[number];
+export type XpEvent = typeof xpEvents.$inferSelect;
+export type NewXpEvent = typeof xpEvents.$inferInsert;
+export type XpSource = (typeof xpSource.enumValues)[number];

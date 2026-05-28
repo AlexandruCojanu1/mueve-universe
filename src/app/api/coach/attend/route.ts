@@ -7,6 +7,7 @@ import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
 import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
 import { generateQrToken } from "@/lib/qr-token";
 import { verifyDynamicToken } from "@/lib/qr-dynamic";
+import { awardAttendance } from "@/lib/xp";
 
 // Anti-fraud: a member can only attend max 2 times in a rolling 2h window.
 // Stops one person from passing their QR around to two friends at the door.
@@ -238,6 +239,9 @@ export async function POST(req: Request) {
         ? `credit:${consumedCreditId}`
         : null,
   });
+
+  // Award XP via the ledger (idempotent, streak-multiplied, reconciles milestones).
+  await awardAttendance(user.id, slotId, slotDate);
 
   // Rotate the QR token + stamp lastScanAt so a previously screenshotted code
   // becomes worthless to whomever else holds it. The legitimate user gets a

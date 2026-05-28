@@ -5,6 +5,7 @@ import { attendances, classSlots, users } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { consumeOldestCredit, getCreditBalance } from "@/lib/credits";
 import { XP_PER_ATTENDANCE } from "@/lib/leaderboard";
+import { awardAttendance } from "@/lib/xp";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,9 @@ export default async function CheckinPage({
         .update(users)
         .set({ lastScanAt: new Date() })
         .where(eq(users.id, userId));
+      // Award XP via the ledger (idempotent; computes the streak multiplier and
+      // reconciles session/streak milestones).
+      await awardAttendance(userId, slotId, slotDate);
       status = "logged";
     }
   }

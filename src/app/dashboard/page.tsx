@@ -10,7 +10,7 @@ import { getProgramData } from "@/lib/coach-schedule";
 import { upcomingSessions } from "@/lib/user-stats";
 import { isoDate } from "@/lib/coach-schedule";
 import { readDeviceBinding } from "@/lib/device-binding";
-import { getLeaderboard, getUserStats } from "@/lib/leaderboard";
+import { getLeaderboard, getUserStats, reconcileUserXp } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +77,9 @@ export default async function DashboardHome({
         .limit(40),
     [],
   );
+  // Award any completed challenges / crossed milestones before reading stats so
+  // they're reflected in this same render. Idempotent; own user only.
+  await safe("reconcileUserXp", () => reconcileUserXp(userId), 0);
   const xpStats = await safe("getUserStats", () => getUserStats(userId), null);
   const board = await safe("getLeaderboard", () => getLeaderboard(userId, 10), []);
 
@@ -167,6 +170,7 @@ export default async function DashboardHome({
     progress: xpStats
       ? {
           tierName: xpStats.tier.name,
+          level: xpStats.level,
           nextTierName: xpStats.nextTier?.name ?? null,
           xpToGo: xpStats.nextTier ? xpStats.nextTier.minXp - xpStats.xp : 0,
           pct: Math.round(xpStats.progressToNext * 100),

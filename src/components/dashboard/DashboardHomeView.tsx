@@ -33,6 +33,7 @@ export type DashboardHomeData = {
   stats: { runs: number; xp: number; streakWeeks: number; rank: number | null };
   progress: {
     tierName: string;
+    level: number;
     nextTierName: string | null;
     xpToGo: number;
     pct: number;
@@ -180,7 +181,8 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
           <div className="m-note-body">
             <div className="m-note-eyebrow">PROGRESUL TĂU</div>
             <p className="m-note-text">
-              Ești <strong>{d.progress.tierName}</strong>.{" "}
+              Ești <strong>{d.progress.tierName}</strong> · Nivel{" "}
+              <strong>{d.progress.level}</strong>.{" "}
               {d.progress.nextTierName
                 ? `Încă ${d.progress.xpToGo} XP până la ${d.progress.nextTierName} — apropie-te cu fiecare sesiune.`
                 : "Ai atins nivelul maxim. Legendă."}
