@@ -38,7 +38,7 @@ function ProfileIcon() {
 
 const TABS: { key: DashTab; href: string; label: string; icon: React.ReactNode }[] = [
   { key: "home", href: "/dashboard", label: "ACASĂ", icon: <HomeIcon /> },
-  { key: "program", href: "/dashboard/program", label: "PROGRAM", icon: <CalendarIcon /> },
+  { key: "program", href: "/dashboard/program", label: "CALENDAR", icon: <CalendarIcon /> },
   { key: "community", href: "/dashboard/board", label: "COMUNITATE", icon: <CommunityIcon /> },
   { key: "profile", href: "/dashboard/profile", label: "PROFIL", icon: <ProfileIcon /> },
 ];

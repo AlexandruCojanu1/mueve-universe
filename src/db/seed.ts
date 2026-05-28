@@ -70,7 +70,7 @@ async function main() {
     logo: "MUEVE UNIVERSE",
     links: [
       { label: bi("Lumi", "Worlds"), href: "#worlds" },
-      { label: bi("Program", "Program"), href: "#prog" },
+      { label: bi("Calendar", "Calendar"), href: "#prog" },
       { label: bi("Misiune", "Mission"), href: "#mission" },
       { label: bi("Intră", "Join"), href: "#join" },
     ],

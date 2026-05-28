@@ -7,7 +7,7 @@ export default function AdminSlotsPage() {
     <>
       <header className="dash-page-head">
         <div className="dash-page-eyebrow">Administrare</div>
-        <h1 className="dash-page-title">Program clase</h1>
+        <h1 className="dash-page-title">Calendar clase</h1>
         <p className="dash-page-sub">
           Atribuie ore fiecărui coach. Coach-ul vede în zona lui doar slot-urile
           asignate lui.

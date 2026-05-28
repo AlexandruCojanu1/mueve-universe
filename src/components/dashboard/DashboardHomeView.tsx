@@ -108,10 +108,10 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
         </section>
       ) : (
         <section className="m-next m-next-empty">
-          <div className="m-next-eyebrow">PROGRAM</div>
+          <div className="m-next-eyebrow">CALENDAR</div>
           <div className="m-next-act">Niciun antrenament programat momentan.</div>
           <a className="m-next-cta" href="/dashboard/program">
-            Vezi programul
+            Vezi calendarul
           </a>
         </section>
       )}

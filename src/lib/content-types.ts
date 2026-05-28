@@ -157,7 +157,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   nav: "Navigation",
   hero: "Hero",
   worlds: "Worlds (4-card group)",
-  program: "Weekly Program Grid",
+  program: "Weekly Calendar Grid",
   pricing: "Pricing / Plans",
   mission: "Mission",
   stats: "Stats / Metrics",

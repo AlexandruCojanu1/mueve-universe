@@ -13,7 +13,7 @@ export default async function ProgramPage() {
     <>
       <header className="m-hello">
         <div>
-          <div className="m-hello-eyebrow">PROGRAM</div>
+          <div className="m-hello-eyebrow">CALENDAR</div>
           <h1 className="m-hello-name">Rezervă o sesiune</h1>
         </div>
       </header>
@@ -21,7 +21,7 @@ export default async function ProgramPage() {
       <ReserveBoard />
 
       <a className="m-fullprog-link" href="/#prog">
-        Vezi programul complet pe site →
+        Vezi calendarul complet pe site →
       </a>
 
       <DashboardTabBar active="program" />

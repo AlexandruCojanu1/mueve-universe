@@ -190,7 +190,7 @@ export default function SlotsManager() {
       <div className="dash-card" style={{ marginTop: "1.5rem" }}>
         <div className="dash-card-head">
           <div>
-            <div className="dash-card-eyebrow">Program</div>
+            <div className="dash-card-eyebrow">Calendar</div>
             <div className="dash-card-title">Toate slot-urile</div>
           </div>
         </div>

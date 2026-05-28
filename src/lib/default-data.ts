@@ -23,7 +23,7 @@ export function defaultDataForType(type: SectionType): Record<string, unknown> {
         logo: "MUEVE UNIVERSE",
         links: [
           { label: { ro: "Lumi", en: "Worlds" }, href: "#worlds" },
-          { label: { ro: "Program", en: "Program" }, href: "#prog" },
+          { label: { ro: "Calendar", en: "Calendar" }, href: "#prog" },
           { label: { ro: "Misiune", en: "Mission" }, href: "#mission" },
           { label: { ro: "Intră", en: "Join" }, href: "#join" },
         ],
