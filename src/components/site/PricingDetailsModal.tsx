@@ -41,6 +41,7 @@ export default function PricingDetailsModal({ plan, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={name}
+        data-lenis-prevent
         onClick={(e) => e.stopPropagation()}
       >
         <button className="pricing-modal-close" onClick={onClose} aria-label="Închide">

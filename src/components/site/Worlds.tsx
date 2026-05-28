@@ -80,6 +80,7 @@ function WorldsModal({
         role="dialog"
         aria-modal="true"
         aria-label={`${pick(data.heading.lead, lang)} ${pick(data.heading.accent, lang)}`}
+        data-lenis-prevent
         onClick={(e) => e.stopPropagation()}
       >
         <button
