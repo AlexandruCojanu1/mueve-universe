@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { sections, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireStripe, stripeEnabled } from "@/lib/stripe";
 import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
@@ -30,10 +30,6 @@ export async function POST(req: Request) {
 
   const body = (await req.json().catch(() => ({}))) as {
     priceId?: string;
-    planId?: string;
-    planName?: string;
-    mode?: "subscription" | "payment";
-    classCount?: number;
   };
 
   const priceId = body.priceId;
@@ -41,7 +37,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing priceId." }, { status: 400 });
   }
 
-  const mode = body.mode === "payment" ? "payment" : "subscription";
+  // Resolve the plan SERVER-SIDE from the pricing section, keyed by price ID.
+  // The client never dictates mode / credit count / plan metadata.
+  const [pricingRow] = await db
+    .select({ data: sections.data })
+    .from(sections)
+    .where(eq(sections.type, "pricing"))
+    .limit(1);
+  type PlanLite = {
+    id: string;
+    name?: { ro?: string };
+    stripePriceId?: string;
+    checkoutMode?: "subscription" | "payment";
+    classCount?: number;
+  };
+  const tiers = (pricingRow?.data as { tiers?: { plans?: PlanLite[] }[] })?.tiers ?? [];
+  const plan = tiers
+    .flatMap((t) => t.plans ?? [])
+    .find((pl) => pl.stripePriceId === priceId);
+  if (!plan) {
+    return NextResponse.json({ error: "Plan necunoscut." }, { status: 400 });
+  }
+
+  const mode = plan.checkoutMode === "payment" ? "payment" : "subscription";
 
   if (mode === "payment") {
     const ok = await hasActivePass(session.user.id);
@@ -70,8 +88,8 @@ export async function POST(req: Request) {
   }
 
   const classCount =
-    mode === "payment" && Number.isFinite(body.classCount) && (body.classCount ?? 0) > 0
-      ? Math.floor(body.classCount!)
+    mode === "payment" && Number.isFinite(plan.classCount) && (plan.classCount ?? 0) > 0
+      ? Math.floor(plan.classCount!)
       : 1;
 
   const stripe = requireStripe();
@@ -110,13 +128,13 @@ export async function POST(req: Request) {
     cancel_url: `${origin}/#pricing`,
     metadata: {
       userId: user.id,
-      planId: body.planId ?? "",
-      planName: body.planName ?? "",
+      planId: plan.id,
+      planName: plan.name?.ro ?? plan.id,
       classCount: mode === "payment" ? String(classCount) : "",
     },
     subscription_data:
       mode === "subscription"
-        ? { metadata: { userId: user.id, planId: body.planId ?? "", planName: body.planName ?? "" } }
+        ? { metadata: { userId: user.id, planId: plan.id, planName: plan.name?.ro ?? plan.id } }
         : undefined,
     allow_promotion_codes: true,
     billing_address_collection: "auto",

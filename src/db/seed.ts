@@ -174,6 +174,7 @@ async function main() {
         plans: [
           {
             id: "plan-class",
+            classCount: 1,
             name: bi("MUEVE CLASS", "MUEVE CLASS"),
             checkoutMode: "payment" as const,
             price: "34.90",
@@ -191,8 +192,9 @@ async function main() {
           },
           {
             id: "plan-orbit",
+            classCount: 4,
             name: bi("ORBIT", "ORBIT"),
-            checkoutMode: "subscription" as const,
+            checkoutMode: "payment" as const,
             price: "119",
             originalPrice: "169.90",
             currency: bi("lei", "RON"),
@@ -208,8 +210,9 @@ async function main() {
           },
           {
             id: "plan-galaxy",
+            classCount: 8,
             name: bi("GALAXY", "GALAXY"),
-            checkoutMode: "subscription" as const,
+            checkoutMode: "payment" as const,
             price: "219",
             originalPrice: "279.90",
             currency: bi("lei", "RON"),
@@ -227,8 +230,9 @@ async function main() {
           },
           {
             id: "plan-universe",
+            classCount: 17,
             name: bi("UNIVERSE", "UNIVERSE"),
-            checkoutMode: "subscription" as const,
+            checkoutMode: "payment" as const,
             price: "599",
             currency: bi("lei", "RON"),
             period: bi("/ lună", "/ month"),

@@ -72,6 +72,8 @@ export type PricingPlan = {
   ctaHref?: string;
   stripePriceId?: string;
   checkoutMode?: "subscription" | "payment";
+  /** Credits granted on a one-time pack purchase. Resolved server-side. */
+  classCount?: number;
 };
 
 export type PricingTier = {
