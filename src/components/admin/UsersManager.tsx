@@ -11,6 +11,15 @@ type Row = {
   hasPartnerProfile: boolean;
 };
 
+type Detail = {
+  user: { createdAt: string; walletAddedAt: string | null; stravaAthleteName: string | null };
+  xp: number;
+  attendances: number;
+  activeSub: { planName: string | null; status: string; currentPeriodEnd: string | null } | null;
+  creditsAvailable: number;
+  upcomingReservations: { slotDate: string; status: string }[];
+};
+
 const ROLES = ["user", "coach", "admin", "partner"] as const;
 const ROLE_LABEL: Record<(typeof ROLES)[number], string> = {
   user: "Utilizator",
@@ -26,6 +35,8 @@ export default function UsersManager() {
   const [filterRole, setFilterRole] = useState<"" | Row["role"]>("");
   const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [details, setDetails] = useState<Record<string, Detail | "loading">>({});
 
   async function load() {
     setLoading(true);
@@ -75,6 +86,44 @@ export default function UsersManager() {
       return;
     }
     setNote(`Device legat resetat pentru ${u.email}.`);
+  }
+
+  async function toggleDetail(u: Row) {
+    if (openId === u.id) {
+      setOpenId(null);
+      return;
+    }
+    setOpenId(u.id);
+    if (!details[u.id]) {
+      setDetails((d) => ({ ...d, [u.id]: "loading" }));
+      const res = await fetch(`/api/admin/users/detail?id=${u.id}`);
+      const data = await res.json().catch(() => null);
+      if (res.ok && data) {
+        setDetails((d) => ({ ...d, [u.id]: data as Detail }));
+      } else {
+        setErr(data?.error || "Eroare la încărcarea detaliilor.");
+        setOpenId(null);
+      }
+    }
+  }
+
+  async function removeUser(u: Row) {
+    if (
+      !confirm(
+        `Ștergi DEFINITIV contul ${u.email}?\nDispar prezențele, XP-ul, abonamentele și rezervările lui.`,
+      )
+    )
+      return;
+    setErr(null);
+    setNote(null);
+    const res = await fetch(`/api/admin/users?id=${u.id}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr(data.error || "Eroare la ștergere.");
+      return;
+    }
+    setNote(`Contul ${u.email} a fost șters.`);
+    load();
   }
 
   async function changeRole(u: Row, newRole: Row["role"]) {
@@ -177,67 +226,147 @@ export default function UsersManager() {
                   <th>Verificat</th>
                   <th>Creat</th>
                   <th>Notă</th>
-                  <th>Device</th>
+                  <th>Acțiuni</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((u) => (
-                  <tr key={u.id}>
-                    <td style={{ fontFamily: "monospace", fontSize: 13 }}>
-                      {u.email}
-                    </td>
-                    <td style={{ opacity: 0.8 }}>{u.name || "—"}</td>
-                    <td>
-                      <select
-                        className="field-input"
-                        value={u.role}
-                        onChange={(e) =>
-                          changeRole(u, e.target.value as Row["role"])
-                        }
-                        style={{ minWidth: 130 }}
-                      >
-                        {ROLES.map((r) => (
-                          <option key={r} value={r}>
-                            {ROLE_LABEL[r]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td style={{ opacity: 0.75 }}>
-                      {u.emailVerified ? "✓" : "—"}
-                    </td>
-                    <td style={{ opacity: 0.65 }}>
-                      {new Date(u.createdAt).toLocaleDateString("ro-RO")}
-                    </td>
-                    <td style={{ fontSize: 12, opacity: 0.65 }}>
-                      {u.role === "partner" && !u.hasPartnerProfile && (
-                        <span style={{ color: "#ffb86b" }}>
-                          profil partener lipsă
-                        </span>
-                      )}
-                      {u.role !== "partner" && u.hasPartnerProfile && (
-                        <span style={{ color: "#ffb86b" }}>
-                          are profil partener
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="dash-btn dash-btn-light"
-                        style={{ fontSize: 11, padding: "0.3rem 0.6rem" }}
-                        onClick={() => resetDevice(u)}
-                      >
-                        Reset device
-                      </button>
-                    </td>
-                  </tr>
+                  <UserRow
+                    key={u.id}
+                    u={u}
+                    open={openId === u.id}
+                    detail={details[u.id]}
+                    onToggle={() => toggleDetail(u)}
+                    onChangeRole={(role) => changeRole(u, role)}
+                    onResetDevice={() => resetDevice(u)}
+                    onDelete={() => removeUser(u)}
+                  />
                 ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+function UserRow({
+  u,
+  open,
+  detail,
+  onToggle,
+  onChangeRole,
+  onResetDevice,
+  onDelete,
+}: {
+  u: Row;
+  open: boolean;
+  detail: Detail | "loading" | undefined;
+  onToggle: () => void;
+  onChangeRole: (role: Row["role"]) => void;
+  onResetDevice: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <>
+      <tr>
+        <td style={{ fontFamily: "monospace", fontSize: 13 }}>{u.email}</td>
+        <td style={{ opacity: 0.8 }}>{u.name || "—"}</td>
+        <td>
+          <select
+            className="field-input"
+            value={u.role}
+            onChange={(e) => onChangeRole(e.target.value as Row["role"])}
+            style={{ minWidth: 130 }}
+          >
+            {ROLES.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABEL[r]}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td style={{ opacity: 0.75 }}>{u.emailVerified ? "✓" : "—"}</td>
+        <td style={{ opacity: 0.65 }}>
+          {new Date(u.createdAt).toLocaleDateString("ro-RO")}
+        </td>
+        <td style={{ fontSize: 12, opacity: 0.65 }}>
+          {u.role === "partner" && !u.hasPartnerProfile && (
+            <span style={{ color: "#ffb86b" }}>profil partener lipsă</span>
+          )}
+          {u.role !== "partner" && u.hasPartnerProfile && (
+            <span style={{ color: "#ffb86b" }}>are profil partener</span>
+          )}
+        </td>
+        <td style={{ whiteSpace: "nowrap" }}>
+          <button
+            type="button"
+            className="dash-btn dash-btn-light"
+            style={{ fontSize: 11, padding: "0.3rem 0.6rem", marginRight: 6 }}
+            onClick={onToggle}
+          >
+            {open ? "Închide" : "Detalii"}
+          </button>
+          <button
+            type="button"
+            className="dash-btn dash-btn-light"
+            style={{ fontSize: 11, padding: "0.3rem 0.6rem", marginRight: 6 }}
+            onClick={onResetDevice}
+          >
+            Reset device
+          </button>
+          <button
+            type="button"
+            className="dash-btn dash-btn-light"
+            style={{ fontSize: 11, padding: "0.3rem 0.6rem", color: "#ff8080" }}
+            onClick={onDelete}
+          >
+            Șterge
+          </button>
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={7} style={{ background: "rgba(255,255,255,0.03)", fontSize: 13 }}>
+            {!detail || detail === "loading" ? (
+              <span style={{ opacity: 0.6 }}>Se încarcă detaliile…</span>
+            ) : (
+              <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", padding: "0.5rem 0" }}>
+                <span>
+                  <strong>{detail.xp}</strong> XP
+                </span>
+                <span>
+                  <strong>{detail.attendances}</strong> prezențe
+                </span>
+                <span>
+                  Pass:{" "}
+                  {detail.activeSub
+                    ? `${detail.activeSub.planName || "activ"} · ${detail.activeSub.status.toUpperCase()}${
+                        detail.activeSub.currentPeriodEnd
+                          ? ` · până la ${new Date(detail.activeSub.currentPeriodEnd).toLocaleDateString("ro-RO")}`
+                          : ""
+                      }`
+                    : "—"}
+                </span>
+                <span>
+                  Credite disponibile: <strong>{detail.creditsAvailable}</strong>
+                </span>
+                <span>
+                  Wallet: {detail.user.walletAddedAt ? "✓ adăugat" : "—"}
+                </span>
+                <span>Strava: {detail.user.stravaAthleteName || "—"}</span>
+                <span>
+                  Rezervări viitoare:{" "}
+                  {detail.upcomingReservations.length === 0
+                    ? "—"
+                    : detail.upcomingReservations.map((r) => r.slotDate).join(", ")}
+                </span>
+              </div>
+            )}
+          </td>
+        </tr>
+      )}
     </>
   );
 }

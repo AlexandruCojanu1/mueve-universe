@@ -16,6 +16,13 @@ type Slot = {
 
 type Coach = { id: string; name: string | null; email: string; role: string };
 
+type Reservation = {
+  slotDate: string;
+  createdAt: string;
+  userEmail: string;
+  userName: string | null;
+};
+
 const DAYS = ["Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă", "Duminică"];
 
 export default function SlotsManager() {
@@ -32,6 +39,20 @@ export default function SlotsManager() {
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [openSlot, setOpenSlot] = useState<string | null>(null);
+  const [resv, setResv] = useState<Record<string, Reservation[] | "loading">>({});
+
+  async function toggleReservations(slotId: string) {
+    if (openSlot === slotId) {
+      setOpenSlot(null);
+      return;
+    }
+    setOpenSlot(slotId);
+    setResv((m) => ({ ...m, [slotId]: "loading" }));
+    const res = await fetch(`/api/admin/reservations?slotId=${slotId}`);
+    const data = await res.json().catch(() => ({}));
+    setResv((m) => ({ ...m, [slotId]: res.ok ? data.reservations || [] : [] }));
+  }
 
   async function load() {
     setLoading(true);
@@ -215,57 +236,110 @@ export default function SlotsManager() {
               </thead>
               <tbody>
                 {slots.map((s) => (
-                  <tr key={s.id}>
-                    <td>{DAYS[s.dayOfWeek - 1]}</td>
-                    <td>{s.startTime.slice(0, 5)}</td>
-                    <td>{s.durationMin}&apos;</td>
-                    <td>
-                      <input
-                        className="field-input"
-                        defaultValue={s.classType}
-                        onBlur={(e) =>
-                          e.target.value !== s.classType &&
-                          patch(s.id, { classType: e.target.value })
-                        }
-                      />
-                    </td>
-                    <td style={{ opacity: 0.8 }}>{s.coachName || s.coachEmail}</td>
-                    <td style={{ width: 80 }}>
-                      <input
-                        className="field-input"
-                        type="number"
-                        min={1}
-                        defaultValue={s.capacity}
-                        onBlur={(e) =>
-                          Number(e.target.value) !== s.capacity &&
-                          patch(s.id, { capacity: Number(e.target.value) })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={s.active}
-                        onChange={(e) =>
-                          patch(s.id, { active: e.target.checked })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <button
-                        className="dash-btn dash-btn-light"
-                        onClick={() => remove(s.id)}
-                      >
-                        Șterge
-                      </button>
-                    </td>
-                  </tr>
+                  <SlotRows
+                    key={s.id}
+                    s={s}
+                    open={openSlot === s.id}
+                    resv={resv[s.id]}
+                    onToggle={() => toggleReservations(s.id)}
+                    onPatch={(body) => patch(s.id, body)}
+                    onRemove={() => remove(s.id)}
+                  />
                 ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+function SlotRows({
+  s,
+  open,
+  resv,
+  onToggle,
+  onPatch,
+  onRemove,
+}: {
+  s: Slot;
+  open: boolean;
+  resv: Reservation[] | "loading" | undefined;
+  onToggle: () => void;
+  onPatch: (body: Partial<Slot>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <>
+      <tr>
+        <td>{DAYS[s.dayOfWeek - 1]}</td>
+        <td>{s.startTime.slice(0, 5)}</td>
+        <td>{s.durationMin}&apos;</td>
+        <td>
+          <input
+            className="field-input"
+            defaultValue={s.classType}
+            onBlur={(e) =>
+              e.target.value !== s.classType && onPatch({ classType: e.target.value })
+            }
+          />
+        </td>
+        <td style={{ opacity: 0.8 }}>{s.coachName || s.coachEmail}</td>
+        <td style={{ width: 80 }}>
+          <input
+            className="field-input"
+            type="number"
+            min={1}
+            defaultValue={s.capacity}
+            onBlur={(e) =>
+              Number(e.target.value) !== s.capacity &&
+              onPatch({ capacity: Number(e.target.value) })
+            }
+          />
+        </td>
+        <td>
+          <input
+            type="checkbox"
+            checked={s.active}
+            onChange={(e) => onPatch({ active: e.target.checked })}
+          />
+        </td>
+        <td style={{ whiteSpace: "nowrap" }}>
+          <button
+            className="dash-btn dash-btn-light"
+            style={{ marginRight: 6 }}
+            onClick={onToggle}
+          >
+            {open ? "Închide" : "Rezervări"}
+          </button>
+          <button className="dash-btn dash-btn-light" onClick={onRemove}>
+            Șterge
+          </button>
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={8} style={{ background: "rgba(255,255,255,0.03)", fontSize: 13 }}>
+            {!resv || resv === "loading" ? (
+              <span style={{ opacity: 0.6 }}>Se încarcă rezervările…</span>
+            ) : resv.length === 0 ? (
+              <span style={{ opacity: 0.6 }}>Nicio rezervare activă viitoare.</span>
+            ) : (
+              <div style={{ padding: "0.4rem 0" }}>
+                {resv.map((r, i) => (
+                  <div key={i} style={{ padding: "0.15rem 0" }}>
+                    <strong>{r.slotDate}</strong> · {r.userName || "—"}{" "}
+                    <span style={{ opacity: 0.55, fontFamily: "monospace", fontSize: 12 }}>
+                      {r.userEmail}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </td>
+        </tr>
+      )}
     </>
   );
 }

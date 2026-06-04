@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users, partners } from "@/db/schema";
+import { users, partners, classSlots } from "@/db/schema";
 import { and, asc, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import type { UserRole } from "@/db/schema";
 import { userPatchSchema } from "@/lib/validators";
@@ -117,4 +117,44 @@ export async function PATCH(req: Request) {
   }
 
   return NextResponse.json({ ok: true, user: updated, notes });
+}
+
+export async function DELETE(req: Request) {
+  const r = await requireAdmin();
+  if ("err" in r) return r.err;
+
+  const id = new URL(req.url).searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "id lipsă" }, { status: 400 });
+  if (id === r.userId) {
+    return NextResponse.json(
+      { error: "Nu te poți șterge singur (măsură de siguranță)." },
+      { status: 400 },
+    );
+  }
+
+  // Deleting a coach would cascade-delete their class slots (the whole
+  // schedule). Force reassigning the slots first.
+  const [slotCount] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(classSlots)
+    .where(eq(classSlots.coachId, id));
+  if (slotCount.n > 0) {
+    return NextResponse.json(
+      {
+        error: `Userul e coach pe ${slotCount.n} slot(uri). Mută sloturile pe alt coach din Slots înainte de ștergere.`,
+      },
+      { status: 409 },
+    );
+  }
+
+  const [deleted] = await db
+    .delete(users)
+    .where(eq(users.id, id))
+    .returning({ id: users.id, email: users.email });
+  if (!deleted) {
+    return NextResponse.json({ error: "User inexistent" }, { status: 404 });
+  }
+  // FK cascades remove attendances, payments, subscriptions, credits,
+  // reservations, xp_events etc.
+  return NextResponse.json({ ok: true, deleted });
 }
