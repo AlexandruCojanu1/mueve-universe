@@ -33,12 +33,8 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [magicBusy, setMagicBusy] = useState(false);
-  const [magicSent, setMagicSent] = useState(false);
-
   const hasGoogle = true;
   const hasApple = true;
-  const hasMagic = process.env.NEXT_PUBLIC_AUTH_EMAIL === "1";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,22 +49,6 @@ function LoginForm() {
     const to = await resolveRedirect();
     router.push(to);
     router.refresh();
-  }
-
-  async function sendMagic() {
-    if (!email) {
-      setErr("Completează întâi email-ul.");
-      return;
-    }
-    setErr(null);
-    setMagicBusy(true);
-    const res = await signIn("nodemailer", { email, redirect: false, callbackUrl: from });
-    setMagicBusy(false);
-    if (res?.error) {
-      setErr("Nu am putut trimite linkul. Încearcă din nou.");
-      return;
-    }
-    setMagicSent(true);
   }
 
   return (
@@ -91,8 +71,7 @@ function LoginForm() {
         callbackUrl={from}
         hasGoogle={hasGoogle}
         hasApple={hasApple}
-        hasMagic={hasMagic}
-        onMagicClick={sendMagic}
+        hasMagic={false}
       />
 
       <Divider label="sau cu email" />
@@ -122,12 +101,6 @@ function LoginForm() {
         />
 
         {err && <Alert>{err}</Alert>}
-        {magicBusy && <Alert kind="info">Trimitem linkul magic…</Alert>}
-        {magicSent && (
-          <Alert kind="success">
-            Link trimis pe <strong>{email}</strong>. Verifică inbox-ul.
-          </Alert>
-        )}
 
         <SubmitButton loading={loading} loadingLabel="Se conectează…">
           Intră
