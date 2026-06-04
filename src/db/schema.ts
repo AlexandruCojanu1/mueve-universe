@@ -54,6 +54,7 @@ export const users = pgTable(
     stravaTokenExpiresAt: timestamp("strava_token_expires_at"),
     stravaLastSyncAt: timestamp("strava_last_sync_at"),
     stravaXp: integer("strava_xp").notNull().default(0),
+    walletAddedAt: timestamp("wallet_added_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("users_stripe_customer_id_idx").on(t.stripeCustomerId)],

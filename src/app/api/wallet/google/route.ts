@@ -72,6 +72,11 @@ export async function GET() {
       tier: stats?.tier.name,
       memberSince: memberSince ?? undefined,
     });
+    // Remember the card was added so the wallet buttons stay hidden.
+    await db
+      .update(users)
+      .set({ walletAddedAt: new Date() })
+      .where(eq(users.id, user.id));
     return NextResponse.json({ saveUrl });
   } catch (err) {
     return NextResponse.json(

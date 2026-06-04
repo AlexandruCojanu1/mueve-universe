@@ -12,7 +12,7 @@ export type ProfileViewData = {
   memberSince: string | null;
   tier: { name: string; level: number } | null;
   xp: number;
-  wallet: { appleEnabled: boolean; googleEnabled: boolean };
+  wallet: { appleEnabled: boolean; googleEnabled: boolean; added: boolean };
   showStrava: boolean;
   strava: { athleteName: string | null; lastSync: string | null };
   activeSub: { planName: string | null; status: string; periodEnd: string | null } | null;
@@ -58,6 +58,7 @@ export default function ProfileView({ data: d }: { data: ProfileViewData }) {
           <WalletButtons
             appleEnabled={d.wallet.appleEnabled}
             googleEnabled={d.wallet.googleEnabled}
+            initiallyAdded={d.wallet.added}
           />
         </section>
       )}

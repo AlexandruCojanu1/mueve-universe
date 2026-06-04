@@ -89,7 +89,11 @@ export default async function ProfilePage() {
     memberSince,
     tier: xpStats ? { name: xpStats.tier.name, level: xpStats.tier.level } : null,
     xp: xpStats?.xp ?? 0,
-    wallet: { appleEnabled: appleWalletEnabled(), googleEnabled: googleWalletEnabled() },
+    wallet: {
+      appleEnabled: appleWalletEnabled(),
+      googleEnabled: googleWalletEnabled(),
+      added: !!userRow?.walletAddedAt,
+    },
     showStrava: !userRow?.stravaAthleteId,
     strava: {
       athleteName: userRow?.stravaAthleteName ?? null,

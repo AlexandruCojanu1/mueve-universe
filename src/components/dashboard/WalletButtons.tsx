@@ -18,24 +18,29 @@ function detectPlatform(): Platform {
 export default function WalletButtons({
   appleEnabled = true,
   googleEnabled = true,
+  initiallyAdded = false,
 }: {
   appleEnabled?: boolean;
   googleEnabled?: boolean;
+  initiallyAdded?: boolean;
 }) {
   const [appleErr, setAppleErr] = useState<string | null>(null);
   const [googleErr, setGoogleErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<"apple" | "google" | null>(null);
   const [platform, setPlatform] = useState<Platform | null>(null);
-  const [added, setAdded] = useState(false);
+  // Server-side flag (users.walletAddedAt) wins; localStorage is a fallback
+  // for the moment right after adding, before the page refreshes.
+  const [added, setAdded] = useState(initiallyAdded);
 
   useEffect(() => {
     setPlatform(detectPlatform());
+    if (initiallyAdded) return;
     try {
       setAdded(localStorage.getItem("mueve_wallet_added") === "1");
     } catch {
       /* localStorage blocked */
     }
-  }, []);
+  }, [initiallyAdded]);
 
   const markAdded = () => {
     setAdded(true);
