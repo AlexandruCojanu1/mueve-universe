@@ -97,13 +97,13 @@ async function main() {
       "Click any session for details.",
     ),
     dayLabels: [
-      bi("LUN", "MON"),
-      bi("MAR", "TUE"),
-      bi("MIE", "WED"),
-      bi("JOI", "THU"),
-      bi("VIN", "FRI"),
-      bi("SÂM", "SAT"),
-      bi("DUM", "SUN"),
+      bi("LUNI", "MONDAY"),
+      bi("MARȚI", "TUESDAY"),
+      bi("MIERCURI", "WEDNESDAY"),
+      bi("JOI", "THURSDAY"),
+      bi("VINERI", "FRIDAY"),
+      bi("SÂMBĂTĂ", "SATURDAY"),
+      bi("DUMINICĂ", "SUNDAY"),
     ],
     rowLabels: {
       am: bi("SUNRISE", "SUNRISE"),
@@ -133,8 +133,8 @@ async function main() {
   const pricing: PricingData = {
     heading: { lead: bi("MUEVE UNIVERSE", "MUEVE UNIVERSE"), accent: bi("PASS", "PASS") },
     intro: bi(
-      "Acces premium la toate beneficiile. Cu acest card îți poți rezerva orice clasă.",
-      "Premium access to every perk. With this card you can book any class.",
+      "Acces premium la toate beneficiile. Accesul la clase se face pe baza acestui card.",
+      "Premium access to every perk. This card is your key to every class.",
     ),
     tiers: [
       {
@@ -253,8 +253,8 @@ async function main() {
   const worlds: WorldsData = {
     heading: { lead: bi("CINCI LUMI.", "FIVE WORLDS."), accent: bi("UN UNIVERS.", "ONE UNIVERSE.") },
     intro: bi(
-      "Fiecare lume e o dimensiune a mișcării. Alege-ți drumul — sau stăpânește-le pe toate.",
-      "Each world is a dimension of movement. Choose your path — or master them all.",
+      "Fiecare lume e o dimensiune a mișcării. Alege-ți drumul, sau stăpânește-le pe toate.",
+      "Each world is a dimension of movement. Choose your path, or master them all.",
     ),
     worlds: [
       {
@@ -359,8 +359,8 @@ async function main() {
   const footer: FooterData = {
     copyright: bi("© 2026 MUEVE UNIVERSE", "© 2026 MUEVE UNIVERSE"),
     socials: [
-      { id: "ig", label: "Instagram", href: "#", icon: "instagram" },
-      { id: "tt", label: "TikTok", href: "#", icon: "tiktok" },
+      { id: "ig", label: "Instagram", href: "https://www.instagram.com/mueve_club/", icon: "instagram" },
+      { id: "tt", label: "TikTok", href: "https://www.tiktok.com/@mueve_club", icon: "tiktok" },
     ],
   };
   await add("footer", footer);

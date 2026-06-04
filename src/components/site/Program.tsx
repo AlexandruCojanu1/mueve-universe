@@ -11,11 +11,6 @@ const DOT_COLOR: Record<ProgramSlot["color"], { bg: string; glow: string }> = {
   orange: { bg: "var(--sanctuary)", glow: "rgba(245,158,11,.4)" },
 };
 
-function timeToMin(t: string): number {
-  const [h, m] = t.split(":").map((n) => parseInt(n, 10) || 0);
-  return h * 60 + m;
-}
-
 export default function Program({ data }: { data: ProgramData }) {
   const { lang } = useLang();
   const [open, setOpen] = useState<ProgramSlot | null>(null);
@@ -32,21 +27,6 @@ export default function Program({ data }: { data: ProgramData }) {
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
-
-  const nextSlotId = useMemo(() => {
-    if (!now) return null;
-    const candidates = data.slots
-      .map((s) => {
-        const dayDelta = (s.day - now.day + 7) % 7;
-        const isToday = dayDelta === 0;
-        const sMin = timeToMin(s.time || "00:00");
-        if (isToday && sMin <= now.min) return null;
-        return { id: s.id, sortKey: dayDelta * 1440 + sMin };
-      })
-      .filter((x): x is { id: string; sortKey: number } => x !== null)
-      .sort((a, b) => a.sortKey - b.sortKey);
-    return candidates[0]?.id ?? null;
-  }, [data.slots, now]);
 
   const grid = useMemo(() => {
     const rows: Record<"am" | "pm", (ProgramSlot | null)[]> = {
@@ -100,7 +80,6 @@ export default function Program({ data }: { data: ProgramData }) {
             slots={grid[rowKey]}
             lang={lang}
             todayIdx={now?.day ?? -1}
-            nextSlotId={nextSlotId}
             onOpen={setOpen}
           />
         ))}
@@ -136,7 +115,6 @@ function RowBlock({
   slots,
   lang,
   todayIdx,
-  nextSlotId,
   onOpen,
 }: {
   label: string;
@@ -145,7 +123,6 @@ function RowBlock({
   slots: (ProgramSlot | null)[];
   lang: ReturnType<typeof useLang>["lang"];
   todayIdx: number;
-  nextSlotId: string | null;
   onOpen: (s: ProgramSlot) => void;
 }) {
   return (
@@ -166,21 +143,18 @@ function RowBlock({
           );
         }
         const dot = DOT_COLOR[s.color];
-        const isNext = s.id === nextSlotId;
         return (
           <div
             key={s.id}
             className={
               "pt-cell pt-has" +
               (s.boss ? " pt-boss-cell" : "") +
-              (isToday ? " pt-cell-today" : "") +
-              (isNext ? " pt-cell-next" : "")
+              (isToday ? " pt-cell-today" : "")
             }
             data-c={s.color}
             data-row={rowKey}
             onClick={() => onOpen(s)}
           >
-            {isNext && <div className="pt-next-badge">URMĂTOAREA</div>}
             <div
               className="pt-dot"
               style={{ background: dot.bg, boxShadow: `0 0 12px ${dot.glow}` }}
