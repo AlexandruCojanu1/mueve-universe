@@ -468,6 +468,12 @@ body.is-day .ham span {
   z-index: 2;
   margin: 0;
 }
+/* Desktop only: bigger hero headline, vmin-based so it still fits the 100svh hero. */
+@media (min-width: 1024px) {
+  .hero h1 {
+    font-size: clamp(3.2rem, 8vmin, 7rem);
+  }
+}
 .hero h1 em {
   font-style: italic;
   color: var(--sun);
