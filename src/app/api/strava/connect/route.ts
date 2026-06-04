@@ -14,6 +14,11 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.redirect(new URL("/login?from=/dashboard/profile", origin));
   }
+  // Strava integration is "coming soon" — block new connections for now.
+  const COMING_SOON = true;
+  if (COMING_SOON) {
+    return NextResponse.redirect(new URL("/dashboard/profile?strava=soon#strava", origin));
+  }
   if (!stravaEnabled()) {
     // Surface a friendly message in the card instead of dumping raw JSON.
     return NextResponse.redirect(new URL("/dashboard/profile?strava=disabled#strava", origin));

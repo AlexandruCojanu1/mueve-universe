@@ -4344,6 +4344,17 @@ body.is-night .foot-legal a:hover { color: #fff; }
 }
 .strava-btn:hover { filter: brightness(1.08); }
 .strava-btn:disabled { opacity: 0.6; cursor: wait; }
+.strava-soon-badge {
+  align-self: flex-start;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #FC4C02;
+  border: 1px solid rgba(252, 76, 2, 0.5);
+  border-radius: 4px;
+  padding: 0.45rem 0.8rem;
+}
 /* Official "Connect with Strava" button asset — keep aspect ratio, don't restyle. */
 .strava-connect-btn { display: inline-block; line-height: 0; align-self: flex-start; }
 .strava-connect-btn img { height: 44px; width: auto; display: block; }

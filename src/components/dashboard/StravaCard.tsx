@@ -29,6 +29,7 @@ export default function StravaCard({ connected, athleteName, lastSync }: Props) 
     else if (flash === "state") setMsg("Sesiune OAuth invalidă. Încearcă din nou.");
     else if (flash === "oauth_failed") setMsg("Strava a refuzat tokenul. Încearcă din nou.");
     else if (flash === "no_athlete") setMsg("Strava nu ne-a returnat athlete-ul.");
+    else if (flash === "soon") setMsg("Integrarea Strava vine în curând.");
     else if (flash === "disabled")
       setMsg("Strava nu e configurat pe server (lipsesc cheile API). Contactează adminul.");
   }, [flash]);
@@ -74,22 +75,10 @@ export default function StravaCard({ connected, athleteName, lastSync }: Props) 
           <div className="strava-card-eyebrow">Sincronizează-ți alergările</div>
         </div>
         <p className="strava-card-body">
-          Conectează-ți contul Strava și primești <strong>+10 XP / km</strong> pentru fiecare
-          alergare, mers sau drumeție. Plafon zilnic 120 XP — sigur de farming.
+          Conectează-ți contul Strava și primești XP pentru fiecare alergare, mers sau drumeție.
+          Lucrăm la integrare.
         </p>
-        <a
-          className="strava-connect-btn"
-          href="/api/strava/connect"
-          aria-label="Connect with Strava"
-        >
-          {/* Official Strava-provided button asset — do not modify (brand guidelines). */}
-          <img
-            src="/strava/btn_connect_orange.svg"
-            alt="Connect with Strava"
-            width={207}
-            height={42}
-          />
-        </a>
+        <span className="strava-soon-badge">În curând</span>
         {msg && <div className="strava-msg">{msg}</div>}
       </div>
     );
