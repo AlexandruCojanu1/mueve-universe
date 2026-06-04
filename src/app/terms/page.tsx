@@ -2,64 +2,308 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Termeni și Condiții — MUEVE UNIVERSE",
+  description:
+    "Termenii și condițiile de utilizare a platformei MUEVE UNIVERSE: cont, abonamente, plăți, facturare, drept de retragere, acces la sesiuni.",
 };
+
+const LAST_UPDATED = "4 iunie 2026";
+
+function S({
+  n,
+  title,
+  children,
+}: {
+  n: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="legal-section">
+      <h2>
+        <span>{n}</span>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
 
 export default function TermsPage() {
   return (
-    <div className="max-w-3xl mx-auto px-6 py-20 space-y-6 relative z-10">
-      <Link href="/" className="text-xs uppercase tracking-widest opacity-60 hover:opacity-100">
+    <div className="legal-page">
+      <Link href="/" className="legal-back">
         ← Înapoi acasă
       </Link>
-      <h1 className="text-4xl font-black uppercase tracking-tight">Termeni și Condiții</h1>
-      <p className="text-sm opacity-60">
-        Ultima actualizare: {new Date().toLocaleDateString("ro-RO")}
-      </p>
+      <div className="legal-eyebrow">Legal</div>
+      <h1 className="legal-title">
+        Termeni și
+        <br />
+        Condiții
+      </h1>
+      <div className="legal-updated">Ultima actualizare: {LAST_UPDATED}</div>
 
-      <section className="space-y-3 text-sm leading-relaxed opacity-85">
-        <h2 className="text-xl font-black uppercase mt-6">1. Obiect</h2>
+      <S n="01" title="Cine suntem și ce reglementează acest document">
         <p>
-          Acest document reglementează utilizarea platformei MUEVE UNIVERSE și achiziția de
-          abonamente/sesiuni. Prin crearea unui cont sau plată accepți acești termeni.
+          Platforma MUEVE UNIVERSE, disponibilă la adresa{" "}
+          <a href="https://www.mueve.ro">www.mueve.ro</a> (denumită în continuare
+          „Platforma"), este operată de MUEVE UNIVERSE („noi"). Datele complete de
+          identificare ale societății (denumire, CUI, nr. Registrul Comerțului, sediu)
+          sunt disponibile la cerere la adresa de contact de mai jos și pe facturile
+          emise.
         </p>
-
-        <h2 className="text-xl font-black uppercase mt-6">2. Abonamente și plăți</h2>
         <p>
-          Plățile sunt procesate prin Stripe. Abonamentele se reînnoiesc automat până la anulare.
-          Poți anula oricând din <Link href="/dashboard" className="text-[var(--sun)]">contul tău</Link>,
-          iar accesul continuă până la finalul perioadei plătite.
+          Acest document („Termenii") reglementează crearea și utilizarea contului,
+          achiziția abonamentului MUEVE UNIVERSE PASS, a pachetelor de sesiuni și
+          participarea la activitățile organizate prin Platformă. Prin crearea unui
+          cont, prin bifarea acceptului la plată sau prin utilizarea Platformei,
+          confirmi că ai citit și accepți Termenii. Dacă nu ești de acord cu ei, te
+          rugăm să nu folosești Platforma.
         </p>
+      </S>
 
-        <h2 className="text-xl font-black uppercase mt-6">3. Accesul la sesiuni</h2>
+      <S n="02" title="Contul tău">
+        <ul>
+          <li>
+            Contul este personal și netransmisibil. Ești responsabil de
+            confidențialitatea datelor de autentificare și de toate acțiunile făcute
+            din contul tău.
+          </li>
+          <li>
+            La înregistrare trebuie să furnizezi date reale și complete. Putem
+            suspenda sau închide conturile cu date false, conturile duplicate sau
+            conturile folosite abuziv (de exemplu partajarea cardului de acces).
+          </li>
+          <li>
+            Vârsta minimă pentru crearea unui cont este 16 ani. Minorii între 16 și
+            18 ani pot participa la sesiuni doar cu acordul părintelui sau al
+            tutorelui legal.
+          </li>
+          <li>
+            Îți poți șterge contul oricând printr-o cerere la adresa de contact;
+            ștergerea este definitivă și include istoricul de prezențe și punctele
+            acumulate.
+          </li>
+        </ul>
+      </S>
+
+      <S n="03" title="Abonamente, pachete și credite">
+        <ul>
+          <li>
+            <strong>MUEVE UNIVERSE PASS</strong> este un abonament lunar cu
+            reînnoire automată. Prețul afișat la momentul achiziției se percepe
+            lunar până la anulare.
+          </li>
+          <li>
+            Poți anula Pass-ul oricând din contul tău (secțiunea Profil) sau prin
+            portalul de facturare Stripe. Anularea oprește următoarea plată, iar
+            accesul rămâne activ până la finalul perioadei deja plătite. Nu se
+            rambursează perioade parțiale.
+          </li>
+          <li>
+            <strong>Pachetele de sesiuni</strong> (drop-in, ORBIT, GALAXY, UNIVERSE)
+            sunt achiziții cu plată unică ce adaugă în cont un număr de credite de
+            clasă. Achiziția pachetelor necesită un Pass activ.
+          </li>
+          <li>
+            Un credit se consumă la rezervarea unei sesiuni. Creditele au termen de
+            valabilitate afișat în cont la momentul achiziției și nu sunt
+            transmisibile către alte conturi.
+          </li>
+          <li>
+            Dacă anulezi o rezervare cu cel puțin 12 ore înainte de începerea
+            sesiunii, creditul revine în cont. Anulările târzii sau neprezentarea
+            consumă creditul.
+          </li>
+          <li>
+            Sesiunile marcate gratuite (de exemplu evenimentele comunitare) nu
+            consumă credite.
+          </li>
+        </ul>
+      </S>
+
+      <S n="04" title="Prețuri, plăți și facturare">
+        <ul>
+          <li>
+            Toate prețurile sunt afișate în lei (RON) și sunt finale. Operatorul nu
+            este plătitor de TVA.
+          </li>
+          <li>
+            Plățile se procesează exclusiv prin{" "}
+            <a href="https://stripe.com" target="_blank" rel="noopener noreferrer">
+              Stripe
+            </a>
+            , un procesator autorizat de plăți. Noi nu stocăm datele cardului tău.
+          </li>
+          <li>
+            Pentru fiecare plată se emite automat o factură fiscală, transmisă pe
+            emailul contului și raportată în sistemul național e-Factura, conform
+            legislației în vigoare.
+          </li>
+          <li>
+            Prețurile pot fi modificate; pentru abonamentele active vei fi anunțat
+            prin email cu cel puțin 15 zile înainte ca noul preț să se aplice, cu
+            posibilitatea de a anula înainte de prima plată la noul preț.
+          </li>
+        </ul>
+      </S>
+
+      <S n="05" title="Dreptul de retragere">
         <p>
-          Cardul digital (QR) este personal și netransmisibil. Coach-ul poate refuza accesul dacă
-          utilizatorul nu are abonament activ sau o sesiune drop-in plătită în ultimele 7 zile.
+          Conform OUG nr. 34/2014 privind drepturile consumatorilor, beneficiezi de
+          un termen de 14 zile de retragere pentru contractele încheiate la
+          distanță, cu următoarele precizări:
         </p>
+        <ul>
+          <li>
+            Pentru abonament și pachete, dacă în termenul de 14 zile nu ai folosit
+            niciun serviciu (nicio prezență, nicio rezervare consumată), poți cere
+            rambursarea integrală la adresa de contact.
+          </li>
+          <li>
+            Prin începerea utilizării serviciilor în interiorul celor 14 zile
+            (participarea la o sesiune sau consumarea unui credit) îți exprimi
+            acordul expres pentru prestarea serviciului și accepți că, pentru
+            serviciile deja prestate, se reține contravaloarea proporțională.
+          </li>
+        </ul>
+      </S>
 
-        <h2 className="text-xl font-black uppercase mt-6">4. Răspundere</h2>
+      <S n="06" title="Accesul la sesiuni și regulile comunității">
+        <ul>
+          <li>
+            Accesul la sesiuni se face pe baza cardului digital (cod QR) din cont,
+            care este personal și netransmisibil. Partajarea lui poate duce la
+            suspendarea contului.
+          </li>
+          <li>
+            Rezervarea locurilor se face din cont, în limita locurilor disponibile.
+            Programul sesiunilor poate fi modificat; sesiunile anulate de noi
+            returnează automat creditul.
+          </li>
+          <li>
+            Antrenorul poate refuza accesul persoanelor fără abonament sau credit
+            valabil, aflate sub influența alcoolului sau a altor substanțe, ori care
+            au un comportament care pune în pericol siguranța grupului.
+          </li>
+          <li>
+            Respectă antrenorii și ceilalți participanți. Comportamentul abuziv,
+            discriminatoriu sau periculos duce la excluderea din comunitate, fără
+            rambursare pentru perioada rămasă.
+          </li>
+        </ul>
+      </S>
+
+      <S n="07" title="Sănătate și răspundere">
+        <ul>
+          <li>
+            Participarea la activitățile fizice se face pe propria răspundere.
+            Înainte de a începe un program de antrenament, consultă un medic, mai
+            ales dacă ai afecțiuni preexistente, ești însărcinată sau urmezi un
+            tratament.
+          </li>
+          <li>
+            Ai obligația să comunici antrenorului orice problemă de sănătate
+            relevantă înainte de sesiune și să îți adaptezi efortul la propriul
+            nivel.
+          </li>
+          <li>
+            Nu răspundem pentru vătămări rezultate din nerespectarea indicațiilor
+            antrenorului, din afecțiuni preexistente nedeclarate sau din folosirea
+            necorespunzătoare a echipamentelor.
+          </li>
+          <li>
+            Activitățile în aer liber depind de vreme; sesiunile pot fi reprogramate
+            din motive de siguranță.
+          </li>
+          <li>
+            Nu răspundem pentru bunurile personale pierdute sau deteriorate în
+            timpul sesiunilor.
+          </li>
+        </ul>
+      </S>
+
+      <S n="08" title="Puncte, niveluri și provocări (XP)">
         <p>
-          Participarea la activitățile fizice se face pe răspunderea proprie. MUEVE UNIVERSE nu
-          răspunde pentru accidente sau afecțiuni preexistente. Consultă medicul înainte de a
-          începe un program de antrenament.
+          Sistemul de XP, niveluri, serii (streak) și provocări este un program de
+          gamificare fără valoare monetară. Punctele nu pot fi vândute, transferate
+          sau convertite în bani ori servicii. Ne rezervăm dreptul de a ajusta
+          regulile programului și de a anula punctele obținute prin fraudă (de
+          exemplu check-in-uri false sau activități sportive fictive).
         </p>
+      </S>
 
-        <h2 className="text-xl font-black uppercase mt-6">5. Modificări</h2>
+      <S n="09" title="Date personale">
         <p>
-          Ne rezervăm dreptul de a modifica acești termeni. Vei fi notificat prin email la
-          modificări semnificative.
+          Prelucrarea datelor tale personale (cont, prezențe, plăți, integrarea
+          opțională cu Strava) este descrisă în{" "}
+          <Link href="/privacy">Politica de confidențialitate</Link>, parte
+          integrantă a acestor Termeni. Prelucrăm datele conform Regulamentului (UE)
+          2016/679 (GDPR).
         </p>
+      </S>
 
-        <h2 className="text-xl font-black uppercase mt-6">6. Contact</h2>
+      <S n="10" title="Proprietate intelectuală">
         <p>
-          Întrebări? Scrie-ne la{" "}
-          <a href="mailto:mueve.universe@gmail.com" className="text-[var(--sun)]">
-            mueve.universe@gmail.com
-          </a>
-          .
+          Conținutul Platformei (denumire, logo, texte, grafică, structura
+          programelor de antrenament) aparține MUEVE UNIVERSE și este protejat de
+          legislația proprietății intelectuale. Nu îl poți copia sau folosi în
+          scopuri comerciale fără acordul nostru scris.
         </p>
-      </section>
+      </S>
 
-      <div className="opacity-40 text-xs mt-10 border-t border-white/10 pt-4">
-        * Acest document este un draft. Înlocuiește cu text juridic verificat înainte de lansare publică.
+      <S n="11" title="Modificarea Termenilor">
+        <p>
+          Putem actualiza acești Termeni. Versiunea curentă, cu data ultimei
+          actualizări, este publicată permanent pe această pagină. Pentru modificări
+          semnificative te anunțăm prin email cu cel puțin 15 zile înainte de
+          intrarea lor în vigoare; continuarea utilizării Platformei după acea dată
+          înseamnă acceptarea noilor Termeni.
+        </p>
+      </S>
+
+      <S n="12" title="Legea aplicabilă și soluționarea litigiilor">
+        <p>
+          Acești Termeni sunt guvernați de legea română. Încercăm să rezolvăm
+          amiabil orice neînțelegere; ne poți scrie oricând la adresa de contact.
+          Dacă nu ajungem la o soluție, te poți adresa:
+        </p>
+        <ul>
+          <li>
+            Autorității Naționale pentru Protecția Consumatorilor (ANPC) și
+            platformei SAL:{" "}
+            <a
+              href="https://anpc.ro/ce-este-sal/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              anpc.ro/ce-este-sal
+            </a>
+          </li>
+          <li>
+            Platformei europene de soluționare online a litigiilor (SOL/ODR):{" "}
+            <a
+              href="https://ec.europa.eu/consumers/odr"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ec.europa.eu/consumers/odr
+            </a>
+          </li>
+          <li>instanțelor judecătorești competente din România.</li>
+        </ul>
+      </S>
+
+      <S n="13" title="Contact">
+        <p>
+          Pentru orice întrebare legată de acești Termeni, de abonament sau de
+          facturi, scrie-ne la{" "}
+          <a href="mailto:mueve.universe@gmail.com">mueve.universe@gmail.com</a>.
+          Răspundem în cel mult 3 zile lucrătoare.
+        </p>
+      </S>
+
+      <div className="legal-foot">
+        MUEVE UNIVERSE · www.mueve.ro · mueve.universe@gmail.com
       </div>
     </div>
   );

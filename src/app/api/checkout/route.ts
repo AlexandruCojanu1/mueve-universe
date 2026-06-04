@@ -120,7 +120,7 @@ export async function POST(req: Request) {
 
   const origin = req.headers.get("origin") ?? new URL(req.url).origin;
 
-  const checkout = await stripe.checkout.sessions.create({
+  const baseParams = {
     mode,
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
@@ -138,7 +138,28 @@ export async function POST(req: Request) {
         : undefined,
     allow_promotion_codes: true,
     billing_address_collection: "auto",
-  });
+  } satisfies Parameters<typeof stripe.checkout.sessions.create>[0];
+
+  // Require accepting the Terms before paying. Stripe shows the checkbox only
+  // if the ToS URL is configured in the Dashboard (Settings → Public details);
+  // until then we fall back to a plain session so payments never break.
+  let checkout;
+  try {
+    checkout = await stripe.checkout.sessions.create({
+      ...baseParams,
+      consent_collection: { terms_of_service: "required" },
+      custom_text: {
+        terms_of_service_acceptance: {
+          message: `Sunt de acord cu [Termenii și condițiile](${origin}/terms) MUEVE UNIVERSE.`,
+        },
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (!msg.includes("terms of service")) throw err;
+    console.error("Stripe ToS consent unavailable (set the URL in Dashboard → Public details):", msg);
+    checkout = await stripe.checkout.sessions.create(baseParams);
+  }
 
   return NextResponse.json({ url: checkout.url });
 }
