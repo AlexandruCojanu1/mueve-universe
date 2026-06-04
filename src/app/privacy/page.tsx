@@ -44,11 +44,13 @@ export default function PrivacyPage() {
 
       <S n="01" title="Operatorul de date">
         <p>
-          MUEVE UNIVERSE, prin platforma{" "}
+          <strong>MUEVE SRL</strong>, CUI 53051552, cu sediul în Constanța, Bd.
+          Tomis nr. 307, operatorul platformei{" "}
           <a href="https://www.mueve.ro">www.mueve.ro</a>, este operatorul datelor
           tale personale în sensul Regulamentului (UE) 2016/679 (GDPR). Ne poți
           contacta pentru orice aspect legat de date la{" "}
-          <a href="mailto:mueve.universe@gmail.com">mueve.universe@gmail.com</a>.
+          <a href="mailto:mueve.universe@gmail.com">mueve.universe@gmail.com</a>{" "}
+          sau la telefon <a href="tel:+40753087056">0753 087 056</a>.
         </p>
       </S>
 
@@ -178,7 +180,9 @@ export default function PrivacyPage() {
       </S>
 
       <div className="legal-foot">
-        MUEVE UNIVERSE · www.mueve.ro · mueve.universe@gmail.com
+        MUEVE SRL · CUI 53051552 · Constanța, Bd. Tomis nr. 307
+        <br />
+        www.mueve.ro · mueve.universe@gmail.com · 0753 087 056
       </div>
     </div>
   );

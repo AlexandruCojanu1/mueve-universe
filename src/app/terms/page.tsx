@@ -46,10 +46,10 @@ export default function TermsPage() {
         <p>
           Platforma MUEVE UNIVERSE, disponibilă la adresa{" "}
           <a href="https://www.mueve.ro">www.mueve.ro</a> (denumită în continuare
-          „Platforma"), este operată de MUEVE UNIVERSE („noi"). Datele complete de
-          identificare ale societății (denumire, CUI, nr. Registrul Comerțului, sediu)
-          sunt disponibile la cerere la adresa de contact de mai jos și pe facturile
-          emise.
+          „Platforma"), este operată de <strong>MUEVE SRL</strong>, CUI 53051552,
+          cu sediul în Constanța, Bd. Tomis nr. 307 („noi"). Ne poți contacta la{" "}
+          <a href="mailto:mueve.universe@gmail.com">mueve.universe@gmail.com</a> sau
+          la telefon <a href="tel:+40753087056">0753 087 056</a>.
         </p>
         <p>
           Acest document („Termenii") reglementează crearea și utilizarea contului,
@@ -303,7 +303,9 @@ export default function TermsPage() {
       </S>
 
       <div className="legal-foot">
-        MUEVE UNIVERSE · www.mueve.ro · mueve.universe@gmail.com
+        MUEVE SRL · CUI 53051552 · Constanța, Bd. Tomis nr. 307
+        <br />
+        www.mueve.ro · mueve.universe@gmail.com · 0753 087 056
       </div>
     </div>
   );
