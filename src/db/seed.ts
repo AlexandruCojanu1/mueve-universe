@@ -113,16 +113,16 @@ async function main() {
     slots: [
       // MON — MOVEMENT FOR ALL (sunrise)
       { id: "am-0", day: 0, row: "am", activity: bi("Movement for All", "Movement for All"), time: "06:30", world: bi("Toate Lumile", "All Worlds"), color: "yellow" },
-      // TUE — SOCIAL RUN (sunset)
-      { id: "pm-1", day: 1, row: "pm", activity: bi("Social Run", "Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
+      // TUE — GIRLS' RUN (sunset)
+      { id: "pm-1", day: 1, row: "pm", activity: bi("Alergarea fetelor", "Girls' Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
       // WED — YOGA (sunrise)
       { id: "am-2", day: 2, row: "am", activity: bi("Yoga", "Yoga"), time: "06:30", world: bi("Templul", "Temple"), color: "purple" },
       // THU — CALISTHENICS (sunrise)
       { id: "am-3", day: 3, row: "am", activity: bi("Calisthenics", "Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
+      // THU — SOCIAL RUN (sunset)
+      { id: "pm-3", day: 3, row: "pm", activity: bi("Alergare în grup", "Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
       // FRI — COMING SOON
       { id: "am-4", day: 4, row: "am", activity: bi("Coming Soon", "Coming Soon"), time: "TBA", world: bi("", ""), color: "orange" },
-      // SAT — MERS PE JOS (coming soon)
-      { id: "am-5", day: 5, row: "am", activity: bi("Mers pe jos (în curând)", "Walking (coming soon)"), time: "10:00", world: bi("Drumul", "Path"), color: "orange" },
       // SUN — THE BIG SOCIAL RUN (main event)
       { id: "am-6", day: 6, row: "am", activity: bi("THE BIG Social Run", "THE BIG Social Run"), time: "09:00", world: bi("Toate Lumile", "All Worlds"), color: "yellow", boss: true },
     ],

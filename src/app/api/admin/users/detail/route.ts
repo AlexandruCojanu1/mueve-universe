@@ -37,6 +37,7 @@ export async function GET(req: Request) {
       createdAt: users.createdAt,
       walletAddedAt: users.walletAddedAt,
       stravaAthleteName: users.stravaAthleteName,
+      gender: users.gender,
     })
     .from(users)
     .where(eq(users.id, id))

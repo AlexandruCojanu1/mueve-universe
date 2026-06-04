@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { requireStripe } from "@/lib/stripe";
 import type { SubscriptionStatus } from "@/db/schema";
 import { grantCredits } from "@/lib/credits";
+import { issueOblioInvoice, oblioEnabled } from "@/lib/oblio";
 import { captureError } from "@/lib/observability";
 
 export const runtime = "nodejs";
@@ -26,6 +27,18 @@ function mapStatus(s: string | null | undefined): SubscriptionStatus {
   return (ALLOWED_STATUSES as string[]).includes(s ?? "")
     ? (s as SubscriptionStatus)
     : "incomplete";
+}
+
+async function userFromCustomer(
+  customerId: string | null,
+): Promise<{ id: string; name: string | null; email: string } | null> {
+  if (!customerId) return null;
+  const rows = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(eq(users.stripeCustomerId, customerId))
+    .limit(1);
+  return rows[0] ?? null;
 }
 
 async function userIdFromCustomer(customerId: string | null): Promise<string | null> {
@@ -166,6 +179,24 @@ export async function POST(req: Request) {
               planName: (session.metadata?.planName as string) || null,
             });
           }
+          if (oblioEnabled()) {
+            const client = await userFromCustomer(
+              typeof session.customer === "string"
+                ? session.customer
+                : session.customer?.id ?? null,
+            );
+            if (client) {
+              await issueOblioInvoice({
+                stripeRef: pi.id,
+                clientName: client.name || client.email,
+                clientEmail: client.email,
+                productName:
+                  (session.metadata?.planName as string) || "Pachet clase MUEVE",
+                amountBani: pi.amount_received ?? 0,
+                currency: pi.currency ?? "ron",
+              });
+            }
+          }
         }
         break;
       }
@@ -173,6 +204,24 @@ export async function POST(req: Request) {
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         await recordPayment(invoice);
+        if (oblioEnabled() && (invoice.amount_paid ?? 0) > 0) {
+          const client = await userFromCustomer(
+            typeof invoice.customer === "string"
+              ? invoice.customer
+              : invoice.customer?.id ?? null,
+          );
+          if (client) {
+            await issueOblioInvoice({
+              stripeRef: invoice.id ?? `inv-${event.id}`,
+              clientName: client.name || client.email,
+              clientEmail: client.email,
+              productName:
+                invoice.lines?.data?.[0]?.description || "Abonament MUEVE UNIVERSE PASS",
+              amountBani: invoice.amount_paid ?? 0,
+              currency: invoice.currency ?? "ron",
+            });
+          }
+        }
         break;
       }
       case "customer.subscription.created":

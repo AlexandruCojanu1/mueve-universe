@@ -55,6 +55,7 @@ export const users = pgTable(
     stravaLastSyncAt: timestamp("strava_last_sync_at"),
     stravaXp: integer("strava_xp").notNull().default(0),
     walletAddedAt: timestamp("wallet_added_at"),
+    gender: text("gender"), // "feminin" | "masculin" | null (prefer să nu spună)
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("users_stripe_customer_id_idx").on(t.stripeCustomerId)],
@@ -187,6 +188,16 @@ export const payments = pgTable(
   },
   (t) => [index("payments_user_created_idx").on(t.userId, t.createdAt)],
 );
+
+// ── Oblio invoices (one per Stripe payment; stripe_ref = PI / invoice id) ──
+export const oblioInvoices = pgTable("oblio_invoices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  stripeRef: text("stripe_ref").notNull().unique(),
+  series: text("series"),
+  number: text("number"),
+  link: text("link"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 // ── Webhook idempotency (Stripe event replay protection) ──
 export const processedWebhookEvents = pgTable("processed_webhook_events", {

@@ -12,6 +12,7 @@ const schema = z.object({
   email: z.string().email().max(200),
   password: z.string().min(8).max(200),
   name: z.string().trim().min(1).max(120).optional(),
+  gender: z.enum(["feminin", "masculin", "nespecificat"]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -35,6 +36,10 @@ export async function POST(req: Request) {
   const email = parsed.data.email.trim().toLowerCase();
   const password = parsed.data.password;
   const name = parsed.data.name?.trim() || null;
+  const gender =
+    parsed.data.gender && parsed.data.gender !== "nespecificat"
+      ? parsed.data.gender
+      : null;
 
   const existing = await db
     .select({ id: users.id })
@@ -49,7 +54,7 @@ export async function POST(req: Request) {
   }
 
   const passwordHash = await hashPassword(password);
-  await db.insert(users).values({ email, passwordHash, name });
+  await db.insert(users).values({ email, passwordHash, name, gender });
 
   // Send verification email (best-effort — signup still succeeds if mailer fails).
   if (emailEnabled()) {

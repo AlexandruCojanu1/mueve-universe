@@ -18,6 +18,7 @@ function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [gender, setGender] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +33,12 @@ function SignupForm() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name || undefined, email, password }),
+        body: JSON.stringify({
+          name: name || undefined,
+          email,
+          password,
+          gender: gender || undefined,
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -101,6 +107,24 @@ function SignupForm() {
           required
           placeholder="tu@exemplu.com"
         />
+        <label className="auth-field">
+          <div className="auth-field-row">
+            <span className="auth-field-label">Gen</span>
+          </div>
+          <select
+            className="auth-field-input"
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Alege…
+            </option>
+            <option value="feminin">Feminin</option>
+            <option value="masculin">Masculin</option>
+            <option value="nespecificat">Prefer să nu spun</option>
+          </select>
+        </label>
         <Field
           label="Parolă"
           type="password"
