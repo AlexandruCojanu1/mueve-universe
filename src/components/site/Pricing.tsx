@@ -5,6 +5,7 @@ import { pick } from "@/lib/bilingual";
 import type { PricingData, PricingPlan, PricingTier } from "@/lib/content-types";
 import type { CSSProperties } from "react";
 import PricingDetailsModal from "./PricingDetailsModal";
+import CtaPair from "./CtaPair";
 
 export default function Pricing({ data }: { data: PricingData }) {
   const { lang } = useLang();
@@ -19,6 +20,7 @@ export default function Pricing({ data }: { data: PricingData }) {
           <span>{pick(data.heading.accent, lang)}</span>
         </h2>
         {pick(data.intro, lang) && <p>{pick(data.intro, lang)}</p>}
+        <CtaPair />
       </div>
       <div className="pricing-tiers">
         {data.tiers.map((tier) => (

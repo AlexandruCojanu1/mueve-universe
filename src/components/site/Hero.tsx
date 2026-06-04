@@ -3,6 +3,7 @@ import { useLang } from "@/lib/lang-context";
 import { pick } from "@/lib/bilingual";
 import type { HeroData } from "@/lib/content-types";
 import Celestial from "./Celestial";
+import CtaPair from "./CtaPair";
 
 export default function Hero({ data }: { data: HeroData }) {
   const { lang } = useLang();
@@ -17,6 +18,7 @@ export default function Hero({ data }: { data: HeroData }) {
         {pick(data.headingBottom, lang)}
       </h1>
       <p className="hero-sub">{pick(data.sub, lang)}</p>
+      <CtaPair center />
     </section>
   );
 }

@@ -497,6 +497,47 @@ body.is-day .ham span {
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
+/* ── CTA pair (cont + clase) under section titles ── */
+.cta-pair {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.4rem;
+  position: relative;
+  z-index: 2;
+  flex-wrap: wrap;
+}
+.cta-pair-center {
+  justify-content: center;
+}
+.cta-pair-btn {
+  display: inline-block;
+  font-family: var(--ff);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  padding: 0.9rem 1.8rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: filter 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.cta-pair-primary {
+  background: var(--sun);
+  color: var(--deep);
+}
+.cta-pair-primary:hover {
+  filter: brightness(1.08);
+}
+.cta-pair-ghost {
+  color: var(--sun);
+  border: 1px solid rgba(245, 245, 10, 0.5);
+  background: rgba(245, 245, 10, 0.04);
+}
+.cta-pair-ghost:hover {
+  background: var(--sun);
+  color: var(--deep);
+}
+
 .worlds-intro {
   position: relative;
   z-index: 1;
