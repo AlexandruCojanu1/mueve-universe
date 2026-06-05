@@ -255,31 +255,21 @@ async function main() {
 
   // WORLDS
   const worlds: WorldsData = {
-    heading: { lead: bi("CINCI LUMI.", "FIVE WORLDS."), accent: bi("UN UNIVERS.", "ONE UNIVERSE.") },
+    heading: { lead: bi("PATRU LUMI.", "FOUR WORLDS."), accent: bi("UN UNIVERS.", "ONE UNIVERSE.") },
     intro: bi(
       "Fiecare lume e o dimensiune a mișcării. Alege-ți drumul, sau stăpânește-le pe toate.",
       "Each world is a dimension of movement. Choose your path, or master them all.",
     ),
     worlds: [
       {
-        id: "forge", key: "forge", bigIcon: "FORGE",
-        label: bi("Calisthenics", "Calisthenics"),
-        title: bi("CALISTHENICS", "CALISTHENICS"),
+        id: "path", key: "path", bigIcon: "RUN",
+        label: bi("Alergare", "Running"),
+        title: bi("ALERGARE", "RUNNING"),
         body: bi(
-          "Handstands. Muscle-ups. Strength flow.\nMișcare construită prin repetiție, precizie și voință. Putere funcțională. Control total.",
-          "Handstands. Muscle-ups. Strength flow.\nMovement built through repetition, precision and will. Functional power. Total control.",
+          "Mișcarea devine mai ușoară când o faci împreună.\nEnergie, conexiune și progres real.\nÎți crești condiția fizică, mobilitatea și anduranța, în timp ce cunoști oameni care sunt pe același drum.",
+          "Movement gets easier when you do it together.\nEnergy, connection and real progress.\nYou build fitness, mobility and endurance while meeting people on the same path.",
         ),
-        tags: [bi("Forță", "Strength"), bi("Control", "Control"), bi("Măiestrie", "Mastery")],
-      },
-      {
-        id: "temple", key: "temple", bigIcon: "YOGA",
-        label: bi("Yoga", "Yoga"),
-        title: bi("YOGA", "YOGA"),
-        body: bi(
-          "Respirația conduce mișcarea.\nCorpul încetinește. Mintea se aliniază.\nMobilitate, echilibru și prezență — construite prin practică.\nPutere calmă, din interior spre exterior.",
-          "Breath leads movement.\nThe body slows. The mind aligns.\nMobility, balance and presence — built through practice.\nCalm power, from inside out.",
-        ),
-        tags: [bi("Echilibru", "Balance"), bi("Respirație", "Breath"), bi("Flow", "Flow")],
+        tags: [bi("Rezistență", "Endurance"), bi("Libertate", "Freedom"), bi("Trib", "Tribe")],
       },
       {
         id: "punctul-zero", key: "sanctuary", bigIcon: "POINT 0",
@@ -292,24 +282,24 @@ async function main() {
         tags: [bi("Început", "Start"), bi("Ritm propriu", "Own pace"), bi("Fundație", "Foundation")],
       },
       {
-        id: "path", key: "path", bigIcon: "RUN",
-        label: bi("Alergare", "Running"),
-        title: bi("ALERGARE", "RUNNING"),
+        id: "temple", key: "temple", bigIcon: "YOGA",
+        label: bi("Yoga", "Yoga"),
+        title: bi("YOGA", "YOGA"),
         body: bi(
-          "Mișcarea devine mai ușoară când o faci împreună.\nEnergie, conexiune și progres real.\nÎți crești condiția fizică, mobilitatea și anduranța, în timp ce cunoști oameni care sunt pe același drum.",
-          "Movement gets easier when you do it together.\nEnergy, connection and real progress.\nYou build fitness, mobility and endurance while meeting people on the same path.",
+          "Respirația conduce mișcarea.\nCorpul încetinește. Mintea se aliniază.\nMobilitate, echilibru și prezență — construite prin practică.\nPutere calmă, din interior spre exterior.",
+          "Breath leads movement.\nThe body slows. The mind aligns.\nMobility, balance and presence — built through practice.\nCalm power, from inside out.",
         ),
-        tags: [bi("Rezistență", "Endurance"), bi("Libertate", "Freedom"), bi("Trib", "Tribe")],
+        tags: [bi("Echilibru", "Balance"), bi("Respirație", "Breath"), bi("Flow", "Flow")],
       },
       {
-        id: "walk", key: "walk", bigIcon: "WALK",
-        label: bi("Mers pe jos", "Walking"),
-        title: bi("MERS PE JOS", "WALKING"),
+        id: "forge", key: "forge", bigIcon: "FORGE",
+        label: bi("Calisthenics", "Calisthenics"),
+        title: bi("CALISTHENICS", "CALISTHENICS"),
         body: bi(
-          "În curând · Sâmbătă 10:00\n\nFundația oricărei călătorii.\nPas cu pas, mintea se eliberează, iar corpul își regăsește ritmul natural.\nConstruiești claritate mentală, vitalitate și o bază solidă pentru sănătatea ta.\nCea mai simplă și accesibilă formă de a merge înainte, zi de zi.",
-          "Coming soon · Saturday 10:00\n\nThe foundation of every journey.\nStep by step, the mind clears and the body finds its natural rhythm.\nYou build mental clarity, vitality and a solid base for your health.\nThe simplest, most accessible way forward — day by day.",
+          "Handstands. Muscle-ups. Strength flow.\nMișcare construită prin repetiție, precizie și voință. Putere funcțională. Control total.",
+          "Handstands. Muscle-ups. Strength flow.\nMovement built through repetition, precision and will. Functional power. Total control.",
         ),
-        tags: [bi("Fundație", "Foundation"), bi("Claritate", "Clarity"), bi("Vitalitate", "Vitality")],
+        tags: [bi("Forță", "Strength"), bi("Control", "Control"), bi("Măiestrie", "Mastery")],
       },
     ],
   };
