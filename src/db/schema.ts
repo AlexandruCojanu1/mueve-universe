@@ -189,6 +189,13 @@ export const payments = pgTable(
   (t) => [index("payments_user_created_idx").on(t.userId, t.createdAt)],
 );
 
+// ── App settings (small key-value store: launch state, raffle results) ──
+export const appSettings = pgTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ── Oblio invoices (one per Stripe payment; stripe_ref = PI / invoice id) ──
 export const oblioInvoices = pgTable("oblio_invoices", {
   id: uuid("id").primaryKey().defaultRandom(),

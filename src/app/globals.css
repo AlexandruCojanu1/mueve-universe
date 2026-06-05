@@ -497,6 +497,147 @@ body.is-day .ham span {
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
+/* ── Launch overlay (pre-launch + countdown + reveal) ── */
+.launch-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  background: radial-gradient(120% 120% at 50% 30%, #0a0f2a 0%, #050816 70%);
+}
+.launch-overlay-out {
+  animation: launch-fade-out 0.9s ease forwards;
+  pointer-events: none;
+}
+@keyframes launch-fade-out {
+  to { opacity: 0; visibility: hidden; }
+}
+.launch-logo {
+  font-family: var(--ff);
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(3rem, 10vw, 7rem);
+  color: var(--sun);
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 80px rgba(245, 245, 10, 0.35);
+}
+.launch-tag {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: clamp(0.6rem, 1.4vw, 0.8rem);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  text-align: center;
+  padding: 0 1.5rem;
+}
+.launch-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sun);
+  box-shadow: 0 0 24px var(--sun);
+  animation: launch-pulse 1.6s ease-in-out infinite;
+}
+@keyframes launch-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+.launch-count {
+  font-family: var(--ff);
+  font-weight: 900;
+  font-size: clamp(8rem, 38vmin, 24rem);
+  line-height: 1;
+  color: #fff;
+  animation: launch-count-pop 1s ease-out both;
+  text-shadow: 0 0 120px rgba(245, 245, 10, 0.25);
+}
+@keyframes launch-count-pop {
+  0% { transform: scale(1.6); opacity: 0; }
+  18% { transform: scale(1); opacity: 1; }
+  85% { transform: scale(0.96); opacity: 1; }
+  100% { transform: scale(0.92); opacity: 0.2; }
+}
+.launch-mueve {
+  font-family: var(--ff);
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(4rem, 18vw, 16rem);
+  line-height: 1;
+  color: var(--sun);
+  letter-spacing: -0.02em;
+  animation: launch-mueve-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  text-shadow: 0 0 140px rgba(245, 245, 10, 0.5);
+}
+@keyframes launch-mueve-in {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Raffle winners (admin fullscreen display) ── */
+.raffle-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.2rem;
+  background: radial-gradient(120% 120% at 50% 30%, #0a0f2a 0%, #050816 70%);
+  padding: 2rem;
+}
+.raffle-title {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: clamp(0.7rem, 1.6vw, 0.95rem);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--sun);
+}
+.raffle-winners {
+  display: flex;
+  gap: clamp(2rem, 8vw, 7rem);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.raffle-card {
+  text-align: center;
+  animation: launch-mueve-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.raffle-card:nth-child(2) { animation-delay: 0.35s; }
+.raffle-kind {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 0.8rem;
+}
+.raffle-name {
+  font-family: var(--ff);
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 7vw, 5.5rem);
+  line-height: 1.05;
+  color: #fff;
+  text-shadow: 0 0 90px rgba(245, 245, 10, 0.3);
+}
+.raffle-close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.6rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 2rem;
+  cursor: pointer;
+}
+.raffle-close:hover { color: #fff; }
+
 /* ── Cookie banner (centered pill at the bottom) ── */
 .ck-banner {
   position: fixed;

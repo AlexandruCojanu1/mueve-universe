@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { sections } from "@/db/schema";
-import { asc } from "drizzle-orm";
+import { sections, appSettings } from "@/db/schema";
+import { asc, eq } from "drizzle-orm";
 import SiteShell from "@/components/site/SiteShell";
 import { auth } from "@/auth";
 
@@ -21,5 +21,13 @@ export default async function Home() {
   }
 
   const rows = await db.select().from(sections).orderBy(asc(sections.order));
-  return <SiteShell sections={rows} />;
+  const [launchRow] = await db
+    .select({ value: appSettings.value })
+    .from(appSettings)
+    .where(eq(appSettings.key, "launch"))
+    .limit(1);
+  const launch = (launchRow?.value as { state: "pre" | "countdown" | "live"; startAt?: string }) ?? {
+    state: "live" as const,
+  };
+  return <SiteShell sections={rows} launch={launch} />;
 }

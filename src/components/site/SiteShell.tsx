@@ -5,10 +5,20 @@ import SkyScene from "./SkyScene";
 import Cursor from "./Cursor";
 import LenisScroll from "./LenisScroll";
 import CookieBanner from "./CookieBanner";
+import LaunchOverlay from "./LaunchOverlay";
 
-export default function SiteShell({ sections }: { sections: Section[] }) {
+type LaunchState = { state: "pre" | "countdown" | "live"; startAt?: string };
+
+export default function SiteShell({
+  sections,
+  launch,
+}: {
+  sections: Section[];
+  launch?: LaunchState;
+}) {
   return (
     <LangProvider>
+      {launch && launch.state !== "live" && <LaunchOverlay initial={launch} />}
       <LenisScroll />
       <SkyScene />
       <Cursor />

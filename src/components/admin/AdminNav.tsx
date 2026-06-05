@@ -8,6 +8,7 @@ const links = [
   { href: "/admin/users", label: "Useri" },
   { href: "/admin/partners", label: "Parteneri" },
   { href: "/admin/slots", label: "Slots" },
+  { href: "/admin/launch", label: "Lansare" },
   { href: "/admin/activity", label: "Activitate" },
   { href: "/admin/billing", label: "Plăți" },
   { href: "/admin/theme", label: "Temă" },
