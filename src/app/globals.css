@@ -516,14 +516,16 @@ body.is-day .ham span {
 @keyframes launch-fade-out {
   to { opacity: 0; visibility: hidden; }
 }
-.launch-logo {
-  font-family: var(--ff);
-  font-weight: 900;
-  font-style: italic;
-  font-size: clamp(3rem, 10vw, 7rem);
-  color: var(--sun);
-  letter-spacing: -0.02em;
-  text-shadow: 0 0 80px rgba(245, 245, 10, 0.35);
+.launch-logo-img {
+  width: clamp(220px, 42vw, 520px);
+  height: auto;
+  filter: drop-shadow(0 0 60px rgba(245, 245, 10, 0.35));
+}
+.launch-mueve-img {
+  width: clamp(280px, 72vw, 1100px);
+  height: auto;
+  filter: drop-shadow(0 0 120px rgba(245, 245, 10, 0.5));
+  animation: launch-mueve-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .launch-tag {
   font-family: 'Space Mono', ui-monospace, monospace;

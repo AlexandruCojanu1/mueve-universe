@@ -55,7 +55,8 @@ export default function LaunchOverlay({ initial }: { initial: LaunchState }) {
   if (launch.state === "pre") {
     return (
       <div className="launch-overlay">
-        <div className="launch-logo">mueve</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/mueve-logo.png" alt="mueve" className="launch-logo-img" />
         <div className="launch-tag">UNIVERSUL MIȘCĂRII · SE LANSEAZĂ ACUM</div>
         <div className="launch-dot" aria-hidden />
       </div>
@@ -68,7 +69,8 @@ export default function LaunchOverlay({ initial }: { initial: LaunchState }) {
   if (elapsedMs < 0) {
     return (
       <div className="launch-overlay">
-        <div className="launch-logo">mueve</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/mueve-logo.png" alt="mueve" className="launch-logo-img" />
       </div>
     );
   }
@@ -89,7 +91,8 @@ export default function LaunchOverlay({ initial }: { initial: LaunchState }) {
   if (afterMs < MUEVE_MS) {
     return (
       <div className="launch-overlay">
-        <div className="launch-mueve">MUEVE</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/mueve-logo.png" alt="mueve" className="launch-mueve-img" />
       </div>
     );
   }
