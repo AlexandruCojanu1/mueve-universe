@@ -44,7 +44,7 @@ export default function PrivacyPage() {
 
       <S n="01" title="Operatorul de date">
         <p>
-          <strong>MUEVE SRL</strong>, CUI 53051552, cu sediul în Constanța, Bd.
+          <strong>MUEVE COLLECTIVE S.R.L.</strong>, CUI 54738377, cu sediul în Constanța, Bd.
           Tomis nr. 307, operatorul platformei{" "}
           <a href="https://www.mueve.ro">www.mueve.ro</a>, este operatorul datelor
           tale personale în sensul Regulamentului (UE) 2016/679 (GDPR). Ne poți
@@ -180,7 +180,7 @@ export default function PrivacyPage() {
       </S>
 
       <div className="legal-foot">
-        MUEVE SRL · CUI 53051552 · Constanța, Bd. Tomis nr. 307
+        MUEVE COLLECTIVE S.R.L. · CUI 54738377 · Constanța, Bd. Tomis nr. 307
         <br />
         www.mueve.ro · mueve.universe@gmail.com · 0753 087 056
       </div>
