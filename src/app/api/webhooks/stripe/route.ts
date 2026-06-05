@@ -7,6 +7,7 @@ import { requireStripe } from "@/lib/stripe";
 import type { SubscriptionStatus } from "@/db/schema";
 import { grantCredits } from "@/lib/credits";
 import { issueOblioInvoice, oblioEnabled } from "@/lib/oblio";
+import { sendEmail, emailEnabled } from "@/lib/mailer";
 import { captureError } from "@/lib/observability";
 
 export const runtime = "nodejs";
@@ -27,6 +28,40 @@ function mapStatus(s: string | null | undefined): SubscriptionStatus {
   return (ALLOWED_STATUSES as string[]).includes(s ?? "")
     ? (s as SubscriptionStatus)
     : "incomplete";
+}
+
+const ADMIN_NOTIFY = process.env.ADMIN_NOTIFY_EMAIL || "mueve.universe@gmail.com";
+
+/** Best-effort sale notification to the admin inbox. Never throws. */
+async function notifyAdminSale(args: {
+  clientName: string | null;
+  clientEmail: string;
+  planName: string;
+  amountBani: number;
+  currency: string;
+  kind: "abonament" | "pachet" | "reînnoire";
+}) {
+  if (!emailEnabled()) return;
+  const suma = `${(args.amountBani / 100).toFixed(2)} ${args.currency.toUpperCase()}`;
+  const cine = args.clientName ? `${args.clientName} (${args.clientEmail})` : args.clientEmail;
+  try {
+    await sendEmail({
+      to: ADMIN_NOTIFY,
+      subject: `Vânzare nouă · ${args.planName} · ${suma}`,
+      text: [
+        `Vânzare nouă pe mueve.ro`,
+        ``,
+        `Tip: ${args.kind}`,
+        `Plan: ${args.planName}`,
+        `Sumă: ${suma}`,
+        `Client: ${cine}`,
+        ``,
+        `Detalii: https://www.mueve.ro/admin/billing`,
+      ].join("\n"),
+    });
+  } catch (err) {
+    captureError(err, { scope: "admin-sale-notify" });
+  }
 }
 
 async function userFromCustomer(
@@ -197,6 +232,23 @@ export async function POST(req: Request) {
               });
             }
           }
+          {
+            const client = await userFromCustomer(
+              typeof session.customer === "string"
+                ? session.customer
+                : session.customer?.id ?? null,
+            );
+            if (client) {
+              await notifyAdminSale({
+                clientName: client.name,
+                clientEmail: client.email,
+                planName: (session.metadata?.planName as string) || "Pachet clase",
+                amountBani: pi.amount_received ?? 0,
+                currency: pi.currency ?? "ron",
+                kind: "pachet",
+              });
+            }
+          }
         }
         break;
       }
@@ -204,13 +256,13 @@ export async function POST(req: Request) {
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         await recordPayment(invoice);
-        if (oblioEnabled() && (invoice.amount_paid ?? 0) > 0) {
+        if ((invoice.amount_paid ?? 0) > 0) {
           const client = await userFromCustomer(
             typeof invoice.customer === "string"
               ? invoice.customer
               : invoice.customer?.id ?? null,
           );
-          if (client) {
+          if (client && oblioEnabled()) {
             await issueOblioInvoice({
               stripeRef: invoice.id ?? `inv-${event.id}`,
               clientName: client.name || client.email,
@@ -219,6 +271,18 @@ export async function POST(req: Request) {
                 invoice.lines?.data?.[0]?.description || "Abonament MUEVE UNIVERSE PASS",
               amountBani: invoice.amount_paid ?? 0,
               currency: invoice.currency ?? "ron",
+            });
+          }
+          // Only on invoice.paid — invoice.payment_succeeded fires for the same
+          // invoice and would double the email.
+          if (client && event.type === "invoice.paid") {
+            await notifyAdminSale({
+              clientName: client.name,
+              clientEmail: client.email,
+              planName: "MUEVE UNIVERSE PASS",
+              amountBani: invoice.amount_paid ?? 0,
+              currency: invoice.currency ?? "ron",
+              kind: invoice.billing_reason === "subscription_create" ? "abonament" : "reînnoire",
             });
           }
         }
