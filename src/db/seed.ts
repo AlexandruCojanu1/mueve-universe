@@ -120,11 +120,11 @@ async function main() {
       // THU — CALISTHENICS (sunrise)
       { id: "am-3", day: 3, row: "am", activity: bi("Calisthenics", "Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
       // THU — SOCIAL RUN (sunset)
-      { id: "pm-3", day: 3, row: "pm", activity: bi("Alergare în grup", "Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
+      { id: "pm-3", day: 3, row: "pm", activity: bi("Alergare socială", "Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
       // FRI — COMING SOON
       { id: "am-4", day: 4, row: "am", activity: bi("Coming Soon", "Coming Soon"), time: "TBA", world: bi("", ""), color: "orange" },
       // SUN — THE BIG SOCIAL RUN (main event)
-      { id: "am-6", day: 6, row: "am", activity: bi("THE BIG Social Run", "THE BIG Social Run"), time: "09:00", world: bi("Toate Lumile", "All Worlds"), color: "yellow", boss: true },
+      { id: "am-6", day: 6, row: "am", activity: bi("Marea Alergare", "The Big Run"), time: "09:00", world: bi("Toate Lumile", "All Worlds"), color: "yellow", boss: true },
     ],
   };
   await add("program", program);

@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { pick } from "@/lib/bilingual";
 import type { ProgramData, ProgramSlot } from "@/lib/content-types";
-import CtaPair from "./CtaPair";
 
 const DOT_COLOR: Record<ProgramSlot["color"], { bg: string; glow: string }> = {
   yellow: { bg: "var(--sun)", glow: "var(--sun-g)" },
@@ -56,7 +55,6 @@ export default function Program({ data }: { data: ProgramData }) {
           <span>{pick(data.heading.accent, lang)}</span>
         </h2>
         <p>{pick(data.intro, lang)}</p>
-        <CtaPair />
       </div>
       <div className="prog-table">
         <div className="pt-corner" />
