@@ -196,6 +196,15 @@ export const appSettings = pgTable("app_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// ── Launch gate entries (name + email collected before the site opens; raffle pool) ──
+export const raffleEntries = pgTable("raffle_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  gender: text("gender").notNull(), // "f" | "m"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Oblio invoices (one per Stripe payment; stripe_ref = PI / invoice id) ──
 export const oblioInvoices = pgTable("oblio_invoices", {
   id: uuid("id").primaryKey().defaultRandom(),

@@ -1,7 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type LaunchState = { state: "pre" | "countdown" | "live"; startAt?: string };
+type Winners = {
+  girl: { name: string | null } | null;
+  boy: { name: string | null } | null;
+} | null;
+type LaunchState = {
+  state: "pre" | "countdown" | "live";
+  startAt?: string;
+  gate?: boolean;
+  winners?: Winners;
+};
 type Winner = { name: string | null; email: string } | null;
 type Raffle = { girl: Winner; boy: Winner; drawnAt: string } | null;
 
@@ -39,7 +48,10 @@ export default function LaunchPanel() {
     return () => clearInterval(id);
   }, []);
 
-  async function act(action: "arm" | "launch" | "reset", confirmMsg?: string) {
+  async function act(
+    action: "arm" | "launch" | "reset" | "gate-on" | "gate-off" | "hide-winners",
+    confirmMsg?: string,
+  ) {
     if (confirmMsg && !confirm(confirmMsg)) return;
     setBusy(action);
     setErr(null);
@@ -58,7 +70,12 @@ export default function LaunchPanel() {
   }
 
   async function draw() {
-    if (!confirm("Extragi câștigătorii? Rezultatul înlocuiește extragerea anterioară.")) return;
+    if (
+      !confirm(
+        "Extragi câștigătorii? Rezultatul înlocuiește extragerea anterioară și apare pe TOATE telefoanele deschise.",
+      )
+    )
+      return;
     setBusy("draw");
     setErr(null);
     try {
@@ -70,17 +87,58 @@ export default function LaunchPanel() {
       }
       setRaffle(data.raffle);
       setShowStage(true);
+      await refresh();
     } finally {
       setBusy(null);
     }
   }
+
+  const gateOn = !!launch?.gate;
 
   return (
     <>
       <div className="dash-card" style={{ marginBottom: "1.5rem" }}>
         <div className="dash-card-head">
           <div>
-            <div className="dash-card-eyebrow">Pasul 1 · Lansarea</div>
+            <div className="dash-card-eyebrow">Pasul 1 · Poarta de intrare</div>
+            <div className="dash-card-title">
+              {launch ? (gateOn ? "POARTĂ ACTIVĂ (site cu login)" : "POARTĂ OPRITĂ") : "…"}
+            </div>
+          </div>
+        </div>
+        <p style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.6 }}>
+          Când poarta e activă, site-ul se deschide doar după ce vizitatorul își lasă
+          numele, emailul și alege Fată/Băiat. Înscrierile intră automat în tombolă.
+          {eligible && (
+            <>
+              {" "}
+              Înscriși până acum: <strong>{eligible.girls} fete</strong> ·{" "}
+              <strong>{eligible.boys} băieți</strong> ({eligible.total} total).
+            </>
+          )}
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: "0.8rem" }}>
+          <button
+            className="dash-btn dash-btn-primary"
+            disabled={busy !== null || gateOn}
+            onClick={() => act("gate-on", "Activezi poarta? Site-ul va cere nume + email la intrare.")}
+          >
+            {busy === "gate-on" ? "…" : "🔒 Pornește poarta"}
+          </button>
+          <button
+            className="dash-btn dash-btn-light"
+            disabled={busy !== null || !gateOn}
+            onClick={() => act("gate-off")}
+          >
+            {busy === "gate-off" ? "…" : "Oprește poarta (site liber)"}
+          </button>
+        </div>
+      </div>
+
+      <div className="dash-card" style={{ marginBottom: "1.5rem" }}>
+        <div className="dash-card-head">
+          <div>
+            <div className="dash-card-eyebrow">Pasul 2 · Lansarea</div>
             <div className="dash-card-title">
               {launch ? STATE_LABEL[launch.state] : "…"}
             </div>
@@ -129,18 +187,18 @@ export default function LaunchPanel() {
       <div className="dash-card">
         <div className="dash-card-head">
           <div>
-            <div className="dash-card-eyebrow">Pasul 2 · Tombola</div>
+            <div className="dash-card-eyebrow">Pasul 3 · Tombola</div>
             <div className="dash-card-title">Extragerea câștigătorilor</div>
           </div>
         </div>
         <p style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.6 }}>
-          Alege aleatoriu o fată și un băiat dintre membrii înscriși (pe baza genului
-          declarat la crearea contului).
+          Alege aleatoriu o fată și un băiat dintre cei înscriși la poartă. Câștigătorii
+          apar fullscreen pe toate telefoanele deschise și aici.
           {eligible && (
             <>
               {" "}
               Eligibili acum: <strong>{eligible.girls} fete</strong> ·{" "}
-              <strong>{eligible.boys} băieți</strong> (din {eligible.total} membri).
+              <strong>{eligible.boys} băieți</strong> (din {eligible.total} înscriși).
             </>
           )}
         </p>
@@ -152,12 +210,26 @@ export default function LaunchPanel() {
           >
             {busy === "draw" ? "Se extrage…" : "🎉 Extrage câștigătorii"}
           </button>
+          {launch?.winners && (
+            <button
+              className="dash-btn dash-btn-light"
+              disabled={busy !== null}
+              onClick={() => act("hide-winners")}
+            >
+              {busy === "hide-winners" ? "…" : "Ascunde de pe ecrane"}
+            </button>
+          )}
           {raffle && (
             <button className="dash-btn dash-btn-light" onClick={() => setShowStage(true)}>
-              Afișează din nou
+              Afișează din nou (aici)
             </button>
           )}
         </div>
+        {launch?.winners && (
+          <p style={{ fontSize: 12, marginTop: "0.8rem", color: "var(--sun)" }}>
+            Câștigătorii sunt afișați acum pe toate ecranele deschise.
+          </p>
+        )}
         {raffle && (
           <p style={{ fontSize: 12, opacity: 0.6, marginTop: "0.8rem" }}>
             Ultima extragere: {new Date(raffle.drawnAt).toLocaleString("ro-RO")} · Fata:{" "}

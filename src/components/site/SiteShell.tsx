@@ -7,7 +7,17 @@ import LenisScroll from "./LenisScroll";
 import CookieBanner from "./CookieBanner";
 import LaunchOverlay from "./LaunchOverlay";
 
-type LaunchState = { state: "pre" | "countdown" | "live"; startAt?: string; v?: number };
+type LaunchState = {
+  state: "pre" | "countdown" | "live";
+  startAt?: string;
+  gate?: boolean;
+  winners?: {
+    girl: { name: string | null } | null;
+    boy: { name: string | null } | null;
+    shownAt?: string;
+  } | null;
+  v?: number;
+};
 
 export default function SiteShell({
   sections,

@@ -26,9 +26,16 @@ export default async function Home() {
     .from(appSettings)
     .where(eq(appSettings.key, "launch"))
     .limit(1);
-  const launch = (launchRow?.value as { state: "pre" | "countdown" | "live"; startAt?: string }) ?? {
-    state: "live" as const,
-  };
+  const launch = (launchRow?.value as {
+    state: "pre" | "countdown" | "live";
+    startAt?: string;
+    gate?: boolean;
+    winners?: {
+      girl: { name: string | null } | null;
+      boy: { name: string | null } | null;
+      shownAt?: string;
+    } | null;
+  }) ?? { state: "live" as const };
   // Content version: lets open clients soft-refresh when admin edits content.
   const v = rows.reduce((m, r) => Math.max(m, r.updatedAt?.getTime() ?? 0), 0);
   return <SiteShell sections={rows} launch={{ ...launch, v }} />;

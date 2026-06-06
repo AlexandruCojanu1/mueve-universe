@@ -6438,3 +6438,93 @@ body.is-night .foot-legal a:hover { color: #fff; }
   text-transform: uppercase;
   color: var(--sun);
 }
+
+/* ── Launch gate (name + email before the site opens) ─────────────────── */
+.gate-overlay {
+  gap: 1.6rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+.gate-logo {
+  width: clamp(140px, 30vw, 260px);
+  height: auto;
+  filter: drop-shadow(0 0 40px rgba(245, 245, 10, 0.3));
+}
+.gate-form {
+  width: min(420px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.gate-title {
+  font-family: var(--ff);
+  font-weight: 900;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  text-align: center;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.gate-sub {
+  font-size: 0.85rem;
+  text-align: center;
+  opacity: 0.65;
+  line-height: 1.5;
+  margin-bottom: 0.4rem;
+}
+.gate-input {
+  width: 100%;
+  padding: 0.95rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+.gate-input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 400; }
+.gate-input:focus {
+  outline: 2px solid var(--sun);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.gate-gender {
+  display: flex;
+  gap: 0.7rem;
+}
+.gate-gender-btn {
+  flex: 1;
+  padding: 0.85rem 0;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.gate-gender-btn.on {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: #050816;
+}
+.gate-err {
+  font-size: 0.85rem;
+  color: #ff8080;
+  text-align: center;
+}
+.gate-submit {
+  margin-top: 0.4rem;
+  padding: 1rem 0;
+  border-radius: 14px;
+  border: none;
+  background: var(--sun);
+  color: #050816;
+  font-family: var(--ff);
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.gate-submit:disabled { opacity: 0.6; cursor: wait; }

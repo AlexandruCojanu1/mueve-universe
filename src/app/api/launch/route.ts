@@ -5,9 +5,19 @@ import { eq, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
+export type LaunchWinners = {
+  girl: { name: string | null } | null;
+  boy: { name: string | null } | null;
+  shownAt: string;
+} | null;
+
 export type LaunchState = {
   state: "pre" | "countdown" | "live";
   startAt?: string; // ISO, set when countdown begins
+  /** Gate ON: site opens only after visitors leave name + email. */
+  gate?: boolean;
+  /** When set, every open phone shows the raffle winners fullscreen. */
+  winners?: LaunchWinners;
   /** Content version: max(sections.updatedAt) in ms. Clients soft-refresh when it changes. */
   v?: number;
 };
