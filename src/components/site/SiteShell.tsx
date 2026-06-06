@@ -7,7 +7,7 @@ import LenisScroll from "./LenisScroll";
 import CookieBanner from "./CookieBanner";
 import LaunchOverlay from "./LaunchOverlay";
 
-type LaunchState = { state: "pre" | "countdown" | "live"; startAt?: string };
+type LaunchState = { state: "pre" | "countdown" | "live"; startAt?: string; v?: number };
 
 export default function SiteShell({
   sections,
@@ -18,7 +18,8 @@ export default function SiteShell({
 }) {
   return (
     <LangProvider>
-      {launch && launch.state !== "live" && <LaunchOverlay initial={launch} />}
+      {/* Always mounted: live-syncs launch state + content edits to open phones. */}
+      <LaunchOverlay initial={launch ?? { state: "live" }} />
       <LenisScroll />
       <SkyScene />
       <Cursor />

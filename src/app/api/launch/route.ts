@@ -1,23 +1,30 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { appSettings } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { appSettings, sections } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
 export type LaunchState = {
   state: "pre" | "countdown" | "live";
   startAt?: string; // ISO, set when countdown begins
+  /** Content version: max(sections.updatedAt) in ms. Clients soft-refresh when it changes. */
+  v?: number;
 };
 
 export async function GET() {
-  const [row] = await db
-    .select({ value: appSettings.value })
-    .from(appSettings)
-    .where(eq(appSettings.key, "launch"))
-    .limit(1);
+  const [[row], [ver]] = await Promise.all([
+    db
+      .select({ value: appSettings.value })
+      .from(appSettings)
+      .where(eq(appSettings.key, "launch"))
+      .limit(1),
+    db.select({ max: sql<string | null>`max(${sections.updatedAt})` }).from(sections),
+  ]);
   const value = (row?.value as LaunchState | undefined) ?? { state: "live" };
-  return NextResponse.json(value, {
-    headers: { "Cache-Control": "no-store" },
-  });
+  const v = ver?.max ? new Date(ver.max).getTime() : 0;
+  return NextResponse.json(
+    { ...value, v },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

@@ -33,8 +33,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, state: "pre" });
   }
   if (action === "launch") {
-    // Countdown starts in 2s so all polling clients pick it up in sync.
-    const startAt = new Date(Date.now() + 2000).toISOString();
+    // Countdown starts in 3s — clients poll every 1.2s while armed, so every
+    // open phone catches the start before 10 appears and they count in sync.
+    const startAt = new Date(Date.now() + 3000).toISOString();
     await setLaunch({ state: "countdown", startAt });
     return NextResponse.json({ ok: true, state: "countdown", startAt });
   }

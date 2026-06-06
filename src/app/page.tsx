@@ -29,5 +29,7 @@ export default async function Home() {
   const launch = (launchRow?.value as { state: "pre" | "countdown" | "live"; startAt?: string }) ?? {
     state: "live" as const,
   };
-  return <SiteShell sections={rows} launch={launch} />;
+  // Content version: lets open clients soft-refresh when admin edits content.
+  const v = rows.reduce((m, r) => Math.max(m, r.updatedAt?.getTime() ?? 0), 0);
+  return <SiteShell sections={rows} launch={{ ...launch, v }} />;
 }
