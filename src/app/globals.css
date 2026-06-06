@@ -6366,3 +6366,63 @@ body.is-night .foot-legal a:hover { color: #fff; }
   outline-offset: 1px;
   border-color: transparent;
 }
+
+/* ── Teaser (blur + "În curând" pill) ─────────────────────────────────── */
+.teaser-wrap {
+  position: relative;
+}
+.teaser-blur {
+  filter: blur(7px);
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.teaser-pill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(8, 12, 30, 0.7);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  color: var(--w);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.teaser-pill-lg {
+  font-size: 0.75rem;
+  padding: 0.45rem 1rem;
+}
+.pt-cell.pt-teaser {
+  cursor: default;
+}
+
+/* ── PASS countdown ───────────────────────────────────────────────────── */
+.pass-countdown {
+  margin-top: 0.55rem;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--sun);
+  text-align: center;
+}
+
+/* ── Worlds modal tagline ─────────────────────────────────────────────── */
+.worlds-modal-tagline {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--sun);
+}

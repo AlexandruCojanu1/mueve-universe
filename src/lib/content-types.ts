@@ -27,12 +27,16 @@ export type WorldCard = {
   body: Bilingual;
   tags: Bilingual[];
   bigIcon: string;
+  /** Teaser card: content blurred with an "În curând" pill on top. */
+  teaser?: boolean;
 };
 
 export type WorldsData = {
   heading: { lead: Bilingual; accent: Bilingual };
   intro: Bilingual;
   worlds: WorldCard[];
+  /** Readable tagline shown after the worlds list (e.g. "MAI MULTE LUMI. UN UNIVERS."). */
+  tagline?: Bilingual;
 };
 
 export type ProgramSlot = {
@@ -45,6 +49,8 @@ export type ProgramSlot = {
   color: "yellow" | "purple" | "blue" | "orange";
   boss?: boolean;
   description?: Bilingual;
+  /** Teaser slot: rendered blurred with an "În curând" pill, not clickable, never synced to bookable class_slots. */
+  teaser?: boolean;
 };
 
 export type ProgramData = {
@@ -65,6 +71,10 @@ export type PricingPlan = {
   period?: Bilingual;
   tagline?: Bilingual;
   featuresTitle?: Bilingual;
+  /**
+   * Feature lines may use the "||" teaser convention: text before "||" stays
+   * readable, text after it is rendered blurred (e.g. "20% ||FOAM").
+   */
   features: Bilingual[];
   highlighted?: boolean;
   badge?: Bilingual;
@@ -108,6 +118,8 @@ export type MissionData = {
   heading: { lead: Bilingual; accent: Bilingual };
   intro: Bilingual;
   values: MissionValue[];
+  /** Teaser mode: heading stays readable, intro + value cards are blurred. */
+  teaser?: boolean;
 };
 
 export type JoinData = {

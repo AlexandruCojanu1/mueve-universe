@@ -15,6 +15,7 @@
     "db:content-update": "tsx --env-file=.env.local scripts/apply-content-update.ts",
     "db:seed-demo": "tsx --env-file=.env.local scripts/seed-demo-data.ts",
     "db:sync-slots": "tsx --env-file=.env.local scripts/sync-class-slots.ts",
+    "db:teaser-content": "tsx --env-file=.env.local scripts/apply-teaser-content.ts",
     "db:backfill-xp": "tsx --env-file=.env.local scripts/backfill-xp.ts"
   },
   "dependencies": {

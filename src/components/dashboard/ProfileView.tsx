@@ -37,13 +37,14 @@ export default function ProfileView({ data: d }: { data: ProfileViewData }) {
         <div className="m-prof-id">
           <div className="m-prof-name">{d.name}</div>
           <div className="m-prof-email">{d.email}</div>
-          <div className="m-prof-tags">
+          <div className="m-prof-tags teaser-wrap">
             {d.tier && (
-              <span className="m-prof-tag">
+              <span className="m-prof-tag teaser-blur">
                 LVL {d.tier.level} · {d.tier.name}
               </span>
             )}
-            <span className="m-prof-tag m-prof-tag-xp">{d.xp} XP</span>
+            <span className="m-prof-tag m-prof-tag-xp teaser-blur">{d.xp} XP</span>
+            <span className="teaser-pill">În curând</span>
           </div>
           {d.memberSince && (
             <div className="m-prof-since">Membru din {d.memberSince}</div>

@@ -113,16 +113,20 @@ async function main() {
     slots: [
       // MON — MOVEMENT FOR ALL (sunrise)
       { id: "am-0", day: 0, row: "am", activity: bi("Movement for All", "Movement for All"), time: "06:30", world: bi("Toate Lumile", "All Worlds"), color: "yellow" },
+      // TUE — TEASER (sunrise)
+      { id: "am-1", day: 1, row: "am", activity: bi("Mobility Flow", "Mobility Flow"), time: "06:30", world: bi("Templul", "Temple"), color: "orange", teaser: true },
       // TUE — GIRLS' RUN (sunset)
       { id: "pm-1", day: 1, row: "pm", activity: bi("Alergarea fetelor", "Girls' Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
       // WED — YOGA (sunrise)
       { id: "am-2", day: 2, row: "am", activity: bi("Yoga", "Yoga"), time: "06:30", world: bi("Templul", "Temple"), color: "purple" },
-      // THU — CALISTHENICS (sunrise)
-      { id: "am-3", day: 3, row: "am", activity: bi("Calisthenics", "Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue" },
+      // THU — CALISTHENICS (sunrise, teaser until launch)
+      { id: "am-3", day: 3, row: "am", activity: bi("Calisthenics", "Calisthenics"), time: "06:30", world: bi("Forja", "Forge"), color: "blue", teaser: true },
       // THU — SOCIAL RUN (sunset)
       { id: "pm-3", day: 3, row: "pm", activity: bi("Alergare socială", "Social Run"), time: "19:30", world: bi("Drumul", "Path"), color: "purple" },
-      // FRI — COMING SOON
-      { id: "am-4", day: 4, row: "am", activity: bi("Coming Soon", "Coming Soon"), time: "TBA", world: bi("", ""), color: "orange" },
+      // FRI — TEASER (sunrise)
+      { id: "am-4", day: 4, row: "am", activity: bi("Strength Lab", "Strength Lab"), time: "06:30", world: bi("Forja", "Forge"), color: "orange", teaser: true },
+      // SAT — TEASER (sunset)
+      { id: "pm-5", day: 5, row: "pm", activity: bi("Sunset Session", "Sunset Session"), time: "19:30", world: bi("Toate Lumile", "All Worlds"), color: "orange", teaser: true },
       // SUN — THE BIG SOCIAL RUN (main event)
       { id: "am-6", day: 6, row: "am", activity: bi("Marea Alergare", "The Big Run"), time: "09:00", world: bi("Toate Lumile", "All Worlds"), color: "yellow", boss: true },
     ],
@@ -153,13 +157,15 @@ async function main() {
             period: bi("/ lună", "/ month"),
             badge: bi("REDUS", "DEAL"),
             featuresTitle: bi("CE INCLUDE?", "WHAT\u2019S INCLUDED?"),
+            // "||" = teaser convention: prefix readable, remainder blurred
             features: [
-              bi("20% FOAM", "20% FOAM"),
-              bi("30% PADEL", "30% PADEL"),
-              bi("10% VISA MED", "10% VISA MED"),
-              bi("20% DISCOUNT LA MERCH", "20% DISCOUNT ON MERCH"),
-              bi("PRODUSE GRATUITE LUNAR", "FREE PRODUCTS EVERY MONTH"),
-              bi("+++", "+++"),
+              bi("20% ||FOAM", "20% ||FOAM"),
+              bi("30% ||PADEL", "30% ||PADEL"),
+              bi("10% ||VISA MED", "10% ||VISA MED"),
+              bi("10% ||PARTENER NOU", "10% ||NEW PARTNER"),
+              bi("20% ||DISCOUNT LA MERCH", "20% ||DISCOUNT ON MERCH"),
+              bi("FREE ||PRODUSE LUNAR", "FREE ||MONTHLY PRODUCTS"),
+              bi("FREE ||SURPRIZĂ LA LANSARE", "FREE ||LAUNCH SURPRISE"),
             ],
             highlighted: true,
             ctaLabel: bi("INTRĂ", "GET IT"),
@@ -300,8 +306,21 @@ async function main() {
           "Handstands. Muscle-ups. Strength flow.\nMovement built through repetition, precision and will. Functional power. Total control.",
         ),
         tags: [bi("Forță", "Strength"), bi("Control", "Control"), bi("Măiestrie", "Mastery")],
+        teaser: true,
+      },
+      {
+        id: "soon", key: "walk", bigIcon: "SOON",
+        label: bi("În curând", "Coming soon"),
+        title: bi("O LUME NOUĂ", "A NEW WORLD"),
+        body: bi(
+          "O dimensiune nouă a mișcării se deschide în MUEVE UNIVERSE.\nDetaliile vin la lansare.",
+          "A new dimension of movement opens inside MUEVE UNIVERSE.\nDetails at launch.",
+        ),
+        tags: [bi("Mister", "Mystery"), bi("Lansare", "Launch"), bi("Univers", "Universe")],
+        teaser: true,
       },
     ],
+    tagline: bi("MAI MULTE LUMI. UN UNIVERS.", "MORE WORLDS. ONE UNIVERSE."),
   };
   await add("worlds", worlds);
 
@@ -317,6 +336,7 @@ async function main() {
       { id: "v2", title: bi("Varietatea e sistemul", "Variety is the system"), body: bi("Corpul tău are nevoie de mai mult. Calisthenics construiește. Yoga echilibrează. Alergarea eliberează. Împreună — te completează.", "Your body needs more than one thing. Calisthenics builds. Yoga balances. Running liberates. Together — they complete you.") },
       { id: "v3", title: bi("Energia tribului", "Tribe energy"), body: bi("Antrenamentul solo are limite. Când alergi cu 50 de oameni într-o duminică dimineață, ceva se schimbă. Asta e energia MUEVE UNIVERSE.", "Solo training has limits. When you run with 50 people on a Sunday morning, something shifts. That's MUEVE UNIVERSE energy.") },
     ],
+    teaser: true,
   };
   await add("mission", mission);
 

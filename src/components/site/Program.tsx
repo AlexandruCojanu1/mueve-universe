@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useLang } from "@/lib/lang-context";
-import { pick } from "@/lib/bilingual";
+import { pick, soonLabel } from "@/lib/bilingual";
 import type { ProgramData, ProgramSlot } from "@/lib/content-types";
 
 const DOT_COLOR: Record<ProgramSlot["color"], { bg: string; glow: string }> = {
@@ -143,6 +143,30 @@ function RowBlock({
           );
         }
         const dot = DOT_COLOR[s.color];
+        if (s.teaser) {
+          return (
+            <div
+              key={s.id}
+              className={
+                "pt-cell pt-has pt-teaser teaser-wrap" +
+                (isToday ? " pt-cell-today" : "")
+              }
+              data-c={s.color}
+              data-row={rowKey}
+            >
+              <div className="teaser-blur">
+                <div
+                  className="pt-dot"
+                  style={{ background: dot.bg, boxShadow: `0 0 12px ${dot.glow}` }}
+                />
+                <div className="pt-act">{pick(s.activity, lang)}</div>
+                <div className="pt-time">{s.time}</div>
+                <div className="pt-world">{pick(s.world, lang)}</div>
+              </div>
+              <span className="teaser-pill">{soonLabel(lang)}</span>
+            </div>
+          );
+        }
         return (
           <div
             key={s.id}

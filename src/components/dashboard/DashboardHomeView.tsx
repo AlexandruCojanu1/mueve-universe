@@ -154,9 +154,10 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
             <div className="m-stat-value m-stat-accent">{d.stats.runs}</div>
             <div className="m-stat-label">Sesiuni</div>
           </div>
-          <div className="m-stat-tile">
-            <div className="m-stat-value">{d.stats.xp}</div>
+          <div className="m-stat-tile teaser-wrap">
+            <div className="m-stat-value teaser-blur">{d.stats.xp}</div>
             <div className="m-stat-label">XP total</div>
+            <span className="teaser-pill">În curând</span>
           </div>
           <div className="m-stat-tile">
             <div className="m-stat-value">
@@ -165,11 +166,12 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
             </div>
             <div className="m-stat-label">Streak</div>
           </div>
-          <div className="m-stat-tile">
-            <div className="m-stat-value m-stat-rank">
+          <div className="m-stat-tile teaser-wrap">
+            <div className="m-stat-value m-stat-rank teaser-blur">
               {d.stats.rank ? `#${d.stats.rank}` : "—"}
             </div>
             <div className="m-stat-label">Rank comunitate</div>
+            <span className="teaser-pill">În curând</span>
           </div>
         </div>
       </section>
@@ -180,13 +182,16 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
           <div className="m-note-icon">🎯</div>
           <div className="m-note-body">
             <div className="m-note-eyebrow">PROGRESUL TĂU</div>
-            <p className="m-note-text">
-              Ești <strong>{d.progress.tierName}</strong> · Nivel{" "}
-              <strong>{d.progress.level}</strong>.{" "}
-              {d.progress.nextTierName
-                ? `Încă ${d.progress.xpToGo} XP până la ${d.progress.nextTierName} — apropie-te cu fiecare sesiune.`
-                : "Ai atins nivelul maxim. Legendă."}
-            </p>
+            <div className="teaser-wrap">
+              <p className="m-note-text teaser-blur">
+                Ești <strong>{d.progress.tierName}</strong> · Nivel{" "}
+                <strong>{d.progress.level}</strong>.{" "}
+                {d.progress.nextTierName
+                  ? `Încă ${d.progress.xpToGo} XP până la ${d.progress.nextTierName}. Apropie-te cu fiecare sesiune.`
+                  : "Ai atins nivelul maxim. Legendă."}
+              </p>
+              <span className="teaser-pill">În curând</span>
+            </div>
             {d.progress.nextTierName && (
               <div className="m-note-bar">
                 <div

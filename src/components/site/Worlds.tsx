@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/lang-context";
-import { pick } from "@/lib/bilingual";
+import { pick, soonLabel } from "@/lib/bilingual";
 import type { WorldsData, WorldCard, Lang } from "@/lib/content-types";
 
 function Symbol({ k }: { k: WorldCard["key"] }) {
@@ -99,11 +99,20 @@ function WorldsModal({
         </div>
         <div className="worlds-modal-list">
           {data.worlds.map((w) => (
-            <div key={w.id} className={`worlds-modal-item wr-${w.key}`}>
+            <div
+              key={w.id}
+              className={
+                `worlds-modal-item wr-${w.key}` + (w.teaser ? " teaser-wrap" : "")
+              }
+            >
               <div className="w-symbol worlds-modal-symbol">
                 <Symbol k={w.key} />
               </div>
-              <div className="worlds-modal-info">
+              <div
+                className={
+                  "worlds-modal-info" + (w.teaser ? " teaser-blur" : "")
+                }
+              >
                 <div className="w-label">{pick(w.label, lang)}</div>
                 <h3>{pick(w.title, lang)}</h3>
                 <p>{pick(w.body, lang)}</p>
@@ -115,8 +124,12 @@ function WorldsModal({
                   </div>
                 )}
               </div>
+              {w.teaser && <span className="teaser-pill">{soonLabel(lang)}</span>}
             </div>
           ))}
+          {data.tagline && pick(data.tagline, lang) && (
+            <div className="worlds-modal-tagline">{pick(data.tagline, lang)}</div>
+          )}
         </div>
       </div>
     </div>

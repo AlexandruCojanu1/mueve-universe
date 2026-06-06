@@ -5,6 +5,7 @@ import { pick } from "@/lib/bilingual";
 import type { PricingData, PricingPlan, PricingTier } from "@/lib/content-types";
 import type { CSSProperties } from "react";
 import PricingDetailsModal from "./PricingDetailsModal";
+import PassCountdown from "./PassCountdown";
 import CtaPair from "./CtaPair";
 
 export default function Pricing({ data }: { data: PricingData }) {
@@ -128,6 +129,7 @@ function PlanCard({
         )}
         {period && <div className="price-period">{period}</div>}
         {tagline && <div className="price-tagline">{tagline}</div>}
+        {plan.id === "plan-pass" && <PassCountdown />}
       </div>
       <div className="price-card-hint">
         {lang === "ro" ? "Vezi beneficii →" : "See benefits →"}

@@ -36,6 +36,7 @@ type ProgramSlot = {
   day: number; // 0=Mon..6=Sun
   time: string;
   activity?: { ro?: string; en?: string };
+  teaser?: boolean;
 };
 
 const isTime = (t: string) => /^\d{1,2}:\d{2}$/.test(t || "");
@@ -67,7 +68,7 @@ async function main() {
 
   for (const s of slots) {
     const act = s.activity?.ro?.trim() || "Clasă";
-    if (!isTime(s.time) || isComingSoon(act)) {
+    if (s.teaser || !isTime(s.time) || isComingSoon(act)) {
       skipped.push(`${act} (${s.time || "—"})`);
       continue;
     }

@@ -30,8 +30,9 @@ export default async function CommunityPage() {
         </div>
       </header>
 
-      <section className="m-board" id="board">
-        <ul className="m-board-list">
+      <section className="m-board teaser-wrap" id="board">
+        <span className="teaser-pill teaser-pill-lg">În curând</span>
+        <ul className="m-board-list teaser-blur">
           {board.length === 0 && (
             <li className="m-crew-empty">Niciun runner încă.</li>
           )}

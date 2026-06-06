@@ -1,9 +1,10 @@
 "use client";
 import { useEffect } from "react";
 import { useLang } from "@/lib/lang-context";
-import { pick } from "@/lib/bilingual";
+import { pick, splitTeaser } from "@/lib/bilingual";
 import type { PricingPlan } from "@/lib/content-types";
 import PricingCta from "./PricingCta";
+import PassCountdown from "./PassCountdown";
 
 type Props = {
   plan: PricingPlan;
@@ -57,6 +58,7 @@ export default function PricingDetailsModal({ plan, onClose }: Props) {
           <div className="pricing-modal-original">{plan.originalPrice}</div>
         )}
         {period && <div className="pricing-modal-period">{period}</div>}
+        {plan.id === "plan-pass" && <PassCountdown />}
         {tagline && <div className="pricing-modal-tagline">{tagline}</div>}
         {plan.features.length > 0 && (
           <div className="pricing-modal-feat">
@@ -64,9 +66,15 @@ export default function PricingDetailsModal({ plan, onClose }: Props) {
               <div className="pricing-modal-feat-title">{featuresTitle}</div>
             )}
             <ul>
-              {plan.features.map((f, i) => (
-                <li key={i}>{pick(f, lang)}</li>
-              ))}
+              {plan.features.map((f, i) => {
+                const { prefix, blur } = splitTeaser(pick(f, lang));
+                return (
+                  <li key={i}>
+                    {prefix}
+                    {blur && <span className="teaser-blur">{blur}</span>}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
