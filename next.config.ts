@@ -28,6 +28,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  output: "standalone", // self-contained server build for Docker/Coolify
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {
