@@ -1,5 +1,4 @@
 import WalletButtons from "@/components/dashboard/WalletButtons";
-import StravaCard from "@/components/dashboard/StravaCard";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AttendanceList from "@/components/dashboard/AttendanceList";
 import SignOutButton from "@/components/dashboard/SignOutButton";
@@ -13,8 +12,6 @@ export type ProfileViewData = {
   tier: { name: string; level: number } | null;
   xp: number;
   wallet: { appleEnabled: boolean; googleEnabled: boolean; added: boolean };
-  showStrava: boolean;
-  strava: { athleteName: string | null; lastSync: string | null };
   activeSub: { planName: string | null; status: string; periodEnd: string | null } | null;
   creditsTotal: number;
   recentPayments: { id: string; label: string; amount: string }[];
@@ -113,18 +110,6 @@ export default function ProfileView({ data: d }: { data: ProfileViewData }) {
           </div>
         </div>
       </section>
-
-      {/* ── Strava ────────────────────────────────────────────────────── */}
-      {d.showStrava && (
-        <section className="m-card-section" id="strava">
-          <div className="m-section-eyebrow">STRAVA · ALERGĂRILE TALE</div>
-          <StravaCard
-            connected={false}
-            athleteName={d.strava.athleteName}
-            lastSync={d.strava.lastSync}
-          />
-        </section>
-      )}
 
       {/* ── Attendance history ────────────────────────────────────────── */}
       <section className="m-card-section" id="history">

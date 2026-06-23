@@ -36,7 +36,6 @@ export async function GET(req: Request) {
       role: users.role,
       createdAt: users.createdAt,
       walletAddedAt: users.walletAddedAt,
-      stravaAthleteName: users.stravaAthleteName,
       gender: users.gender,
     })
     .from(users)

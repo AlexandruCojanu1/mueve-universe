@@ -234,8 +234,8 @@ export default function TermsPage() {
 
       <S n="09" title="Date personale">
         <p>
-          Prelucrarea datelor tale personale (cont, prezențe, plăți, integrarea
-          opțională cu Strava) este descrisă în{" "}
+          Prelucrarea datelor tale personale (cont, prezențe, plăți) este descrisă
+          în{" "}
           <Link href="/privacy">Politica de confidențialitate</Link>, parte
           integrantă a acestor Termeni. Prelucrăm datele conform Regulamentului (UE)
           2016/679 (GDPR).

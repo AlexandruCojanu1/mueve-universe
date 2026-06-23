@@ -4,7 +4,6 @@ import {
   classCredits,
   attendances,
   classSlots,
-  stravaActivities,
 } from "../src/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -33,7 +32,6 @@ async function main() {
   // 1. Wipe any demo data
   await db.delete(attendances).where(eq(attendances.userId, u.id));
   await db.delete(classCredits).where(eq(classCredits.userId, u.id));
-  await db.delete(stravaActivities).where(eq(stravaActivities.userId, u.id));
   console.log("  wiped existing data");
 
   // 2. Get class slots to attend
@@ -106,57 +104,6 @@ async function main() {
     dayCursor = addDays(dayCursor, -7);
   }
   console.log(`  inserted ${totalAtt} attendances across 20 weeks`);
-
-  // 5. Strava activities — 30 runs/rides over the last 8 weeks
-  const RUN_NAMES = [
-    "Sunday Long Run",
-    "Tempo 8x400m",
-    "Recovery Jog",
-    "Sunrise Trail",
-    "Hill Repeats",
-    "Marathon Prep",
-    "Easy Spin",
-    "Park Loop",
-    "Beach Run",
-    "Coffee Run",
-  ];
-  const SPORTS = ["Run", "Run", "Run", "Run", "Run", "Walk", "Ride"];
-  let stravaXp = 0;
-  for (let i = 0; i < 30; i++) {
-    const daysAgo = Math.floor(Math.random() * 56);
-    const date = addDays(now, -daysAgo);
-    const sport = SPORTS[Math.floor(Math.random() * SPORTS.length)];
-    const distanceKm =
-      sport === "Walk"
-        ? 3 + Math.random() * 8
-        : sport === "Ride"
-          ? 15 + Math.random() * 40
-          : 5 + Math.random() * 16;
-    const distance = Math.round(distanceKm * 1000);
-    const pace = sport === "Ride" ? 130 : sport === "Walk" ? 720 : 280 + Math.random() * 120;
-    const moving = Math.round(distanceKm * pace);
-    const xp = Math.min(80, Math.round(distanceKm * 10));
-    stravaXp += xp;
-    await db
-      .insert(stravaActivities)
-      .values({
-        id: `demo-alex-boost-${i}`,
-        userId: u.id,
-        name: RUN_NAMES[Math.floor(Math.random() * RUN_NAMES.length)],
-        sportType: sport,
-        distanceMeters: distance,
-        movingTimeSec: moving,
-        startedAt: date,
-        xpAwarded: xp,
-      })
-      .onConflictDoNothing();
-  }
-  console.log(`  inserted 30 Strava activities, ${stravaXp} XP from Strava`);
-
-  await db
-    .update(users)
-    .set({ stravaXp })
-    .where(eq(users.id, u.id));
 
   console.log("DONE.");
   process.exit(0);

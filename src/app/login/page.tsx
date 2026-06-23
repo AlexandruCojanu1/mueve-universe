@@ -128,20 +128,10 @@ export default function LoginPage() {
       eyebrow="Universul mișcării"
       headline="Bine ai"
       headlineAccent="revenit."
-      sub="Continuă ritualul — sesiuni, wallet, comunitate. Totul te așteaptă unde l-ai lăsat."
       bullets={[
-        {
-          title: "Toate lumile într-un loc",
-          desc: "Calisthenics · Yoga · Alergare · Team sports.",
-        },
-        {
-          title: "Wallet cosmic",
-          desc: "Prezențe, abonament, plăți — istoric complet.",
-        },
-        {
-          title: "Comunitate reală",
-          desc: "Antrenori, evenimente, oameni care se mișcă.",
-        },
+        { title: "Toate lumile într-un loc" },
+        { title: "Wallet cosmic" },
+        { title: "Comunitate reală" },
       ]}
     >
       <Suspense fallback={<div style={{ opacity: 0.6, fontSize: "0.85rem" }}>…</div>}>

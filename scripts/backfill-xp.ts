@@ -13,17 +13,11 @@
  * Going forward, live check-ins/syncs apply the streak multiplier.
  */
 import { db } from "@/db";
-import { attendances, stravaActivities } from "@/db/schema";
-import {
-  awardXp,
-  reconcileMilestones,
-  awardStravaFirstSync,
-  XP_PER_ATTENDANCE,
-} from "@/lib/xp";
+import { attendances } from "@/db/schema";
+import { awardXp, reconcileMilestones, XP_PER_ATTENDANCE } from "@/lib/xp";
 
 async function main() {
   let attendanceXp = 0;
-  let stravaXp = 0;
   let milestoneXp = 0;
 
   // ── Attendances → attendance events (base 100, ×1.0) ──
@@ -48,50 +42,15 @@ async function main() {
     });
   }
 
-  // ── Strava activities → strava events (preserve recorded xpAwarded, ×1.0) ──
-  const acts = await db
-    .select({
-      id: stravaActivities.id,
-      userId: stravaActivities.userId,
-      sportType: stravaActivities.sportType,
-      distanceMeters: stravaActivities.distanceMeters,
-      startedAt: stravaActivities.startedAt,
-      xpAwarded: stravaActivities.xpAwarded,
-    })
-    .from(stravaActivities);
-  console.log(`Backfilling ${acts.length} Strava activities…`);
-  const stravaUsers = new Set<string>();
-  for (const s of acts) {
-    stravaUsers.add(s.userId);
-    stravaXp += await awardXp({
-      userId: s.userId,
-      source: "strava",
-      idempotencyKey: `strava:${s.id}`,
-      baseXp: s.xpAwarded,
-      multiplierBp: 100,
-      refId: s.id,
-      occurredAt: s.startedAt,
-      metadata: {
-        sportType: s.sportType,
-        km: +(s.distanceMeters / 1000).toFixed(1),
-        backfill: true,
-      },
-    });
-  }
-
-  // ── Milestones: sessions + streak per attending user, strava-first per syncer ──
-  const userIds = new Set<string>([...att.map((a) => a.userId), ...stravaUsers]);
+  // ── Milestones: sessions + streak per attending user ──
+  const userIds = new Set<string>(att.map((a) => a.userId));
   console.log(`Reconciling milestones for ${userIds.size} users…`);
   for (const uid of userIds) {
     milestoneXp += await reconcileMilestones(uid);
   }
-  for (const uid of stravaUsers) {
-    milestoneXp += await awardStravaFirstSync(uid);
-  }
 
   console.log("Done.");
   console.log(`  attendance XP awarded: ${attendanceXp}`);
-  console.log(`  strava XP awarded:     ${stravaXp}`);
   console.log(`  milestone XP awarded:  ${milestoneXp}`);
 }
 

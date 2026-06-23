@@ -35,7 +35,7 @@ function slotDateTime(dateStr: string, time: string): Date {
 export default async function DashboardHome({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string; strava?: string }>;
+  searchParams: Promise<{ checkout?: string }>;
 }) {
   const sp = await searchParams;
   const session = await auth();

@@ -15,7 +15,6 @@ type Detail = {
   user: {
     createdAt: string;
     walletAddedAt: string | null;
-    stravaAthleteName: string | null;
     gender: string | null;
   };
   xp: number;
@@ -361,7 +360,6 @@ function UserRow({
                   Wallet: {detail.user.walletAddedAt ? "✓ adăugat" : "—"}
                 </span>
                 <span>Gen: {detail.user.gender || "—"}</span>
-                <span>Strava: {detail.user.stravaAthleteName || "—"}</span>
                 <span>
                   Rezervări viitoare:{" "}
                   {detail.upcomingReservations.length === 0

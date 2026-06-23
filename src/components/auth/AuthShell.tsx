@@ -2,7 +2,7 @@
 import Link from "next/link";
 import StarfieldBg from "@/components/site/StarfieldBg";
 
-type Bullet = { title: string; desc: string };
+type Bullet = { title: string; desc?: string };
 
 export default function AuthShell({
   children,
@@ -57,7 +57,9 @@ export default function AuthShell({
                     <span className="auth-shell-bullet-mark" />
                     <div>
                       <div className="auth-shell-bullet-title">{b.title}</div>
-                      <div className="auth-shell-bullet-desc">{b.desc}</div>
+                      {b.desc && (
+                        <div className="auth-shell-bullet-desc">{b.desc}</div>
+                      )}
                     </div>
                   </li>
                 ))}

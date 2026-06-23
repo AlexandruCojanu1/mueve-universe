@@ -139,11 +139,8 @@ export default async function CheckinPage({
           <span>{balance.total} clase rămase</span>
         </div>
         <div className="checkin-actions">
-          <a className="checkin-btn" href="/dashboard/leaderboard">
-            Vezi clasamentul →
-          </a>
-          <a className="checkin-link" href="/dashboard">
-            Acasă
+          <a className="checkin-btn" href="/dashboard">
+            Mergi la dashboard →
           </a>
         </div>
       </div>

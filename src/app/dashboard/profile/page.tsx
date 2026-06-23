@@ -94,11 +94,6 @@ export default async function ProfilePage() {
       googleEnabled: googleWalletEnabled(),
       added: !!userRow?.walletAddedAt,
     },
-    showStrava: !userRow?.stravaAthleteId,
-    strava: {
-      athleteName: userRow?.stravaAthleteName ?? null,
-      lastSync: userRow?.stravaLastSyncAt ? userRow.stravaLastSyncAt.toISOString() : null,
-    },
     activeSub: activeSub
       ? {
           planName: activeSub.planName,

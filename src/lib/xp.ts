@@ -13,14 +13,6 @@ import { eq, sql } from "drizzle-orm";
 export const XP_PER_ATTENDANCE = 100;
 export const CHALLENGE_BONUS = 75; // default; some challenges override (below)
 
-// Strava: trust-weighted, with daily + weekly caps so the phone can't
-// out-earn someone who actually shows up. See src/lib/strava.ts for enforcement.
-export const STRAVA_XP_PER_KM_CARDIO = 8; // run / walk / hike
-export const STRAVA_XP_PER_KM_RIDE = 3; // bike
-export const STRAVA_MIN_KM = 1;
-export const STRAVA_DAILY_CAP_XP = 100;
-export const STRAVA_WEEKLY_CAP_XP = 300;
-
 // ── Streak multiplier (basis points; 100 = ×1.0). Applied to all XP earned
 // during an active streak week, then banked into the event so it stays monotonic.
 export function streakMultiplierBp(weeks: number): number {
@@ -225,28 +217,6 @@ export async function awardAttendance(
   return awarded;
 }
 
-// ── Award: a single Strava activity (XP already capped by caller) ──
-export async function awardStravaActivity(opts: {
-  userId: string;
-  activityId: string;
-  xp: number;
-  occurredAt: Date;
-  metadata?: Record<string, unknown>;
-}): Promise<number> {
-  const { current } = computeStreak(await userWeekKeys(opts.userId));
-  const multiplierBp = streakMultiplierBp(current);
-  return awardXp({
-    userId: opts.userId,
-    source: "strava",
-    idempotencyKey: `strava:${opts.activityId}`,
-    baseXp: opts.xp,
-    multiplierBp,
-    refId: opts.activityId,
-    occurredAt: opts.occurredAt,
-    metadata: opts.metadata,
-  });
-}
-
 // ── Milestones (one-time, permanent) ──
 const SESSION_MILESTONES: { n: number; xp: number }[] = [
   { n: 1, xp: 50 },
@@ -291,16 +261,6 @@ export async function reconcileMilestones(userId: string): Promise<number> {
     }
   }
   return total;
-}
-
-export async function awardStravaFirstSync(userId: string): Promise<number> {
-  return awardXp({
-    userId,
-    source: "milestone",
-    idempotencyKey: `milestone:strava-first:${userId}`,
-    baseXp: 50,
-    metadata: { kind: "strava-first" },
-  });
 }
 
 // ── Challenge award (called when a weekly challenge flips to done) ──

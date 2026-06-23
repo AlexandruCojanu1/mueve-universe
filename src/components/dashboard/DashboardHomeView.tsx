@@ -145,19 +145,11 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
       <section className="m-month">
         <div className="m-month-head">
           <h2 className="m-month-title">Luna aceasta</h2>
-          <a className="m-month-link" href="/dashboard/board">
-            Vezi tot →
-          </a>
         </div>
         <div className="m-stats m-stats-2">
           <div className="m-stat-tile">
             <div className="m-stat-value m-stat-accent">{d.stats.runs}</div>
             <div className="m-stat-label">Sesiuni</div>
-          </div>
-          <div className="m-stat-tile teaser-wrap">
-            <div className="m-stat-value teaser-blur">{d.stats.xp}</div>
-            <div className="m-stat-label">XP total</div>
-            <span className="teaser-pill">În curând</span>
           </div>
           <div className="m-stat-tile">
             <div className="m-stat-value">
@@ -165,13 +157,6 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
               <span className="m-stat-unit">săpt</span>
             </div>
             <div className="m-stat-label">Streak</div>
-          </div>
-          <div className="m-stat-tile teaser-wrap">
-            <div className="m-stat-value m-stat-rank teaser-blur">
-              {d.stats.rank ? `#${d.stats.rank}` : "—"}
-            </div>
-            <div className="m-stat-label">Rank comunitate</div>
-            <span className="teaser-pill">În curând</span>
           </div>
         </div>
       </section>

@@ -74,11 +74,6 @@ export default function PrivacyPage() {
             emise prin Oblio și raportate în e-Factura, conform obligațiilor legale.
           </li>
           <li>
-            <strong>Strava (opțional):</strong> dacă îți conectezi contul Strava,
-            primim activitățile tale sportive (tip, distanță, dată) pentru
-            acordarea XP. Poți deconecta oricând din profil.
-          </li>
-          <li>
             <strong>Cookie-uri:</strong> doar cookie-uri esențiale (sesiunea de
             login, preferința de limbă). Fără tracking terț, fără reclame.
           </li>
@@ -101,8 +96,8 @@ export default function PrivacyPage() {
             de gamificare.
           </li>
           <li>
-            <strong>Consimțământ:</strong> integrarea Strava și comunicările
-            opționale. Îl poți retrage oricând, fără a afecta serviciile de bază.
+            <strong>Consimțământ:</strong> comunicările opționale. Îl poți retrage
+            oricând, fără a afecta serviciile de bază.
           </li>
         </ul>
       </S>
@@ -116,7 +111,6 @@ export default function PrivacyPage() {
           <li>Stripe (procesarea plăților)</li>
           <li>Oblio (emiterea facturilor) și ANAF/SPV (e-Factura, obligație legală)</li>
           <li>Google și Apple (autentificare și wallet digital, dacă le folosești)</li>
-          <li>Strava (doar dacă îți conectezi contul)</li>
           <li>Vercel și Neon (găzduirea aplicației și a bazei de date, în UE)</li>
           <li>furnizorul de email tranzacțional (confirmări, resetare parolă)</li>
         </ul>

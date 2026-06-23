@@ -47,13 +47,6 @@ export const users = pgTable(
     lastScanAt: timestamp("last_scan_at"),
     deviceId: text("device_id"),
     deviceBoundAt: timestamp("device_bound_at"),
-    stravaAthleteId: text("strava_athlete_id").unique(),
-    stravaAthleteName: text("strava_athlete_name"),
-    stravaAccessToken: text("strava_access_token"),
-    stravaRefreshToken: text("strava_refresh_token"),
-    stravaTokenExpiresAt: timestamp("strava_token_expires_at"),
-    stravaLastSyncAt: timestamp("strava_last_sync_at"),
-    stravaXp: integer("strava_xp").notNull().default(0),
     walletAddedAt: timestamp("wallet_added_at"),
     gender: text("gender"), // "feminin" | "masculin" | null (prefer să nu spună)
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -360,24 +353,6 @@ export const classSlots = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [index("class_slots_coach_active_idx").on(t.coachId, t.active)],
-);
-
-export const stravaActivities = pgTable(
-  "strava_activities",
-  {
-    id: text("id").primaryKey(), // Strava activity id (numeric, kept as text)
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    name: text("name").notNull().default(""),
-    sportType: text("sport_type").notNull().default(""),
-    distanceMeters: integer("distance_meters").notNull().default(0),
-    movingTimeSec: integer("moving_time_sec").notNull().default(0),
-    startedAt: timestamp("started_at").notNull(),
-    xpAwarded: integer("xp_awarded").notNull().default(0),
-    importedAt: timestamp("imported_at").defaultNow().notNull(),
-  },
-  (t) => [index("strava_activities_user_idx").on(t.userId, t.startedAt)],
 );
 
 // ── XP ledger ──

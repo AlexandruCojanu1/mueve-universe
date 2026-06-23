@@ -1,7 +1,7 @@
 /**
- * Demo seed for users — populates credits, attendances and Strava activities
- * so dashboards aren't empty for the launch demo. Safe to re-run; uses
- * predictable demo IDs and skips users that already have demo rows.
+ * Demo seed for users — populates credits and attendances so dashboards aren't
+ * empty for the launch demo. Safe to re-run; uses predictable demo IDs and
+ * skips users that already have demo rows.
  *
  *   tsx --env-file=.env.local scripts/seed-demo-data.ts
  *   FORCE_PROD=1 tsx --env-file=.env.local scripts/seed-demo-data.ts
@@ -12,12 +12,10 @@ import {
   classCredits,
   attendances,
   classSlots,
-  stravaActivities,
 } from "../src/db/schema";
 import { eq, and, like } from "drizzle-orm";
 
 const HORIZON_WEEKS = 10;
-const STRAVA_DEMO_PREFIX = "demo-";
 
 function pad(n: number): string {
   return n.toString().padStart(2, "0");
@@ -36,18 +34,6 @@ function rand<T>(arr: T[]): T {
 function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
-const SPORT_TYPES = ["Run", "Run", "Run", "Walk", "Hike", "Ride"];
-const RUN_NAMES = [
-  "Morning Run",
-  "Lunch Run",
-  "Evening Long Run",
-  "Recovery Jog",
-  "Tempo Run",
-  "Trail Loop",
-  "Hill Repeats",
-  "Easy Saturday",
-];
 
 async function main() {
   if (process.env.NODE_ENV === "production" && process.env.FORCE_PROD !== "1") {
@@ -141,59 +127,6 @@ async function main() {
             notes: "demo",
           })
           .onConflictDoNothing();
-      }
-    }
-
-    // 3. Strava activities — 3-8 runs in the last 4 weeks, with demo prefix id
-    const existingStrava = await db
-      .select({ id: stravaActivities.id })
-      .from(stravaActivities)
-      .where(
-        and(
-          eq(stravaActivities.userId, u.id),
-          like(stravaActivities.id, `${STRAVA_DEMO_PREFIX}%`),
-        ),
-      )
-      .limit(1);
-    if (existingStrava.length === 0) {
-      const count = randInt(3, 8);
-      let xpTotal = 0;
-      for (let i = 0; i < count; i++) {
-        const daysAgo = randInt(0, 28);
-        const date = addDays(today, -daysAgo);
-        const sportType = rand(SPORT_TYPES);
-        const distanceKm =
-          sportType === "Walk"
-            ? randInt(2, 8) + Math.random()
-            : sportType === "Ride"
-              ? randInt(10, 35) + Math.random()
-              : randInt(3, 12) + Math.random();
-        const distanceMeters = Math.round(distanceKm * 1000);
-        const pacePerKm = sportType === "Ride" ? randInt(120, 180) : randInt(300, 480);
-        const movingTime = Math.round(distanceKm * pacePerKm);
-        const xp = Math.min(80, Math.round(distanceKm * 10));
-        xpTotal += xp;
-        await db
-          .insert(stravaActivities)
-          .values({
-            id: `${STRAVA_DEMO_PREFIX}${u.id.slice(0, 8)}-${i}`,
-            userId: u.id,
-            name: rand(RUN_NAMES),
-            sportType,
-            distanceMeters,
-            movingTimeSec: movingTime,
-            startedAt: date,
-            xpAwarded: xp,
-          })
-          .onConflictDoNothing();
-      }
-
-      // Stamp the cached Strava XP on the user row so leaderboard ranks update.
-      if (xpTotal > 0) {
-        await db
-          .update(users)
-          .set({ stravaXp: (u.stravaXp || 0) + xpTotal })
-          .where(eq(users.id, u.id));
       }
     }
 
