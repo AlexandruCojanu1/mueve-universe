@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { sections } from "@/db/schema";
@@ -8,21 +7,16 @@ import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
-// One-shot maintenance endpoint. Idempotent — safe to hit twice. Applies the
-// pricing trim + Strava DB cleanup directly on the live database, since the
-// live (Coolify) DB is only reachable from inside the deployment.
-// Auth: admin session OR a one-time ?key whose sha256 matches the constant
-// below (the key itself is never committed). Remove this route after running.
-const KEY_HASH = "d7b6bc2ff18800f6e42dacf8655fab2ca9df5de67e471dbc390e81ae1642a80e";
-
-async function authorize(req: Request): Promise<{ err: NextResponse } | { ok: true }> {
-  const key = new URL(req.url).searchParams.get("key");
-  if (key && createHash("sha256").update(key).digest("hex") === KEY_HASH) {
-    return { ok: true };
-  }
+// One-shot maintenance endpoint (admin session only). Idempotent — safe to hit
+// twice. Applies the pricing trim + Strava DB cleanup directly on the live
+// database, since the live (Coolify) DB is only reachable from inside the
+// deployment. Remove this route once it has been run.
+async function requireAdmin() {
   const session = await auth();
-  if (session?.user?.role === "admin") return { ok: true };
-  return { err: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  if (session?.user?.role !== "admin") {
+    return { err: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+  return { ok: true as const };
 }
 
 const KEEP = new Set(["plan-class", "plan-orbit"]);
@@ -31,8 +25,8 @@ const NEW_PRICE: Record<string, string> = {
   "plan-orbit": "129.90",
 };
 
-export async function GET(req: Request) {
-  const r = await authorize(req);
+export async function GET() {
+  const r = await requireAdmin();
   if ("err" in r) return r.err;
 
   const result: Record<string, unknown> = {};
