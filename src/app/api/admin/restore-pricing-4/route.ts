@@ -28,18 +28,21 @@ const PASS_DESC = bi(
   "Universe Pass isn't an entry ticket, it's a way to enjoy premium benefits and support the Mueve community.",
 );
 
-async function findPriceIdByAmount(amount: number): Promise<string | null> {
-  if (!stripe) return null;
+async function listActivePrices() {
+  if (!stripe) return [];
+  const out: Array<{ id: string; amount: number | null; currency: string; recurring: boolean; product: string }> = [];
   let starting_after: string | undefined;
   for (let i = 0; i < 10; i++) {
-    const page = await stripe.prices.list({ active: true, limit: 100, starting_after });
+    const page = await stripe.prices.list({ active: true, limit: 100, starting_after, expand: ["data.product"] });
     for (const p of page.data) {
-      if (p.unit_amount === amount) return p.id;
+      const prod = p.product;
+      const name = typeof prod === "object" && prod && "name" in prod ? (prod as { name?: string }).name ?? "" : String(prod);
+      out.push({ id: p.id, amount: p.unit_amount, currency: p.currency, recurring: !!p.recurring, product: name });
     }
     if (!page.has_more) break;
     starting_after = page.data[page.data.length - 1]?.id;
   }
-  return null;
+  return out;
 }
 
 export async function GET(req: NextRequest) {
@@ -81,10 +84,15 @@ export async function GET(req: NextRequest) {
   }
   (passPlan as Record<string, unknown>).tagline = PASS_DESC;
 
-  // recover Stripe price IDs by amount (RON minor units)
-  const classPriceId = await findPriceIdByAmount(3990);
-  const orbitPriceId = await findPriceIdByAmount(12990);
-  report.stripeMatches = { classPriceId, orbitPriceId };
+  // Stripe price wiring. Display prices are cosmetic; the real charge is the
+  // Stripe price. Provide explicit IDs via query, else leave unwired (the
+  // original class cards were display-only -> "#join"). Catalog is reported so
+  // the correct prices can be picked.
+  const catalog = await listActivePrices();
+  report.stripeCatalog = catalog;
+  const classPriceId = req.nextUrl.searchParams.get("classPriceId") || null;
+  const orbitPriceId = req.nextUrl.searchParams.get("orbitPriceId") || null;
+  report.stripeWired = { classPriceId, orbitPriceId };
 
   const planClass: Record<string, unknown> = {
     id: "plan-class",
