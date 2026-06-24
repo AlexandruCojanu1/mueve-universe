@@ -15,6 +15,7 @@ export type HeroData = {
   headingTop: Bilingual;
   headingAccent: Bilingual;
   headingBottom: Bilingual;
+  subBold?: Bilingual;
   sub: Bilingual;
   scrollLabel: Bilingual;
 };

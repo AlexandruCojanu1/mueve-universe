@@ -111,7 +111,7 @@ export function upcomingSessions(
     d.setDate(d.getDate() + i);
     const dayIdx = jsDayToSlotDay(d);
     const slots = program.slots
-      .filter((s) => s.day === dayIdx)
+      .filter((s) => s.day === dayIdx && !s.teaser)
       .sort((a, b) => a.time.localeCompare(b.time));
     const dayLabel = program.dayLabels[dayIdx]?.ro ?? "";
     for (const slot of slots) {

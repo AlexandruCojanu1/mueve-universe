@@ -16,7 +16,15 @@ export default function Hero({ data }: { data: HeroData }) {
         <em>{pick(data.headingAccent, lang)}</em>
         {pick(data.headingBottom, lang)}
       </h1>
-      <p className="hero-sub">{pick(data.sub, lang)}</p>
+      <p className="hero-sub">
+        {data.subBold && pick(data.subBold, lang) && (
+          <>
+            <strong>{pick(data.subBold, lang)}</strong>
+            {pick(data.sub, lang) && <><br /><br /></>}
+          </>
+        )}
+        {pick(data.sub, lang)}
+      </p>
     </section>
   );
 }

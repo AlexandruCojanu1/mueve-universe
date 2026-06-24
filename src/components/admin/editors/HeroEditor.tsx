@@ -18,7 +18,8 @@ export default function HeroEditor({ value, onChange }: { value: HeroData; onCha
         <BilingualInput label="Rând 3 (jos)" value={v.headingBottom} onChange={(headingBottom) => update({ headingBottom })} />
       </Card>
       <Card title="Subtitlu">
-        <BilingualInput label="Text" value={v.sub} onChange={(sub) => update({ sub })} multiline rows={3} />
+        <BilingualInput label="Text bold (prima frază)" value={v.subBold ?? { ro: "", en: "" }} onChange={(subBold) => update({ subBold })} multiline rows={2} />
+        <BilingualInput label="Text normal (a doua frază)" value={v.sub} onChange={(sub) => update({ sub })} multiline rows={3} />
       </Card>
     </div>
   );
