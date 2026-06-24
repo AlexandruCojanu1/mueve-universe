@@ -130,7 +130,7 @@ export type JoinData = {
   submitLabel: Bilingual;
 };
 
-export type FooterSocial = { id: string; label: string; href: string; icon: "instagram" | "tiktok" | "facebook" | "youtube" | "twitter" };
+export type FooterSocial = { id: string; label: string; href: string; icon: "instagram" | "tiktok" | "facebook" | "youtube" | "twitter" | "whatsapp" };
 export type FooterData = {
   copyright: Bilingual;
   socials: FooterSocial[];
