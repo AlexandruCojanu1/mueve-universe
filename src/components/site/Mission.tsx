@@ -7,7 +7,9 @@ export default function Mission({ data }: { data: MissionData }) {
   const { lang } = useLang();
   const lead = pick(data.heading.lead, lang);
   const accent = pick(data.heading.accent, lang);
-  const teaser = !!data.teaser;
+  // Mission content is live post-launch: always show it unblurred regardless
+  // of the stored teaser flag.
+  const teaser = false;
   return (
     <section className="mission" id="mission">
       <div className="mission-left">

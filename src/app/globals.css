@@ -1350,6 +1350,13 @@ body.is-day .ham span {
   line-height: 1.3;
   position: relative;
   z-index: 1;
+  /* Reserve two lines so labels that wrap (e.g. "PILATES (în curând)") keep the
+     time/world rows aligned with neighbouring cells instead of pushing down. */
+  min-height: 2.6em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-wrap: balance;
 }
 .pt-time {
   font-size: clamp(0.55rem, 0.75vw, 0.65rem);
@@ -1545,11 +1552,16 @@ body.is-day .ham span {
   color: var(--sun);
 }
 .pricing-head p {
-  opacity: 0.45;
+  opacity: 0.9;
+  font-weight: 700;
   margin-top: 1.2rem;
   max-width: 520px;
   font-size: 0.98rem;
-  line-height: 1.7;
+  line-height: 1.5;
+}
+/* Two-paragraph intro: keep the lines tight together, both left-aligned. */
+.pricing-intro p + p {
+  margin-top: 0.15rem;
 }
 .pricing-tiers {
   display: flex;
@@ -2577,6 +2589,9 @@ body.is-night .foot-legal a:hover { color: #fff; }
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    -webkit-box-pack: center;
+    /* Reserve two lines so wrapped labels keep times aligned across the row. */
+    min-height: 2.3em;
     /* Keep long single words (CALISTHENICS) intact on one line. */
     word-break: keep-all;
     overflow-wrap: normal;

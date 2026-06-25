@@ -12,6 +12,15 @@ export default function Pricing({ data }: { data: PricingData }) {
   const { lang } = useLang();
   const [openPlan, setOpenPlan] = useState<PricingPlan | null>(null);
 
+  // Render the intro as separate left-aligned paragraphs: split on explicit
+  // line breaks first, then on sentence boundaries, so "Alergăm împreună
+  // gratuit. Construim împreună mai departe." becomes two distinct lines.
+  const introParas = pick(data.intro, lang)
+    .split(/\n+/)
+    .flatMap((s) => s.trim().split(/(?<=\.)\s+/))
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   return (
     <section className="pricing" id="pricing">
       <div className="pricing-head">
@@ -20,7 +29,13 @@ export default function Pricing({ data }: { data: PricingData }) {
           <br />
           <span>{pick(data.heading.accent, lang)}</span>
         </h2>
-        {pick(data.intro, lang) && <p>{pick(data.intro, lang)}</p>}
+        {introParas.length > 0 && (
+          <div className="pricing-intro">
+            {introParas.map((para, i) => (
+              <p key={i}>{para}</p>
+            ))}
+          </div>
+        )}
         <CtaPair />
       </div>
       <div className="pricing-tiers">
