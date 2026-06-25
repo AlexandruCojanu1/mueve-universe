@@ -6,6 +6,7 @@ import { eq, asc, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { defaultDataForType } from "@/lib/default-data";
 import type { SectionType } from "@/lib/content-types";
+import { syncClassSlotsFromProgram } from "@/lib/sync-class-slots";
 
 async function requireAuth() {
   const session = await auth();
@@ -87,11 +88,21 @@ export async function reorderSections(orderedIds: string[]) {
 
 export async function updateSectionData(id: string, data: Record<string, unknown>) {
   await requireAuth();
-  await db
+  const [row] = await db
     .update(sections)
     .set({ data, updatedAt: new Date() })
-    .where(eq(sections.id, id));
+    .where(eq(sections.id, id))
+    .returning({ type: sections.type });
   bumpAll();
+  // Keep the bookable dashboard calendar in sync with the public programme.
+  if (row?.type === "program") {
+    try {
+      await syncClassSlotsFromProgram();
+      revalidatePath("/dashboard/program");
+    } catch (e) {
+      console.error("[updateSectionData] class-slot sync failed:", e);
+    }
+  }
 }
 
 export async function updateTheme(colors: Record<string, string>, fonts: { heading: string; body: string }) {
