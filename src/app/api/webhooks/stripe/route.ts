@@ -229,6 +229,7 @@ export async function POST(req: Request) {
                   (session.metadata?.planName as string) || "Pachet clase MUEVE",
                 amountBani: pi.amount_received ?? 0,
                 currency: pi.currency ?? "ron",
+                seriesName: process.env.OBLIO_SERIES_PACKAGE || undefined,
               });
             }
           }
@@ -271,6 +272,7 @@ export async function POST(req: Request) {
                 invoice.lines?.data?.[0]?.description || "Abonament MUEVE UNIVERSE PASS",
               amountBani: invoice.amount_paid ?? 0,
               currency: invoice.currency ?? "ron",
+              seriesName: process.env.OBLIO_SERIES_SUBSCRIPTION || undefined,
             });
           }
           // Only on invoice.paid — invoice.payment_succeeded fires for the same

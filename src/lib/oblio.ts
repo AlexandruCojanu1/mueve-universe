@@ -64,6 +64,8 @@ export type OblioInvoiceParams = {
   /** Gross amount in bani (RON cents). */
   amountBani: number;
   currency?: string;
+  /** Override the invoice series (else falls back to OBLIO_SERIES_NAME). */
+  seriesName?: string;
 };
 
 /**
@@ -85,7 +87,7 @@ export async function issueOblioInvoice(params: OblioInvoiceParams): Promise<voi
   try {
     const token = await getToken();
     const cif = process.env.OBLIO_CIF!;
-    const seriesName = process.env.OBLIO_SERIES_NAME!;
+    const seriesName = params.seriesName || process.env.OBLIO_SERIES_NAME!;
     const issueDate = new Date().toISOString().slice(0, 10);
 
     const res = await fetch(`${BASE}/docs/invoice`, {
