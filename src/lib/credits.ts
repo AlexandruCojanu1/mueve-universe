@@ -21,6 +21,13 @@ export function endOfMonth(from = new Date()): Date {
   );
 }
 
+// Purchased class packs don't expire on a clock — a credit lives until it's
+// consumed (consumedAt). The expires_at column is NOT NULL and every balance/
+// consume query filters `expires_at > now()`, so we store a far-future date to
+// mean "never expires" without a schema migration. The PASS expires via Stripe's
+// monthly cycle (hasActivePass), not via these credits.
+export const NON_EXPIRING = new Date("2999-12-31T23:59:59.999Z");
+
 export async function hasActivePass(userId: string): Promise<boolean> {
   const rows = await db
     .select({ id: subscriptions.id })
@@ -59,7 +66,9 @@ export async function grantCredits(params: {
   expiresAt?: Date;
 }): Promise<void> {
   const count = Math.max(1, Math.floor(params.count));
-  const expiresAt = params.expiresAt ?? endOfMonth();
+  // Class packs never expire on a clock — only when consumed. Callers can still
+  // pass an explicit expiresAt (e.g. future pass-included credits with a 30-day life).
+  const expiresAt = params.expiresAt ?? NON_EXPIRING;
   const rows = Array.from({ length: count }, () => ({
     userId: params.userId,
     sourceType: "purchase" as const,
