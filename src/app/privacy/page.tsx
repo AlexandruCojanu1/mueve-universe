@@ -6,7 +6,7 @@ export const metadata = {
     "Cum prelucrează MUEVE UNIVERSE datele tale personale: ce colectăm, în ce scop, cu cine partajăm și care sunt drepturile tale GDPR.",
 };
 
-const LAST_UPDATED = "4 iunie 2026";
+const LAST_UPDATED = "26 iunie 2026";
 
 function S({
   n,
@@ -111,7 +111,10 @@ export default function PrivacyPage() {
           <li>Stripe (procesarea plăților)</li>
           <li>Oblio (emiterea facturilor) și ANAF/SPV (e-Factura, obligație legală)</li>
           <li>Google și Apple (autentificare și wallet digital, dacă le folosești)</li>
-          <li>Vercel și Neon (găzduirea aplicației și a bazei de date, în UE)</li>
+          <li>
+            furnizorul de găzduire a serverului (Netcup, Germania, UE), unde rulează
+            aplicația și baza de date PostgreSQL administrată de noi
+          </li>
           <li>furnizorul de email tranzacțional (confirmări, resetare parolă)</li>
         </ul>
       </S>

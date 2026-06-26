@@ -6,7 +6,7 @@ export const metadata = {
     "Termenii și condițiile de utilizare a platformei MUEVE UNIVERSE: cont, abonamente, plăți, facturare, drept de retragere, acces la sesiuni.",
 };
 
-const LAST_UPDATED = "4 iunie 2026";
+const LAST_UPDATED = "26 iunie 2026";
 
 function S({
   n,
@@ -100,19 +100,21 @@ export default function TermsPage() {
             rambursează perioade parțiale.
           </li>
           <li>
-            <strong>Pachetele de sesiuni</strong> (drop-in, ORBIT, GALAXY, UNIVERSE)
-            sunt achiziții cu plată unică ce adaugă în cont un număr de credite de
-            clasă. Achiziția pachetelor necesită un Pass activ.
+            <strong>Pachetele de sesiuni</strong> (drop-in cu o singură sesiune sau
+            pachete cu mai multe sesiuni) sunt achiziții cu plată unică ce adaugă în
+            cont un număr de credite de clasă. Achiziția pachetelor necesită un Pass
+            activ.
           </li>
           <li>
-            Un credit se consumă la rezervarea unei sesiuni. Creditele au termen de
-            valabilitate afișat în cont la momentul achiziției și nu sunt
+            Un credit se consumă la rezervarea unei sesiuni. Creditele din pachetele
+            cumpărate nu expiră și rămân valabile până la consumare; ele nu sunt
             transmisibile către alte conturi.
           </li>
           <li>
-            Dacă anulezi o rezervare cu cel puțin 12 ore înainte de începerea
-            sesiunii, creditul revine în cont. Anulările târzii sau neprezentarea
-            consumă creditul.
+            Dacă anulezi o rezervare cu cel puțin 2 ore înainte de începerea
+            sesiunii, creditul revine în cont și poate fi folosit pentru altă clasă.
+            Anulările sub 2 ore înainte de începere sau neprezentarea consumă
+            creditul.
           </li>
           <li>
             Sesiunile marcate gratuite (de exemplu evenimentele comunitare) nu
