@@ -142,6 +142,11 @@ export default function TermsPage() {
             legislației în vigoare.
           </li>
           <li>
+            Plata se face exclusiv online, cu cardul. Pentru tranzacțiile online cu
+            cardul nu se emite bon fiscal de casă de marcat; documentul fiscal aferent
+            fiecărei plăți este factura, conform OUG nr. 28/1999.
+          </li>
+          <li>
             Prețurile pot fi modificate; pentru abonamentele active vei fi anunțat
             prin email cu cel puțin 15 zile înainte ca noul preț să se aplice, cu
             posibilitatea de a anula înainte de prima plată la noul preț.
