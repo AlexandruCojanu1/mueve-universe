@@ -46,11 +46,32 @@ function colorFor(classType: string): "yellow" | "purple" | "blue" | "orange" {
   return "yellow";
 }
 
+// Class start in venue-local time; free cancellation closes 2h before it.
+function classStart(s: Slot): Date {
+  return new Date(`${s.slotDate}T${(s.startTime || "00:00:00").slice(0, 8)}`);
+}
+function freeCancelDeadline(s: Slot): Date {
+  return new Date(classStart(s).getTime() - 2 * 3600_000);
+}
+function humanizeLeft(ms: number): string {
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 export default function ReserveBoard({ initialSlots }: { initialSlots?: Slot[] }) {
   const [slots, setSlots] = useState<Slot[]>(initialSlots ?? []);
   const [loading, setLoading] = useState(!initialSlots);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Re-render every 30s so the free-cancel countdown stays live.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   async function load() {
     try {
@@ -87,9 +108,7 @@ export default function ReserveBoard({ initialSlots }: { initialSlots?: Slot[] }
   }
 
   async function cancel(s: Slot) {
-    const d = new Date(s.slotDate + "T00:00:00");
-    const twoH = new Date(d.getTime() - 2 * 3600_000);
-    const late = new Date() > twoH;
+    const late = Date.now() > freeCancelDeadline(s).getTime();
     const msg = late
       ? "Anulezi sub 2h înainte — creditul NU se returnează. Continui?"
       : "Anulezi rezervarea? Creditul se întoarce.";
@@ -140,14 +159,43 @@ export default function ReserveBoard({ initialSlots }: { initialSlots?: Slot[] }
                     </span>
                   </span>
                   {s.reserved ? (
-                    <button
-                      type="button"
-                      className="m-slot-btn m-slot-btn-on"
-                      disabled={isBusy}
-                      onClick={() => cancel(s)}
-                    >
-                      {isBusy ? "…" : "Rezervat ✓"}
-                    </button>
+                    (() => {
+                      const freeLeft = freeCancelDeadline(s).getTime() - now;
+                      const inWindow = freeLeft > 0;
+                      const hint = s.free
+                        ? "Sesiune gratuită"
+                        : inWindow
+                          ? `Anulare gratuită · încă ${humanizeLeft(freeLeft)}`
+                          : "Sub 2h · creditul nu se mai întoarce";
+                      return (
+                        <span className="m-slot-resv">
+                          <button
+                            type="button"
+                            className="m-slot-btn m-slot-btn-on"
+                            disabled={isBusy}
+                            onClick={() => cancel(s)}
+                            title="Apasă pentru a anula rezervarea"
+                          >
+                            {isBusy ? "…" : "Rezervat ✓ · Anulează"}
+                          </button>
+                          <span
+                            className="m-slot-cancelhint"
+                            style={{
+                              fontSize: "0.62rem",
+                              marginTop: 3,
+                              opacity: 0.85,
+                              color: s.free
+                                ? undefined
+                                : inWindow
+                                  ? "var(--ok, #7CFC6B)"
+                                  : "var(--warn, #FF6B6B)",
+                            }}
+                          >
+                            {hint}
+                          </span>
+                        </span>
+                      );
+                    })()
                   ) : (
                     <button
                       type="button"

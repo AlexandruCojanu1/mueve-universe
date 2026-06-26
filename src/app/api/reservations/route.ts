@@ -203,8 +203,16 @@ export async function DELETE(req: Request) {
   }
 
   const rows = await db
-    .select()
+    .select({
+      userId: reservations.userId,
+      slotId: reservations.slotId,
+      slotDate: reservations.slotDate,
+      status: reservations.status,
+      creditId: reservations.creditId,
+      startTime: classSlots.startTime,
+    })
     .from(reservations)
+    .innerJoin(classSlots, eq(classSlots.id, reservations.slotId))
     .where(
       and(
         eq(reservations.userId, session.user.id),
@@ -221,8 +229,10 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Deja procesată" }, { status: 409 });
   }
 
-  const d = new Date(`${slotDate}T00:00:00`);
-  const twoHoursBefore = new Date(d.getTime() - 2 * 3600 * 1000);
+  // Free-cancel window = up to 2h before the class actually STARTS, not before
+  // midnight of the class day. startTime is "HH:MM[:SS]" in the venue's local time.
+  const classStart = new Date(`${slotDate}T${(r.startTime || "00:00:00").slice(0, 8)}`);
+  const twoHoursBefore = new Date(classStart.getTime() - 2 * 3600 * 1000);
   const late = new Date() > twoHoursBefore;
 
   const already = await db
