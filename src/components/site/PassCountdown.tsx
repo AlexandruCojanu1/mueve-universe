@@ -31,5 +31,13 @@ export default function PassCountdown() {
       ? `${days} ZILE ${hours} ORE ${mins} MIN ${secs} SEC`
       : `${days} DAYS ${hours} HRS ${mins} MIN ${secs} SEC`;
 
-  return <div className="pass-countdown">{text}</div>;
+  const label =
+    lang === "ro" ? "OFERTĂ VALABILĂ PÂNĂ DUMINICĂ 20:00" : "OFFER ENDS SUNDAY 20:00";
+
+  return (
+    <div className="pass-countdown">
+      <span className="pass-countdown-label">{label}</span>
+      <span className="pass-countdown-clock">{text}</span>
+    </div>
+  );
 }

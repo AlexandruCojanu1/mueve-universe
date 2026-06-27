@@ -37,6 +37,7 @@ export default function Pricing({ data }: { data: PricingData }) {
           </div>
         )}
         <CtaPair />
+        <PassCountdown />
       </div>
       <div className="pricing-tiers">
         {data.tiers.map((tier) => (
@@ -144,7 +145,6 @@ function PlanCard({
         )}
         {period && <div className="price-period">{period}</div>}
         {tagline && <div className="price-tagline">{tagline}</div>}
-        {plan.id === "plan-pass" && <PassCountdown />}
       </div>
       <div className="price-card-hint">
         {lang === "ro" ? "Vezi beneficii →" : "See benefits →"}
