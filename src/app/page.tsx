@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { sections, appSettings } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
 import SiteShell from "@/components/site/SiteShell";
+import ComingSoon from "@/components/site/ComingSoon";
+import { LAUNCH_AT } from "@/lib/launch-window";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,12 @@ export default async function Home() {
     if (role === "partner") redirect("/partner");
     if (role === "coach") redirect("/coach");
     redirect("/dashboard");
+  }
+
+  // Pre-launch: hide the whole marketing site behind the full-screen countdown.
+  // Decided server-side so no site content is sent before the reveal moment.
+  if (Date.now() < LAUNCH_AT) {
+    return <ComingSoon />;
   }
 
   const rows = await db.select().from(sections).orderBy(asc(sections.order));

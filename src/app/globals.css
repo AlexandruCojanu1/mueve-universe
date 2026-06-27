@@ -6442,42 +6442,79 @@ body.is-night .foot-legal a:hover { color: #fff; }
   width: max-content;
 }
 
-/* ── Offer countdown banner (whole pricing block) ─────────────────────── */
-.pass-countdown {
-  margin: 1.4rem auto 0;
-  width: max-content;
-  max-width: 92%;
+/* ── Coming-soon full-screen countdown (pre-launch holding page) ───────── */
+.coming-soon {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background:
+    radial-gradient(120% 120% at 50% 0%, var(--light) 0%, var(--mid) 45%, var(--deep) 100%);
+  color: var(--w);
+  text-align: center;
+  overflow: hidden;
+}
+.coming-soon-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.85rem 1.6rem;
-  border: 1px solid var(--sun);
-  border-radius: 999px;
-  background: rgba(245, 245, 10, 0.06);
-  text-align: center;
+  gap: 1.6rem;
+  max-width: 760px;
+  width: 100%;
 }
-.pass-countdown-label {
+.coming-soon-logo {
+  width: clamp(160px, 34vw, 280px);
+  height: auto;
+  filter: drop-shadow(0 0 50px var(--sun-g));
+}
+.coming-soon-kicker {
+  margin: 0;
   font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 0.62rem;
+  font-size: clamp(0.72rem, 2vw, 0.95rem);
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--sun);
-  opacity: 0.85;
 }
-.pass-countdown-clock {
+.coming-soon-clock {
+  display: flex;
+  gap: clamp(0.6rem, 3vw, 1.6rem);
+  align-items: flex-start;
+  justify-content: center;
+}
+.coming-soon-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: clamp(58px, 18vw, 96px);
+}
+.coming-soon-num {
+  font-family: var(--ff);
+  font-weight: 800;
+  font-size: clamp(2.4rem, 11vw, 4.6rem);
+  line-height: 1;
+  color: var(--w);
+  font-variant-numeric: tabular-nums;
+}
+.coming-soon-lab {
   font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 1.05rem;
+  font-size: clamp(0.55rem, 1.6vw, 0.72rem);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.22em;
   color: var(--sun);
 }
-@media (max-width: 560px) {
-  .pass-countdown-clock {
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-  }
+.coming-soon-tag {
+  margin: 0;
+  font-family: var(--fb);
+  font-size: clamp(0.62rem, 1.8vw, 0.8rem);
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  opacity: 0.6;
 }
 
 /* ── Worlds modal tagline ─────────────────────────────────────────────── */

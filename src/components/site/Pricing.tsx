@@ -5,7 +5,6 @@ import { pick } from "@/lib/bilingual";
 import type { PricingData, PricingPlan, PricingTier } from "@/lib/content-types";
 import type { CSSProperties } from "react";
 import PricingDetailsModal from "./PricingDetailsModal";
-import PassCountdown from "./PassCountdown";
 import CtaPair from "./CtaPair";
 
 export default function Pricing({ data }: { data: PricingData }) {
@@ -37,7 +36,6 @@ export default function Pricing({ data }: { data: PricingData }) {
           </div>
         )}
         <CtaPair />
-        <PassCountdown />
       </div>
       <div className="pricing-tiers">
         {data.tiers.map((tier) => (
