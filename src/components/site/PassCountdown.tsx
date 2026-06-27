@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 
-// Fixed deal deadline: Sunday 2026-06-14 12:00 Europe/Bucharest (EEST, UTC+3).
-const DEADLINE = Date.parse("2026-06-14T09:00:00Z");
+// Fixed deal deadline: Sunday 2026-06-28 20:00 Europe/Bucharest (EEST, UTC+3).
+const DEADLINE = Date.parse("2026-06-28T17:00:00Z");
 
 export default function PassCountdown() {
   const { lang } = useLang();
