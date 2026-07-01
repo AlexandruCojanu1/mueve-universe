@@ -121,6 +121,14 @@ function TierEditor({
         />
         Spotlight (card lat pe toată lățimea, layout 2 coloane)
       </label>
+      <label className="flex items-center gap-2 text-sm opacity-80">
+        <input
+          type="checkbox"
+          checked={!!tier.hidden}
+          onChange={(e) => onChange({ ...tier, hidden: e.target.checked })}
+        />
+        Ascuns (nu apare pe site, dar rămâne salvat)
+      </label>
 
       <div className="pt-2 space-y-4">
         <div className="flex items-center justify-between">

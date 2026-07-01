@@ -7,6 +7,10 @@ import type { CSSProperties } from "react";
 import PricingDetailsModal from "./PricingDetailsModal";
 import CtaPair from "./CtaPair";
 
+// Pricing tiers hidden from the public site (kept in the CMS data, just not
+// rendered). Empty this set to show every tier again.
+const HIDDEN_TIER_IDS = new Set<string>(["tier-classes"]);
+
 export default function Pricing({ data }: { data: PricingData }) {
   const { lang } = useLang();
   const [openPlan, setOpenPlan] = useState<PricingPlan | null>(null);
@@ -38,9 +42,14 @@ export default function Pricing({ data }: { data: PricingData }) {
         <CtaPair />
       </div>
       <div className="pricing-tiers">
-        {data.tiers.map((tier) => (
-          <TierBlock key={tier.id} tier={tier} onOpen={setOpenPlan} />
-        ))}
+        {data.tiers
+          // Hidden tiers: either flagged `hidden` in the CMS, or listed in
+          // HIDDEN_TIER_IDS below. `tier-classes` (CLASE & ABONAMENTE) is
+          // hidden for now — remove it from the set to bring the cards back.
+          .filter((tier) => !tier.hidden && !HIDDEN_TIER_IDS.has(tier.id))
+          .map((tier) => (
+            <TierBlock key={tier.id} tier={tier} onOpen={setOpenPlan} />
+          ))}
       </div>
       <div className="pricing-cta-hint">
         {lang === "ro"

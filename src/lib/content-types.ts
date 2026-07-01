@@ -93,6 +93,7 @@ export type PricingTier = {
   subtitle?: Bilingual;
   plans: PricingPlan[];
   featured?: boolean;
+  hidden?: boolean;
 };
 
 export type PricingData = {
