@@ -53,7 +53,7 @@ export default function DashboardNav({
         <div className="dash-nav-right">
           <span className="dash-nav-user">{name || email}</span>
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: "/" })}
             className="dash-nav-signout"
           >
             Ieși

@@ -6,7 +6,7 @@ export default function SignOutButton() {
     <button
       type="button"
       className="m-signout-btn"
-      onClick={() => signOut({ callbackUrl: "/login" })}
+      onClick={() => signOut({ callbackUrl: "/" })}
     >
       Ieși din cont
     </button>

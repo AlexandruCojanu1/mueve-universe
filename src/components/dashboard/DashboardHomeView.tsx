@@ -161,34 +161,6 @@ export default function DashboardHomeView({ data }: { data: DashboardHomeData })
         </div>
       </section>
 
-      {/* ── Progress note (coach-note style) ──────────────────────────── */}
-      {d.progress && (
-        <section className="m-note">
-          <div className="m-note-icon">🎯</div>
-          <div className="m-note-body">
-            <div className="m-note-eyebrow">PROGRESUL TĂU</div>
-            <div className="teaser-wrap">
-              <p className="m-note-text teaser-blur">
-                Ești <strong>{d.progress.tierName}</strong> · Nivel{" "}
-                <strong>{d.progress.level}</strong>.{" "}
-                {d.progress.nextTierName
-                  ? `Încă ${d.progress.xpToGo} XP până la ${d.progress.nextTierName}. Apropie-te cu fiecare sesiune.`
-                  : "Ai atins nivelul maxim. Legendă."}
-              </p>
-              <span className="teaser-pill">În curând</span>
-            </div>
-            {d.progress.nextTierName && (
-              <div className="m-note-bar">
-                <div
-                  className="m-note-bar-fill"
-                  style={{ width: `${d.progress.pct}%` }}
-                />
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       {/* ── Device safety surfaces ────────────────────────────────────── */}
       {d.deviceBlocked && (
         <section className="m-card-section">

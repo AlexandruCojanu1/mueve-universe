@@ -29,7 +29,7 @@ export default function AvatarMenu({ initials }: { initials: string }) {
           <button
             type="button"
             className="m-avatar-menu-item"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: "/" })}
           >
             Ieși din cont
           </button>
