@@ -16,22 +16,57 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+const SITE_NAME = "MUEVE UNIVERSE";
+const SITE_DESCRIPTION =
+  "MUEVE UNIVERSE, universul mișcării. Un ecosistem de calisthenics, yoga, alergare și comunitate.";
+const OG_IMAGE = "/mueve-logo.png";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://mueve.ro"),
-  title: "MUEVE UNIVERSE — Mișcă-te. Trăiește. Evoluează.",
-  description:
-    "MUEVE UNIVERSE — universul mișcării. Un ecosistem cosmic de calisthenics, yoga, alergare și comunitate.",
-  openGraph: {
-    title: "MUEVE UNIVERSE",
-    description: "Intră în universul mișcării.",
-    url: "https://mueve.ro",
-    siteName: "MUEVE UNIVERSE",
-    locale: "ro_RO",
-    type: "website",
+  title: {
+    default: "MUEVE UNIVERSE: Mișcă-te. Trăiește. Evoluează.",
+    template: "%s | MUEVE UNIVERSE",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  robots: {
+    index: true,
+    follow: true,
   },
   alternates: {
-    canonical: "https://mueve.ro",
+    canonical: "/",
   },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: "Intră în universul mișcării.",
+    locale: "ro_RO",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: "Intră în universul mișcării.",
+    images: [OG_IMAGE],
+  },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  url: "https://mueve.ro",
+  logo: "https://mueve.ro/mueve-logo.png",
+  description: SITE_DESCRIPTION,
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -42,7 +77,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <head>
         <style dangerouslySetInnerHTML={{ __html: css }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
