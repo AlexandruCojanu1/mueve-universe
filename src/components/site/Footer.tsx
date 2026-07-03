@@ -59,7 +59,20 @@ export default function Footer({ data }: { data: FooterData }) {
   const { lang } = useLang();
   return (
     <footer className="foot">
-      <span>{pick(data.copyright, lang)}</span>
+      <span>
+        {pick(data.copyright, lang)}
+        <span style={{ opacity: 0.6, marginLeft: "0.5rem" }}>
+          by{" "}
+          <a
+            href="https://grappes.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "inherit", textDecoration: "underline" }}
+          >
+            grappes.dev
+          </a>
+        </span>
+      </span>
       <div className="foot-legal">
         <a href="/terms">
           {lang === "ro" ? "Termeni & cond." : "Terms & cond."}
