@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { users, subscriptions, payments, attendances } from "@/db/schema";
@@ -9,7 +10,8 @@ import ProfileView, {
 import { cleanDisplayName } from "@/lib/display-name";
 import { appleWalletEnabled } from "@/lib/wallet/apple";
 import { googleWalletEnabled } from "@/lib/wallet/google";
-import { getCreditBalance } from "@/lib/credits";
+import { getCreditBalance, hasActivePass } from "@/lib/credits";
+import { ensureQrToken } from "@/lib/qr-token";
 import { getUserStats } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +77,21 @@ export default async function ProfilePage() {
   );
   const xpStats = await safe(() => getUserStats(userId), null);
 
+  // In-app discount card (QR): only for members with an active PASS. Encodes
+  // the public /q/<token> scan URL, so it works with no Apple/Google Wallet setup.
+  const passActive = await safe(() => hasActivePass(userId), false);
+  let qr: ProfileViewData["qr"] = null;
+  if (passActive) {
+    const token = await safe(() => ensureQrToken(userId), "");
+    if (token) {
+      const h = await headers();
+      const host = h.get("host");
+      const proto = h.get("x-forwarded-proto") ?? "https";
+      const origin = host ? `${proto}://${host}` : "https://www.mueve.ro";
+      qr = { token, origin };
+    }
+  }
+
   const cleanName = cleanDisplayName(userRow?.name);
   const memberSince = userRow?.createdAt
     ? userRow.createdAt
@@ -94,6 +111,7 @@ export default async function ProfilePage() {
       googleEnabled: googleWalletEnabled(),
       added: !!userRow?.walletAddedAt,
     },
+    qr,
     activeSub: activeSub
       ? {
           planName: activeSub.planName,

@@ -1,4 +1,5 @@
 import WalletButtons from "@/components/dashboard/WalletButtons";
+import MemberQrCard from "@/components/dashboard/MemberQrCard";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AttendanceList from "@/components/dashboard/AttendanceList";
 import SignOutButton from "@/components/dashboard/SignOutButton";
@@ -12,6 +13,8 @@ export type ProfileViewData = {
   tier: { name: string; level: number } | null;
   xp: number;
   wallet: { appleEnabled: boolean; googleEnabled: boolean; added: boolean };
+  /** In-app discount card (QR). Present only when the member has an active PASS. */
+  qr: { token: string; origin: string } | null;
   activeSub: { planName: string | null; status: string; periodEnd: string | null } | null;
   creditsTotal: number;
   recentPayments: { id: string; label: string; amount: string }[];
@@ -39,6 +42,20 @@ export default function ProfileView({ data: d }: { data: ProfileViewData }) {
           )}
         </div>
       </section>
+
+      {/* ── Cardul de reduceri (QR) ───────────────────────────────────── */}
+      {d.qr && (
+        <section className="m-card-section" id="card">
+          <div className="m-section-eyebrow">CARDUL TĂU · REDUCERI</div>
+          <MemberQrCard origin={d.qr.origin} token={d.qr.token} />
+          <p
+            className="m-mini-meta"
+            style={{ textAlign: "center", marginTop: "0.8rem" }}
+          >
+            Arată acest cod la partenerii MUEVE ca să primești reducerea.
+          </p>
+        </section>
+      )}
 
       {/* ── Wallet ────────────────────────────────────────────────────── */}
       {(d.wallet.appleEnabled || d.wallet.googleEnabled) && (

@@ -55,25 +55,19 @@ export default async function QLandingPage({
     getCreditBalance(memberId),
   ]);
   const member = memberRows[0];
-  const isOk = !!pass && credits.total > 0;
-  const isWarn = !!pass && credits.total === 0;
+  // PASS is a discount membership: an active Pass = valid card. Class credits
+  // are a separate, currently-inactive feature — they must NOT gate the card.
+  const isOk = !!pass;
 
   return (
-    <main
-      className={
-        "qv-screen " +
-        (isOk ? "qv-screen-ok" : isWarn ? "qv-screen-warn" : "qv-screen-bad")
-      }
-    >
+    <main className={"qv-screen " + (isOk ? "qv-screen-ok" : "qv-screen-bad")}>
       <div className="qv-card">
-        <div className="qv-status">{isOk ? "VALID" : isWarn ? "FĂRĂ CLASE" : "INACTIV"}</div>
+        <div className="qv-status">{isOk ? "VALID" : "INACTIV"}</div>
         <div className="qv-name">{member?.name || member?.email || "Membru"}</div>
-        {!isOk && (
-          <div className="qv-sub">
-            {isWarn
-              ? "Pass activ, dar fără clase rămase."
-              : "Pass-ul nu e activ. Membrul trebuie să cumpere."}
-          </div>
+        {isOk ? (
+          <div className="qv-meta">MEMBRU PASS ACTIV · aplică reducerea</div>
+        ) : (
+          <div className="qv-sub">Pass-ul nu e activ. Membrul trebuie să cumpere.</div>
         )}
         {isOk && credits.total > 0 && (
           <div className="qv-meta">
