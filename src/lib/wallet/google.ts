@@ -15,7 +15,13 @@ function parseServiceAccount(): ServiceAccount | null {
   const raw = process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON;
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw);
+    // Accept either raw JSON or base64-encoded JSON. Base64 is Docker ARG-safe
+    // (no quotes/newlines), so it survives Coolify's build-arg env injection —
+    // raw service-account JSON breaks the generated Dockerfile.
+    const text = raw.trim().startsWith("{")
+      ? raw
+      : Buffer.from(raw, "base64").toString("utf8");
+    const parsed = JSON.parse(text);
     if (!parsed.client_email || !parsed.private_key) return null;
     return parsed;
   } catch {
