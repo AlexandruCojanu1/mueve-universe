@@ -78,10 +78,10 @@ export default function PricingDetailsModal({ plan, onClose }: Props) {
             </ul>
           </div>
         )}
-        {ctaLabel && (
+        {(ctaLabel || plan.kind === "merch") && (
           <PricingCta
             className="pricing-modal-cta"
-            label={ctaLabel}
+            label={ctaLabel || (lang === "ro" ? "COMANDĂ TRICOUL" : "ORDER THE TEE")}
             priceId={plan.stripePriceId}
             planId={plan.id}
             planName={name}
