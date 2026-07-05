@@ -1693,6 +1693,8 @@ body.is-day .ham span {
   width: min(480px, 100%);
   max-height: 92vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: linear-gradient(180deg, rgba(20, 28, 55, 0.95), rgba(8, 14, 32, 0.95));
   border: 1px solid rgba(245, 245, 10, 0.25);
   border-radius: 6px;
@@ -1705,20 +1707,34 @@ body.is-day .ham span {
   to { transform: scale(1); opacity: 1; }
 }
 .pricing-modal-close {
+  /* On the fixed full-screen backdrop, not inside the scrollable card, so it
+     stays pinned to the corner and is always tappable on mobile. */
   position: absolute;
-  top: 0.6rem;
-  right: 0.8rem;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 2rem;
+  top: max(0.9rem, env(safe-area-inset-top, 0px));
+  right: max(0.9rem, env(safe-area-inset-right, 0px));
+  z-index: 210;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 14, 32, 0.92);
+  border: 1px solid rgba(245, 245, 10, 0.35);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 1.7rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0.2rem 0.6rem;
-  transition: color 0.2s;
+  padding: 0;
+  transition: color 0.2s, background 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
 }
 .pricing-modal-close:hover {
   color: var(--sun);
+  background: rgba(20, 28, 55, 0.98);
+}
+.pricing-modal-close:active {
+  transform: scale(0.92);
 }
 .pricing-modal-badge {
   display: inline-block;

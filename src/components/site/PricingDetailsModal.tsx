@@ -36,6 +36,11 @@ export default function PricingDetailsModal({ plan, onClose }: Props) {
 
   return (
     <div className="pricing-modal-backdrop" onClick={onClose}>
+      {/* Close lives on the backdrop (not inside the scrollable card) so it's
+          always reachable on mobile even when the card scrolls. */}
+      <button className="pricing-modal-close" onClick={onClose} aria-label="Închide">
+        ×
+      </button>
       <div
         className="pricing-modal"
         role="dialog"
@@ -44,9 +49,6 @@ export default function PricingDetailsModal({ plan, onClose }: Props) {
         data-lenis-prevent
         onClick={(e) => e.stopPropagation()}
       >
-        <button className="pricing-modal-close" onClick={onClose} aria-label="Închide">
-          ×
-        </button>
         {badge && <div className="pricing-modal-badge">{badge}</div>}
         <div className="pricing-modal-name">{name}</div>
         <div className="pricing-modal-price">
