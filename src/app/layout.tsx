@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { getTheme, themeToCssVars } from "@/lib/theme";
-import CountdownBanner from "@/components/CountdownBanner";
+import SiteGate from "@/components/site/SiteGate";
 
 const outfit = Outfit({
   variable: "--font-heading",
@@ -83,7 +83,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <CountdownBanner />
+        <SiteGate />
         {children}
       </body>
     </html>
