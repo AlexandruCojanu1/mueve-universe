@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users, subscriptions, payments, attendances } from "@/db/schema";
+import { users, subscriptions, payments, attendances, sections } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ProfileView, {
   type ProfileViewData,
@@ -92,6 +92,27 @@ export default async function ProfilePage() {
     }
   }
 
+  // PASS Stripe price id (for the in-account "activează" button), resolved from
+  // the pricing CMS section the same way the checkout route does.
+  let passPriceId: string | null = null;
+  if (!passActive) {
+    const [pricingRow] = await safe(
+      () =>
+        db
+          .select({ data: sections.data })
+          .from(sections)
+          .where(eq(sections.type, "pricing"))
+          .limit(1),
+      [] as { data: unknown }[],
+    );
+    const tiers =
+      (pricingRow?.data as { tiers?: { plans?: { id: string; stripePriceId?: string }[] }[] })
+        ?.tiers ?? [];
+    passPriceId =
+      tiers.flatMap((t) => t.plans ?? []).find((p) => p.id === "plan-pass")?.stripePriceId ??
+      null;
+  }
+
   const cleanName = cleanDisplayName(userRow?.name);
   const memberSince = userRow?.createdAt
     ? userRow.createdAt
@@ -111,6 +132,8 @@ export default async function ProfilePage() {
       googleEnabled: googleWalletEnabled(),
       added: !!userRow?.walletAddedAt,
     },
+    passActive,
+    passPriceId,
     qr,
     activeSub: activeSub
       ? {

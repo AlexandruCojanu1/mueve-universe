@@ -7,7 +7,7 @@ import { desc, eq } from "drizzle-orm";
 import { appleWalletEnabled, buildApplePass } from "@/lib/wallet/apple";
 import { ensureQrToken } from "@/lib/qr-token";
 import { getUserStats } from "@/lib/leaderboard";
-import { getCreditBalance } from "@/lib/credits";
+import { getCreditBalance, hasActivePass } from "@/lib/credits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,6 +31,14 @@ export async function GET() {
   const userRows = await db.select().from(users).where(eq(users.id, session.user.id)).limit(1);
   const user = userRows[0];
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  // The card is a member benefit — no active PASS, no card.
+  if (!(await hasActivePass(user.id))) {
+    return NextResponse.json(
+      { error: "Ai nevoie de un PASS activ ca să adaugi cardul.", needsPass: true },
+      { status: 403 },
+    );
+  }
 
   const qrToken = await ensureQrToken(user.id);
   const sub = (

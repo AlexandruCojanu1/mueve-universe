@@ -1,5 +1,6 @@
 import WalletButtons from "@/components/dashboard/WalletButtons";
 import MemberQrCard from "@/components/dashboard/MemberQrCard";
+import PricingCta from "@/components/site/PricingCta";
 import ManageSubscription from "@/components/dashboard/ManageSubscription";
 import AttendanceList from "@/components/dashboard/AttendanceList";
 import SignOutButton from "@/components/dashboard/SignOutButton";
@@ -13,6 +14,10 @@ export type ProfileViewData = {
   tier: { name: string; level: number } | null;
   xp: number;
   wallet: { appleEnabled: boolean; googleEnabled: boolean; added: boolean };
+  /** True when the member has an active PASS (gates the card + wallet). */
+  passActive: boolean;
+  /** Stripe price id of the PASS plan, for the in-account "activează" button. */
+  passPriceId: string | null;
   /** In-app discount card (QR). Present only when the member has an active PASS. */
   qr: { token: string; origin: string } | null;
   activeSub: { planName: string | null; status: string; periodEnd: string | null } | null;
@@ -57,8 +62,8 @@ export default function ProfileView({ data: d }: { data: ProfileViewData }) {
         </section>
       )}
 
-      {/* ── Wallet ────────────────────────────────────────────────────── */}
-      {(d.wallet.appleEnabled || d.wallet.googleEnabled) && (
+      {/* ── Wallet ── members only (no active PASS → no card) ─────────────── */}
+      {d.passActive && (d.wallet.appleEnabled || d.wallet.googleEnabled) && (
         <section className="m-card-section" id="wallet">
           <div className="m-section-eyebrow">WALLET DIGITAL</div>
           <WalletButtons
@@ -94,9 +99,20 @@ export default function ProfileView({ data: d }: { data: ProfileViewData }) {
             ) : (
               <>
                 <div className="m-mini-value">Fără Pass activ</div>
-                <a className="m-mini-link" href="/#pricing">
-                  Vezi Pass-ul →
-                </a>
+                {d.passPriceId ? (
+                  <PricingCta
+                    className="m-mini-link"
+                    label="Activează PASS →"
+                    priceId={d.passPriceId}
+                    planId="plan-pass"
+                    planName="PASS"
+                    mode="subscription"
+                  />
+                ) : (
+                  <a className="m-mini-link" href="/#pricing">
+                    Vezi Pass-ul →
+                  </a>
+                )}
               </>
             )}
           </div>
