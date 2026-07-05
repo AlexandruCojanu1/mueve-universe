@@ -9,6 +9,7 @@ export default function PricingCta({
   planId,
   planName,
   mode,
+  kind,
   fallbackHref,
   className,
 }: {
@@ -17,6 +18,7 @@ export default function PricingCta({
   planId?: string;
   planName?: string;
   mode?: "subscription" | "payment";
+  kind?: "merch";
   fallbackHref?: string;
   className?: string;
 }) {
@@ -24,6 +26,32 @@ export default function PricingCta({
   const [err, setErr] = useState<string | null>(null);
 
   async function handle(e: React.MouseEvent<HTMLAnchorElement>) {
+    // Merch (tricou): guest checkout — no login, no priceId from the client.
+    // Stripe collects email + shipping + size on its hosted page.
+    if (kind === "merch") {
+      e.preventDefault();
+      setErr(null);
+      setBusy(true);
+      try {
+        const res = await fetch("/api/checkout/merch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        setErr(data.error ?? "Nu pot iniția plata acum.");
+      } catch {
+        setErr("Eroare de rețea.");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (!priceId) {
       e.preventDefault();
       try {

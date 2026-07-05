@@ -85,6 +85,12 @@ export type PricingPlan = {
   checkoutMode?: "subscription" | "payment";
   /** Credits granted on a one-time pack purchase. Resolved server-side. */
   classCount?: number;
+  /**
+   * Product kind. "merch" = physical good (e.g. tricou): buys through the
+   * dedicated guest merch checkout (no Pass, collects shipping + size) instead
+   * of the class/subscription flow.
+   */
+  kind?: "merch";
 };
 
 export type PricingTier = {

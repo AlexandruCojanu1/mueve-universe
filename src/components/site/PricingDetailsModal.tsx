@@ -86,6 +86,7 @@ export default function PricingDetailsModal({ plan, onClose }: Props) {
             planId={plan.id}
             planName={name}
             mode={plan.checkoutMode}
+            kind={plan.kind}
             fallbackHref={plan.ctaHref || "#join"}
           />
         )}

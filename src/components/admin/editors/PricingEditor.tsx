@@ -263,8 +263,23 @@ function PlanEditor({
         Evidențiat (galben)
       </label>
 
+      <label className="flex items-center gap-2 text-sm opacity-80">
+        <input
+          type="checkbox"
+          checked={plan.kind === "merch"}
+          onChange={(e) => onChange({ ...plan, kind: e.target.checked ? "merch" : undefined })}
+        />
+        Merch (produs fizic, ex: tricou) — checkout cu livrare + mărime, fără cont/Pass
+      </label>
+
       <div className="pt-3 mt-3 border-t border-white/10 space-y-3">
         <div className="text-[10px] opacity-50 font-bold uppercase tracking-widest">Stripe</div>
+        {plan.kind === "merch" ? (
+          <div className="text-xs opacity-60 leading-relaxed">
+            Produsul de merch își provizionează singur prețul în Stripe la prima
+            comandă — nu trebuie să completezi Price ID aici.
+          </div>
+        ) : (
         <div>
           <Label hint="Preia din Stripe Dashboard → Products → copiază Price ID (price_...)">Stripe Price ID</Label>
           <Input
@@ -273,6 +288,8 @@ function PlanEditor({
             placeholder="price_1ABCdefg..."
           />
         </div>
+        )}
+        {plan.kind !== "merch" && (
         <div>
           <Label>Tip checkout</Label>
           <Select
@@ -284,6 +301,7 @@ function PlanEditor({
             ]}
           />
         </div>
+        )}
       </div>
     </div>
   );

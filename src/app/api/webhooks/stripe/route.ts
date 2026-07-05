@@ -196,6 +196,19 @@ export async function POST(req: Request) {
         if (session.mode === "payment" && session.payment_intent) {
           const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
           const pi = await stripe.paymentIntents.retrieve(piId);
+
+          // Merch (tricou / physical good): NOT a class pack — grant no credits,
+          // require no Pass, issue no class invoice. Fulfilment data (buyer
+          // email, shipping address, phone, size) lives on the Stripe session.
+          if (session.metadata?.kind === "merch") {
+            console.log("[webhook] merch order paid", {
+              session: session.id,
+              paymentIntent: pi.id,
+              amount: pi.amount_received,
+            });
+            break;
+          }
+
           await recordPayment(pi, session);
           const userId = await userIdFromCustomer(
             typeof session.customer === "string"
