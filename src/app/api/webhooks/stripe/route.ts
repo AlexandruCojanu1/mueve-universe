@@ -197,15 +197,33 @@ export async function POST(req: Request) {
           const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
           const pi = await stripe.paymentIntents.retrieve(piId);
 
-          // Merch (tricou / physical good): NOT a class pack — grant no credits,
-          // require no Pass, issue no class invoice. Fulfilment data (buyer
-          // email, shipping address, phone, size) lives on the Stripe session.
+          // Merch (tricou / physical good): NOT a class pack — grant no credits
+          // and require no Pass. Fulfilment data (shipping address, phone, size)
+          // lives on the Stripe session. Still issue an Oblio fiscal invoice and
+          // email it to the buyer (best-effort, keyed to the guest's details).
           if (session.metadata?.kind === "merch") {
             console.log("[webhook] merch order paid", {
               session: session.id,
               paymentIntent: pi.id,
               amount: pi.amount_received,
             });
+            const buyerEmail = session.customer_details?.email;
+            const buyerName = session.customer_details?.name || buyerEmail || "Client";
+            if (oblioEnabled() && buyerEmail) {
+              try {
+                await issueOblioInvoice({
+                  stripeRef: pi.id,
+                  clientName: buyerName,
+                  clientEmail: buyerEmail,
+                  productName: (session.metadata?.planName as string) || "MUEVE CLUB TEE",
+                  amountBani: pi.amount_received ?? 0,
+                  currency: pi.currency ?? "ron",
+                  seriesName: process.env.OBLIO_SERIES_PACKAGE || undefined,
+                });
+              } catch (err) {
+                captureError(err, { scope: "merch-oblio", session: session.id });
+              }
+            }
             break;
           }
 

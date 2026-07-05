@@ -98,9 +98,8 @@ export default function Program({ data }: { data: ProgramData }) {
             <div className="dx-time">{open.time}</div>
             <div className="dx-world">{pick(open.world, lang)}</div>
             {open.description && <p>{pick(open.description, lang)}</p>}
-            <a href="/dashboard/sessions" className="btn-join">
-              {pick(data.joinLabel, lang)}
-            </a>
+            {/* "Join class" CTA removed for the PASS-only launch (class booking
+                logic is inactive for now). */}
           </div>
         )}
       </div>
