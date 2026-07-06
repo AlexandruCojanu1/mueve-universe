@@ -83,6 +83,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
+        {/* Cloudflare Web Analytics — site is grey-cloud, so this client-side
+            beacon is the only way CF sees visitors. Token is public by design. */}
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: "9e5effe52d6549f6b7c5e24f7b942d5f" })}
+        />
         <SiteGate />
         {children}
       </body>
