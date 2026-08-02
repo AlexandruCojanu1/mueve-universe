@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react";
 
 type Winners = {
-  girl: { name: string | null } | null;
-  boy: { name: string | null } | null;
+  winner: { name: string | null; gender: "f" | "m" } | null;
 } | null;
 type LaunchState = {
   state: "pre" | "countdown" | "live";
@@ -11,8 +10,8 @@ type LaunchState = {
   gate?: boolean;
   winners?: Winners;
 };
-type Winner = { name: string | null; email: string } | null;
-type Raffle = { girl: Winner; boy: Winner; drawnAt: string } | null;
+type Winner = { name: string | null; email: string; gender: "f" | "m" } | null;
+type Raffle = { winner: Winner; drawnAt: string } | null;
 
 const STATE_LABEL: Record<LaunchState["state"], string> = {
   pre: "ECRAN DE PRE-LANSARE (site ascuns)",
@@ -72,7 +71,7 @@ export default function LaunchPanel() {
   async function draw() {
     if (
       !confirm(
-        "Extragi câștigătorii? Rezultatul înlocuiește extragerea anterioară și apare pe TOATE telefoanele deschise.",
+        "Extragi câștigătorul? Rezultatul înlocuiește extragerea anterioară și apare pe TOATE telefoanele deschise.",
       )
     )
       return;
@@ -188,12 +187,13 @@ export default function LaunchPanel() {
         <div className="dash-card-head">
           <div>
             <div className="dash-card-eyebrow">Pasul 3 · Tombola</div>
-            <div className="dash-card-title">Extragerea câștigătorilor</div>
+            <div className="dash-card-title">Extragerea câștigătorului</div>
           </div>
         </div>
         <p style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.6 }}>
-          Alege aleatoriu o fată și un băiat dintre cei înscriși la poartă. Câștigătorii
-          apar fullscreen pe toate telefoanele deschise și aici.
+          Alege aleatoriu un singur câștigător dintre toți cei înscriși la poartă; poate
+          ieși fată sau băiat. Câștigătorul apare fullscreen pe toate telefoanele deschise
+          și aici.
           {eligible && (
             <>
               {" "}
@@ -208,9 +208,9 @@ export default function LaunchPanel() {
             disabled={busy !== null}
             onClick={draw}
           >
-            {busy === "draw" ? "Se extrage…" : "🎉 Extrage câștigătorii"}
+            {busy === "draw" ? "Se extrage…" : "🎉 Extrage câștigătorul"}
           </button>
-          {launch?.winners && (
+          {launch?.winners?.winner && (
             <button
               className="dash-btn dash-btn-light"
               disabled={busy !== null}
@@ -219,22 +219,23 @@ export default function LaunchPanel() {
               {busy === "hide-winners" ? "…" : "Ascunde de pe ecrane"}
             </button>
           )}
-          {raffle && (
+          {raffle?.winner && (
             <button className="dash-btn dash-btn-light" onClick={() => setShowStage(true)}>
               Afișează din nou (aici)
             </button>
           )}
         </div>
-        {launch?.winners && (
+        {launch?.winners?.winner && (
           <p style={{ fontSize: 12, marginTop: "0.8rem", color: "var(--sun)" }}>
-            Câștigătorii sunt afișați acum pe toate ecranele deschise.
+            Câștigătorul este afișat acum pe toate ecranele deschise.
           </p>
         )}
-        {raffle && (
+        {raffle?.winner && (
           <p style={{ fontSize: 12, opacity: 0.6, marginTop: "0.8rem" }}>
-            Ultima extragere: {new Date(raffle.drawnAt).toLocaleString("ro-RO")} · Fata:{" "}
-            {raffle.girl ? `${raffle.girl.name || "—"} (${raffle.girl.email})` : "—"} · Băiatul:{" "}
-            {raffle.boy ? `${raffle.boy.name || "—"} (${raffle.boy.email})` : "—"}
+            Ultima extragere: {new Date(raffle.drawnAt).toLocaleString("ro-RO")} ·{" "}
+            {raffle.winner
+              ? `${raffle.winner.gender === "f" ? "Fata" : "Băiatul"}: ${raffle.winner.name || "—"} (${raffle.winner.email})`
+              : "—"}
           </p>
         )}
         {err && (
@@ -242,20 +243,16 @@ export default function LaunchPanel() {
         )}
       </div>
 
-      {showStage && raffle && (
+      {showStage && raffle?.winner && (
         <div className="raffle-stage" onClick={() => setShowStage(false)}>
           <button className="raffle-close" aria-label="Închide">
             ×
           </button>
-          <div className="raffle-title">Câștigătorii MUEVE</div>
+          <div className="raffle-title">Câștigătorul MUEVE</div>
           <div className="raffle-winners">
             <div className="raffle-card">
-              <div className="raffle-kind">Fata</div>
-              <div className="raffle-name">{raffle.girl?.name || raffle.girl?.email || "—"}</div>
-            </div>
-            <div className="raffle-card">
-              <div className="raffle-kind">Băiatul</div>
-              <div className="raffle-name">{raffle.boy?.name || raffle.boy?.email || "—"}</div>
+              <div className="raffle-kind">{raffle.winner.gender === "f" ? "Fata" : "Băiatul"}</div>
+              <div className="raffle-name">{raffle.winner.name || raffle.winner.email || "—"}</div>
             </div>
           </div>
         </div>

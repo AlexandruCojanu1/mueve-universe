@@ -39,28 +39,26 @@ export async function POST() {
   const r = await requireAdmin();
   if ("err" in r) return r.err;
 
-  // Random pick per gender from the launch-gate entries.
-  const pick = async (gender: "f" | "m") => {
-    const rows = await db
-      .select({ name: raffleEntries.name, email: raffleEntries.email })
-      .from(raffleEntries)
-      .where(eq(raffleEntries.gender, gender))
-      .orderBy(sql`random()`)
-      .limit(1);
-    return rows[0] ?? null;
-  };
+  // One single winner, picked at random across ALL launch-gate entries —
+  // the gender (fată / băiat) falls out of the draw itself.
+  const [winner] = await db
+    .select({
+      name: raffleEntries.name,
+      email: raffleEntries.email,
+      gender: raffleEntries.gender,
+    })
+    .from(raffleEntries)
+    .orderBy(sql`random()`)
+    .limit(1);
 
-  const girl = await pick("f");
-  const boy = await pick("m");
-
-  if (!girl && !boy) {
+  if (!winner) {
     return NextResponse.json(
       { error: "Nicio înscriere la poartă încă (nume + email)." },
       { status: 400 },
     );
   }
 
-  const value = { girl, boy, drawnAt: new Date().toISOString() };
+  const value = { winner, drawnAt: new Date().toISOString() };
   await db
     .insert(appSettings)
     .values({ key: "raffle", value, updatedAt: new Date() })
@@ -69,7 +67,7 @@ export async function POST() {
       set: { value, updatedAt: new Date() },
     });
 
-  // Broadcast winners to every open phone (names only, no emails).
+  // Broadcast the winner to every open phone (name only, no email).
   const [launchRow] = await db
     .select({ value: appSettings.value })
     .from(appSettings)
@@ -78,8 +76,7 @@ export async function POST() {
   const launchValue = {
     ...((launchRow?.value as Record<string, unknown>) ?? { state: "live" }),
     winners: {
-      girl: girl ? { name: girl.name } : null,
-      boy: boy ? { name: boy.name } : null,
+      winner: { name: winner.name, gender: winner.gender },
       shownAt: new Date().toISOString(),
     },
   };

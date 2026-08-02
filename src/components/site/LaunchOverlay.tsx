@@ -3,8 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Winners = {
-  girl: { name: string | null } | null;
-  boy: { name: string | null } | null;
+  winner: { name: string | null; gender: "f" | "m" } | null;
   shownAt?: string;
 } | null;
 
@@ -28,7 +27,7 @@ const GATE_KEY = "mueve-gate-entry";
  * Fullscreen launch overlay + live sync. Always mounted on the landing page:
  * polls /api/launch continuously so every open phone reacts without a refresh —
  * arming shows the holding screen, LAUNCH plays 10 → 1 anchored to the server
- * startAt timestamp, the raffle draw shows the winners on every screen, the
+ * startAt timestamp, the raffle draw shows the winner on every screen, the
  * gate asks visitors for name + email before the site opens, and any admin
  * content edit (teaser flags, copy, pricing) triggers a soft router.refresh().
  */
@@ -52,7 +51,9 @@ export default function LaunchOverlay({ initial }: { initial: LaunchState }) {
   }, []);
 
   const eventActive =
-    (!done && launch.state !== "live") || !!launch.winners || (launch.gate && entered === false);
+    (!done && launch.state !== "live") ||
+    !!launch.winners?.winner ||
+    (launch.gate && entered === false);
 
   // Continuous poll — fast while an event is in progress, slow when live.
   useEffect(() => {
@@ -160,18 +161,15 @@ export default function LaunchOverlay({ initial }: { initial: LaunchState }) {
     return <div className="launch-overlay launch-overlay-out" aria-hidden />;
   }
 
-  if (launch.winners) {
+  if (launch.winners?.winner) {
+    const w = launch.winners.winner;
     return (
       <div className="raffle-stage">
-        <div className="raffle-title">Câștigătorii MUEVE</div>
+        <div className="raffle-title">Câștigătorul MUEVE</div>
         <div className="raffle-winners">
           <div className="raffle-card">
-            <div className="raffle-kind">Fata</div>
-            <div className="raffle-name">{launch.winners.girl?.name || "—"}</div>
-          </div>
-          <div className="raffle-card">
-            <div className="raffle-kind">Băiatul</div>
-            <div className="raffle-name">{launch.winners.boy?.name || "—"}</div>
+            <div className="raffle-kind">{w.gender === "f" ? "Fata" : "Băiatul"}</div>
+            <div className="raffle-name">{w.name || "—"}</div>
           </div>
         </div>
       </div>

@@ -12,8 +12,7 @@ type LaunchState = {
   startAt?: string;
   gate?: boolean;
   winners?: {
-    girl: { name: string | null } | null;
-    boy: { name: string | null } | null;
+    winner: { name: string | null; gender: "f" | "m" } | null;
     shownAt?: string;
   } | null;
   v?: number;
