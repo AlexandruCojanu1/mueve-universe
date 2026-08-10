@@ -169,7 +169,10 @@ export const payments = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     stripePaymentIntentId: text("stripe_payment_intent_id").unique(),
-    stripeInvoiceId: text("stripe_invoice_id"),
+    // Unique: Stripe fires both invoice.paid and invoice.payment_succeeded for
+    // the same invoice, and invoice-sourced rows carry no payment intent id —
+    // this is the only thing that keeps a subscription payment from landing twice.
+    stripeInvoiceId: text("stripe_invoice_id").unique(),
     stripeCheckoutSessionId: text("stripe_checkout_session_id"),
     amount: integer("amount").notNull(),
     currency: text("currency").notNull().default("ron"),

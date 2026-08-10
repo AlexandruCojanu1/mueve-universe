@@ -140,21 +140,42 @@ async function recordPayment(
   const currency = source.currency ?? "ron";
   const status = source.status ?? "unknown";
 
-  await db
-    .insert(payments)
-    .values({
-      userId,
-      stripePaymentIntentId: intent?.id ?? null,
-      stripeInvoiceId: invoice?.id ?? null,
-      stripeCheckoutSessionId: fallbackSession?.id ?? null,
-      amount,
-      currency,
-      status,
-      planId: (fallbackSession?.metadata?.planId as string) || null,
-      planName: (fallbackSession?.metadata?.planName as string) || null,
-      mode: fallbackSession?.mode ?? null,
-    })
-    .onConflictDoNothing({ target: payments.stripePaymentIntentId });
+  // Stripe fires BOTH invoice.paid and invoice.payment_succeeded for the same
+  // invoice, and both land here. Invoice-sourced rows have no payment intent id,
+  // so the ON CONFLICT below (keyed on that column) never fired for them —
+  // Postgres treats two NULLs as distinct — and every subscription payment was
+  // recorded twice. Key invoices on their own id instead.
+  if (invoice?.id) {
+    const seen = await db
+      .select({ id: payments.id })
+      .from(payments)
+      .where(eq(payments.stripeInvoiceId, invoice.id))
+      .limit(1);
+    if (seen.length > 0) return;
+  }
+
+  try {
+    await db
+      .insert(payments)
+      .values({
+        userId,
+        stripePaymentIntentId: intent?.id ?? null,
+        stripeInvoiceId: invoice?.id ?? null,
+        stripeCheckoutSessionId: fallbackSession?.id ?? null,
+        amount,
+        currency,
+        status,
+        planId: (fallbackSession?.metadata?.planId as string) || null,
+        planName: (fallbackSession?.metadata?.planName as string) || null,
+        mode: fallbackSession?.mode ?? null,
+      })
+      .onConflictDoNothing({ target: payments.stripePaymentIntentId });
+  } catch (err) {
+    // 23505 = unique violation on stripe_invoice_id: the twin event won the
+    // race between the check above and this insert. Already recorded, done.
+    if ((err as { code?: string })?.code === "23505") return;
+    throw err;
+  }
 }
 
 export async function POST(req: Request) {
