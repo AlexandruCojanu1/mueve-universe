@@ -76,12 +76,12 @@ export async function POST(req: Request) {
   const tiers = data.tiers ?? [];
   const allPlans = tiers.flatMap((t) => t.plans ?? []);
 
-  // Target the given plan, else auto-match by name/price (tricou / tee / 89).
+  // Target the given plan, else auto-match by name/price (tricou / tee / 79).
   const plan =
     (body.planId && allPlans.find((p) => p.id === body.planId)) ||
     allPlans.find((p) => {
       const n = `${p.name?.ro ?? ""} ${p.name?.en ?? ""}`.toLowerCase();
-      return n.includes("tricou") || n.includes("tee") || n.includes("merch") || p.price === "89";
+      return n.includes("tricou") || n.includes("tee") || n.includes("merch") || p.price === "79";
     });
   if (!plan) {
     return NextResponse.json(

@@ -9,7 +9,7 @@ import type Stripe from "stripe";
 export const MERCH_TEE = {
   lookupKey: "mueve_club_tee_presale",
   productName: "MUEVE CLUB TEE (Pre-Sale)",
-  amountBani: 8900, // 89.00 RON, TVA inclus
+  amountBani: 7900, // 79.00 RON, TVA inclus
   currency: "ron",
   sizes: ["S", "M", "L", "XL", "XXL"],
 } as const;
@@ -24,13 +24,17 @@ export async function getOrCreateMerchPrice(stripe: Stripe): Promise<string> {
     active: true,
     limit: 1,
   });
-  if (existing.data[0]) return existing.data[0].id;
+  const current = existing.data[0];
+  // A Stripe price is immutable, so when the amount here changes we mint a new
+  // one and move the lookup_key onto it (the old price stays, archived).
+  if (current && current.unit_amount === MERCH_TEE.amountBani) return current.id;
 
   const price = await stripe.prices.create({
     currency: MERCH_TEE.currency,
     unit_amount: MERCH_TEE.amountBani,
     lookup_key: MERCH_TEE.lookupKey,
-    product_data: { name: MERCH_TEE.productName },
+    transfer_lookup_key: current ? true : undefined,
+    ...(current ? { product: current.product as string } : { product_data: { name: MERCH_TEE.productName } }),
     metadata: { merch: "mueve_club_tee" },
   });
   return price.id;
