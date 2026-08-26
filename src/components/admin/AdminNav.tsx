@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/launch", label: "Lansare" },
   { href: "/admin/activity", label: "Activitate" },
   { href: "/admin/billing", label: "Plăți" },
+  { href: "/admin/orders", label: "Comenzi" },
   { href: "/admin/theme", label: "Temă" },
   { href: "/dashboard", label: "Contul meu" },
   { href: "/", label: "Vezi site" },
