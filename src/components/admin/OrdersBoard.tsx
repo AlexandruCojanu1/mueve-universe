@@ -92,7 +92,6 @@ export default function OrdersBoard() {
     .filter((s) => bySize.has(s))
     .map((s) => `${s} ×${bySize.get(s)}`)
     .join(" · ");
-  const anyAddress = orders.some((o) => o.address);
 
   const stats = [
     { label: "Comenzi", value: String(orders.length) },
@@ -143,6 +142,7 @@ export default function OrdersBoard() {
           <div className="dash-empty">Nicio comandă încă.</div>
         ) : (
           <div className="dash-table-wrap">
+            <div className="dash-table-scroll">
             <table className="dash-table">
               <thead>
                 <tr>
@@ -151,7 +151,6 @@ export default function OrdersBoard() {
                   <th>Telefon</th>
                   <th>Mărime</th>
                   <th>Buc.</th>
-                  {anyAddress ? <th>Adresă</th> : null}
                   <th>Sumă</th>
                   <th>Factură</th>
                   <th>Status</th>
@@ -166,15 +165,34 @@ export default function OrdersBoard() {
                         {new Date(o.createdAt).toLocaleDateString("ro-RO")}
                       </td>
                       <td>
-                        {o.name || "—"}{" "}
-                        <span style={{ opacity: 0.55, fontSize: 12, fontFamily: "monospace" }}>
+                        {o.name || "—"}
+                        <span
+                          style={{
+                            display: "block",
+                            opacity: 0.55,
+                            fontSize: 12,
+                            fontFamily: "monospace",
+                          }}
+                        >
                           {o.email || ""}
                         </span>
+                        {o.address ? (
+                          <span
+                            style={{
+                              display: "block",
+                              opacity: 0.5,
+                              fontSize: 12,
+                              whiteSpace: "normal",
+                              maxWidth: 320,
+                            }}
+                          >
+                            {o.address}
+                          </span>
+                        ) : null}
                       </td>
                       <td style={{ whiteSpace: "nowrap" }}>{o.phone || "—"}</td>
                       <td style={{ fontWeight: 700 }}>{o.size || "—"}</td>
                       <td>{o.quantity}</td>
-                      {anyAddress ? <td style={{ maxWidth: 260 }}>{o.address || "—"}</td> : null}
                       <td style={{ fontWeight: 700, whiteSpace: "nowrap" }}>
                         {money(o.amount, o.currency)}
                         {o.amountRefunded > 0 ? (
@@ -221,6 +239,7 @@ export default function OrdersBoard() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
