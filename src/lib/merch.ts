@@ -2,9 +2,11 @@ import type Stripe from "stripe";
 
 /**
  * MUEVE CLUB TEE — pre-sale tricou. Physical good sold through a dedicated
- * guest checkout (no account / no Pass needed): collects a shipping address,
- * phone and size on Stripe's hosted page. The Stripe price is provisioned on
- * demand and keyed by a stable lookup_key so we never create duplicates.
+ * guest checkout (no account / no Pass needed). Buyers are people from the
+ * community and tees are handed over in person, so NO shipping address is
+ * collected — only full name, phone, email and size (all required) on
+ * Stripe's hosted page. The Stripe price is provisioned on demand and keyed
+ * by a stable lookup_key so we never create duplicates.
  */
 export const MERCH_TEE = {
   lookupKey: "mueve_club_tee_presale",
@@ -40,14 +42,37 @@ export async function getOrCreateMerchPrice(stripe: Stripe): Promise<string> {
   return price.id;
 }
 
-/** Size dropdown shown on the Stripe Checkout page. */
+/** Full-name text field (required — guest checkout collects no address, so
+ * without it we'd only have the email to identify the buyer). */
+export function merchNameField() {
+  return {
+    key: "nume",
+    label: { type: "custom" as const, custom: "Nume complet" },
+    type: "text" as const,
+    text: { minimum_length: 3, maximum_length: 60 },
+  };
+}
+
+/** Size dropdown shown on the Stripe Checkout page (required by default). */
 export function merchSizeField() {
   return {
     key: "marime",
-    label: { type: "custom" as const, custom: "Mărime tricou" },
+    label: { type: "custom" as const, custom: "Mărime (toate tricourile din comandă)" },
     type: "dropdown" as const,
     dropdown: {
       options: MERCH_TEE.sizes.map((s) => ({ label: s, value: s.toLowerCase() })),
     },
   };
+}
+
+/** Buyer name for a merch session: the required custom field, with fallbacks
+ * for sessions created before it existed (they collected a shipping name). */
+export function merchBuyerName(session: Stripe.Checkout.Session): string | null {
+  const custom = session.custom_fields?.find((f) => f.key === "nume")?.text?.value;
+  return (
+    custom ||
+    session.collected_information?.shipping_details?.name ||
+    session.customer_details?.name ||
+    null
+  );
 }

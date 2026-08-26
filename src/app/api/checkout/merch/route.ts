@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStripe, stripeEnabled } from "@/lib/stripe";
 import { rateLimitAsync, clientKey } from "@/lib/rate-limit";
-import { getOrCreateMerchPrice, merchSizeField, MERCH_TEE } from "@/lib/merch";
+import { getOrCreateMerchPrice, merchNameField, merchSizeField, MERCH_TEE } from "@/lib/merch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,8 +9,9 @@ export const dynamic = "force-dynamic";
 /**
  * Guest checkout for the pre-sale tricou. Unlike /api/checkout (classes/Pass),
  * this needs NO login and NO active Pass — merch is a plain physical good.
- * Stripe's hosted page collects the buyer's email, shipping address, phone and
- * size; fulfilment data lives on the Stripe session.
+ * Tees are handed over in person (community pre-sale, no courier), so no
+ * shipping address: Stripe's hosted page collects email, full name, phone and
+ * size, all mandatory; fulfilment data lives on the Stripe session.
  */
 export async function POST(req: Request) {
   const rl = await rateLimitAsync(clientKey(req, "checkout-merch"), 10, 60_000);
@@ -42,9 +43,8 @@ export async function POST(req: Request) {
       },
     ],
     customer_creation: "always",
-    shipping_address_collection: { allowed_countries: ["RO"] },
     phone_number_collection: { enabled: true },
-    custom_fields: [merchSizeField()],
+    custom_fields: [merchNameField(), merchSizeField()],
     allow_promotion_codes: true,
     billing_address_collection: "auto",
     success_url: `${origin}/?merch=success`,

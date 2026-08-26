@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 
+type OrderStatus = "new" | "working" | "delivered" | "cancelled";
+
 type Order = {
   sessionId: string;
   paymentIntentId: string | null;
@@ -11,10 +13,19 @@ type Order = {
   size: string | null;
   quantity: number;
   amount: number;
+  amountRefunded: number;
   currency: string;
   address: string | null;
-  fulfilled: boolean;
+  status: OrderStatus;
+  refunded: boolean;
   invoice: { series: string | null; number: string | null; link: string | null } | null;
+};
+
+const STATUS_LABEL: Record<OrderStatus, string> = {
+  new: "Nouă",
+  working: "În lucru",
+  delivered: "Predată",
+  cancelled: "Anulată",
 };
 
 function money(amount: number, currency: string) {
@@ -38,21 +49,20 @@ export default function OrdersBoard() {
 
   useEffect(load, [load]);
 
-  async function toggleFulfilled(o: Order) {
-    if (!o.paymentIntentId) return;
+  async function setStatus(o: Order, status: OrderStatus) {
+    if (!o.paymentIntentId || status === o.status) return;
     setBusy(o.sessionId);
     try {
       const res = await fetch("/api/admin/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentIntentId: o.paymentIntentId, fulfilled: !o.fulfilled }),
+        body: JSON.stringify({ paymentIntentId: o.paymentIntentId, status }),
       });
       if (!res.ok) throw new Error();
       setOrders((prev) =>
-        prev?.map((x) =>
-          x.sessionId === o.sessionId ? { ...x, fulfilled: !o.fulfilled } : x,
-        ) ?? null,
+        prev?.map((x) => (x.sessionId === o.sessionId ? { ...x, status } : x)) ?? null,
       );
+      setErr(null);
     } catch {
       setErr("Nu am putut actualiza comanda. Reîncearcă.");
     } finally {
@@ -69,11 +79,12 @@ export default function OrdersBoard() {
   }
   if (!orders) return <div className="dash-empty">Se încarcă…</div>;
 
-  const pieces = orders.reduce((s, o) => s + o.quantity, 0);
-  const revenue = orders.reduce((s, o) => s + o.amount, 0);
-  const pending = orders.filter((o) => !o.fulfilled).length;
+  const active = orders.filter((o) => o.status !== "cancelled" && !o.refunded);
+  const pieces = active.reduce((s, o) => s + o.quantity, 0);
+  const revenue = orders.reduce((s, o) => s + o.amount - o.amountRefunded, 0);
+  const pending = active.filter((o) => o.status === "new" || o.status === "working").length;
   const bySize = new Map<string, number>();
-  for (const o of orders) {
+  for (const o of active) {
     const key = o.size || "?";
     bySize.set(key, (bySize.get(key) ?? 0) + o.quantity);
   }
@@ -81,12 +92,13 @@ export default function OrdersBoard() {
     .filter((s) => bySize.has(s))
     .map((s) => `${s} ×${bySize.get(s)}`)
     .join(" · ");
+  const anyAddress = orders.some((o) => o.address);
 
   const stats = [
     { label: "Comenzi", value: String(orders.length) },
     { label: "Tricouri", value: String(pieces) },
-    { label: "Încasat", value: money(revenue, "ron") },
-    { label: "De expediat", value: String(pending) },
+    { label: "Încasat net", value: money(revenue, "ron") },
+    { label: "De predat", value: String(pending) },
   ];
 
   return (
@@ -122,7 +134,7 @@ export default function OrdersBoard() {
             <div className="dash-card-title">Comenzi tricouri</div>
             {sizeLine ? (
               <div style={{ opacity: 0.6, fontSize: 13, marginTop: 4 }}>
-                Pe mărimi: {sizeLine}
+                De produs, pe mărimi: {sizeLine}
               </div>
             ) : null}
           </div>
@@ -139,60 +151,74 @@ export default function OrdersBoard() {
                   <th>Telefon</th>
                   <th>Mărime</th>
                   <th>Buc.</th>
-                  <th>Adresă</th>
+                  {anyAddress ? <th>Adresă</th> : null}
                   <th>Sumă</th>
                   <th>Factură</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {orders.map((o) => (
-                  <tr key={o.sessionId} style={o.fulfilled ? { opacity: 0.55 } : undefined}>
-                    <td style={{ opacity: 0.7, whiteSpace: "nowrap" }}>
-                      {new Date(o.createdAt).toLocaleDateString("ro-RO")}
-                    </td>
-                    <td>
-                      {o.name || "—"}{" "}
-                      <span style={{ opacity: 0.55, fontSize: 12, fontFamily: "monospace" }}>
-                        {o.email || ""}
-                      </span>
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>{o.phone || "—"}</td>
-                    <td style={{ fontWeight: 700 }}>{o.size || "—"}</td>
-                    <td>{o.quantity}</td>
-                    <td style={{ maxWidth: 260 }}>{o.address || "—"}</td>
-                    <td style={{ fontWeight: 700, whiteSpace: "nowrap" }}>
-                      {money(o.amount, o.currency)}
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      {o.invoice ? (
-                        o.invoice.link ? (
-                          <a href={o.invoice.link} target="_blank" rel="noreferrer">
-                            {o.invoice.series || ""} {o.invoice.number || ""}
-                          </a>
+                {orders.map((o) => {
+                  const dimmed = o.status === "delivered" || o.status === "cancelled" || o.refunded;
+                  return (
+                    <tr key={o.sessionId} style={dimmed ? { opacity: 0.55 } : undefined}>
+                      <td style={{ opacity: 0.7, whiteSpace: "nowrap" }}>
+                        {new Date(o.createdAt).toLocaleDateString("ro-RO")}
+                      </td>
+                      <td>
+                        {o.name || "—"}{" "}
+                        <span style={{ opacity: 0.55, fontSize: 12, fontFamily: "monospace" }}>
+                          {o.email || ""}
+                        </span>
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>{o.phone || "—"}</td>
+                      <td style={{ fontWeight: 700 }}>{o.size || "—"}</td>
+                      <td>{o.quantity}</td>
+                      {anyAddress ? <td style={{ maxWidth: 260 }}>{o.address || "—"}</td> : null}
+                      <td style={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+                        {money(o.amount, o.currency)}
+                        {o.amountRefunded > 0 ? (
+                          <span style={{ display: "block", fontWeight: 400, fontSize: 12, opacity: 0.7 }}>
+                            retur {money(o.amountRefunded, o.currency)}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {o.invoice ? (
+                          o.invoice.link ? (
+                            <a href={o.invoice.link} target="_blank" rel="noreferrer">
+                              {o.invoice.series || ""} {o.invoice.number || ""}
+                            </a>
+                          ) : (
+                            `${o.invoice.series || ""} ${o.invoice.number || ""}`
+                          )
                         ) : (
-                          `${o.invoice.series || ""} ${o.invoice.number || ""}`
-                        )
-                      ) : (
-                        <span style={{ opacity: 0.5 }}>—</span>
-                      )}
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <button
-                        className="dash-btn"
-                        style={{ height: 34, padding: "0 0.8rem", fontSize: "0.6rem" }}
-                        disabled={busy === o.sessionId || !o.paymentIntentId}
-                        onClick={() => toggleFulfilled(o)}
-                      >
-                        {busy === o.sessionId
-                          ? "…"
-                          : o.fulfilled
-                            ? "Expediat ✓"
-                            : "Marchează expediat"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                          <span style={{ opacity: 0.5 }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        <select
+                          className="dash-btn"
+                          style={{ height: 34, padding: "0 0.6rem", fontSize: "0.6rem" }}
+                          value={o.status}
+                          disabled={busy === o.sessionId || !o.paymentIntentId}
+                          onChange={(e) => setStatus(o, e.target.value as OrderStatus)}
+                        >
+                          {(Object.keys(STATUS_LABEL) as OrderStatus[]).map((s) => (
+                            <option key={s} value={s} style={{ color: "#000" }}>
+                              {STATUS_LABEL[s]}
+                            </option>
+                          ))}
+                        </select>
+                        {o.refunded ? (
+                          <span style={{ display: "block", fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+                            Refundată în Stripe
+                          </span>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

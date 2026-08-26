@@ -7,6 +7,7 @@ import { requireStripe } from "@/lib/stripe";
 import type { SubscriptionStatus } from "@/db/schema";
 import { grantCredits } from "@/lib/credits";
 import { issueOblioInvoice, oblioEnabled } from "@/lib/oblio";
+import { merchBuyerName } from "@/lib/merch";
 import { sendEmail, emailEnabled } from "@/lib/mailer";
 import { captureError } from "@/lib/observability";
 
@@ -229,7 +230,7 @@ export async function POST(req: Request) {
               amount: pi.amount_received,
             });
             const buyerEmail = session.customer_details?.email;
-            const buyerName = session.customer_details?.name || buyerEmail || "Client";
+            const buyerName = merchBuyerName(session) || buyerEmail || "Client";
             if (oblioEnabled() && buyerEmail) {
               try {
                 await issueOblioInvoice({

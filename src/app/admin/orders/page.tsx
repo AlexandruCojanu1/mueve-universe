@@ -9,7 +9,7 @@ export default function AdminOrdersPage() {
         <div className="dash-page-eyebrow">Administrare</div>
         <h1 className="dash-page-title">Comenzi</h1>
         <p className="dash-page-sub">
-          Comenzile de merch din Stripe: client, mărime, adresă de livrare și statusul expedierii.
+          Comenzile de merch din Stripe: client, telefon, mărime și statusul predării (fără curier, predare personală).
         </p>
       </header>
       <OrdersBoard />
